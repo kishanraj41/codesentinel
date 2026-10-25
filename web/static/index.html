@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeSentinel — clinical coding audits</title>
+  <meta name="description" content="Clinical coding audits that show their work. Rules find candidates. Nemotron drops what the chart cannot prove.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the chart</a>
+  <div class="app">
+    <aside class="spine">
+      <div class="brand">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="4" y="3" width="16" height="26" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M8 11h8M8 16h8M8 21h5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M18 19l3.2 3.2L28 14" fill="none" stroke="#dff25a" stroke-width="2"/>
+        </svg>
+        <div>
+          <p class="eyebrow">Clinical coding</p>
+          <h1>CodeSentinel</h1>
+        </div>
+      </div>
+      <p class="persona">For Dana, a risk-adjustment coder. She signs only what the chart can defend.</p>
+      <nav aria-label="Synthetic charts">
+        <button type="button" data-jump="margaret-whitmore">Margaret Whitmore</button>
+        <button type="button" data-jump="pt-001">Maria Elena Rodriguez</button>
+        <button type="button" data-jump="pt-004">Robert Williams</button>
+        <button type="button" data-jump="pt-005">Patricia Davis</button>
+        <button type="button" data-jump="pt-009">Jennifer Wilson</button>
+      </nav>
+      <p class="banner">Synthetic data only. Do not paste PHI.</p>
+    </aside>
+
+    <div class="stage" id="main">
+      <header class="top">
+        <p class="banner banner-inline">Synthetic data only. Do not paste PHI.</p>
+        <div class="top-row">
+          <p class="lede">Pick a synthetic chart and audit it. The worklist is what a coder would sign.</p>
+          <div role="tablist" aria-label="Sections">
+            <button type="button" role="tab" id="tab-audit" aria-selected="true" aria-controls="audit-panel">Audit</button>
+            <button type="button" role="tab" id="tab-eval" aria-selected="false" aria-controls="eval-panel" tabindex="-1">Eval</button>
+          </div>
+        </div>
+      </header>
+
+      <div id="live" class="live" aria-live="polite"></div>
+
+      <div id="audit-panel" role="tabpanel" aria-labelledby="tab-audit">
+        <section id="picker">
+          <div id="coach" class="coach">
+            <p id="coach-step"></p>
+            <div class="coach-actions">
+              <button type="button" id="coach-next">Next</button>
+              <button type="button" id="coach-skip" class="ghost">Skip</button>
+            </div>
+          </div>
+
+          <article class="chart-card featured" id="card-margaret-whitmore">
+            <p class="start">Start here</p>
+            <div>
+              <h2>Margaret Whitmore</h2>
+              <p class="hook">Specificity, negation, and a family-history trap in one chart.</p>
+              <p class="meta">Outpatient follow-up · synthetic</p>
+              <p class="claim">On the claim <span>E11.9</span> <span>I10</span></p>
+            </div>
+            <button type="button" data-audit="margaret-whitmore" aria-label="Audit chart, Margaret Whitmore">Audit chart</button>
+          </article>
+
+          <div class="chart-grid">
+            <article class="chart-card" id="card-pt-001">
+              <div>
+                <h2>Maria Elena Rodriguez</h2>
+                <p class="hook">Coded E11.9. The plan says uncontrolled hyperglycemia, and CKD is uncoded.</p>
+                <p class="meta">Outpatient follow-up · synthetic</p>
+                <p class="claim">On the claim <span>E11.9</span> <span>I10</span></p>
+              </div>
+              <button type="button" data-audit="pt-001" aria-label="Audit chart, Maria Elena Rodriguez">Audit chart</button>
+            </article>
+            <article class="chart-card" id="card-pt-004">
+              <div>
+                <h2>Robert Williams</h2>
+                <p class="hook">Diabetes with CKD. The combination code is the decision.</p>
+                <p class="meta">Outpatient follow-up · synthetic</p>
+                <p class="claim">On the claim <span>E11.9</span> <span>I10</span> <span>N18.3</span></p>
+              </div>
+              <button type="button" data-audit="pt-004" aria-label="Audit chart, Robert Williams">Audit chart</button>
+            </article>
+            <article class="chart-card" id="card-pt-005">
+              <div>
+                <h2>Patricia Davis</h2>
+                <p class="hook">Negation trap. The claim says diabetes. The note says there is no evidence of it.</p>
+                <p class="meta">Annual physical · synthetic</p>
+                <p class="claim">On the claim <span>E11.9</span> <span>I10</span> <span>E78.5</span></p>
+              </div>
+              <button type="button" data-audit="pt-005" aria-label="Audit chart, Patricia Davis">Audit chart</button>
+            </article>
+            <article class="chart-card" id="card-pt-009">
+              <div>
+                <h2>Jennifer Wilson</h2>
+                <p class="hook">Screening trap. A PHQ-9 at a wellness visit is not depression.</p>
+                <p class="meta">Annual wellness visit · synthetic</p>
+                <p class="claim">On the claim <span>E78.5</span></p>
+              </div>
+              <button type="button" data-audit="pt-009" aria-label="Audit chart, Jennifer Wilson">Audit chart</button>
+            </article>
+          </div>
+
+          <form id="paste-form" class="paste">
+            <div>
+              <h2>Paste a synthetic note</h2>
+              <p>Identifiers are refused. A cleared note is not stored. It is coded only when the live audit service is connected.</p>
+            </div>
+            <label for="paste">De-identified note</label>
+            <textarea id="paste" name="note" rows="5" placeholder="Synthetic text only. No names tied to real records, no MRN, no phone, no email."></textarea>
+            <button type="submit">Check note</button>
+          </form>
+        </section>
+
+        <section id="result" hidden>
+          <div id="result-head"></div>
+          <div id="worklist"></div>
+          <div class="below">
+            <div id="rail"></div>
+            <div id="receipt"></div>
+          </div>
+        </section>
+      </div>
+
+      <section id="eval-panel" role="tabpanel" aria-labelledby="tab-eval" hidden></section>
+
+      <footer class="limits">
+        <p>Synthetic charts only. English, outpatient. A cached run is the fallback when the live audit is down or over budget. Fixture citations are not live guideline excerpts. This does not submit a claim.</p>
+      </footer>
+    </div>
+  </div>
+
+  <dialog id="dropped">
+    <div class="dialog-head">
+      <h2 id="dropped-title">Dropped by Nemotron</h2>
+      <form method="dialog"><button type="submit" class="ghost">Close</button></form>
+    </div>
+    <div id="dropped-list"></div>
+  </dialog>
+
+  <noscript><p class="banner">CodeSentinel needs JavaScript to run an audit.</p></noscript>
+  <script src="/static/app.js"></script>
+</body>
+</html>

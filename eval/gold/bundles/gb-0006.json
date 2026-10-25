@@ -1,0 +1,99 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0006",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0006",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0006"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1949-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0006-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0006"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0006-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "33914-3",
+              "display": "eGFR"
+            }
+          ],
+          "text": "eGFR"
+        },
+        "subject": {
+          "reference": "Patient/gb-0006"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 42,
+          "unit": "mL/min/1.73m2"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0006-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0006"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6CkNocm9uaWMga2lkbmV5IGRpc2Vhc2Ugc3RhZ2UgMy4KCkFTU0VTU01FTlQgQU5EIFBMQU46ClRoZSBhc3Nlc3NtZW50IHJlY29yZHMgdGhhdCBjaHJvbmljIGtpZG5leSBkaXNlYXNlIHN0YWdlIDMgYW5kIGl0IGlzIGFjdGl2ZS4gVGhlIGVHRlIgaXMgNDIuCg=="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

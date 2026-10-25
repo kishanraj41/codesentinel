@@ -1,0 +1,139 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0071",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0071",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0071"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1951-12-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0071-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0071"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0071-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "HbA1c"
+            }
+          ],
+          "text": "HbA1c"
+        },
+        "subject": {
+          "reference": "Patient/gb-0071"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 8.5,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0071-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Metformin 1000mg"
+            }
+          ],
+          "text": "Metformin 1000mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0071"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0071-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Tiotropium 18mcg"
+            }
+          ],
+          "text": "Tiotropium 18mcg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0071"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0071-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0071"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6CkNPUEQKCkFTU0VTU01FTlQgQU5EIFBMQU46CkFzc2Vzc21lbnQ6IHR5cGUgMiBkaWFiZXRlcyBtZWxsaXR1cyB3aXRoIGh5cGVyZ2x5Y2VtaWEsIGN1cnJlbnRseSBhY3RpdmUuIEhiQTFjIGlzIDguNSBwZXJjZW50LiBDb250aW51ZSBtZXRmb3JtaW4uIENPUEQgcmVtYWlucyBvbiB0aGUgY29waWVkIHByb2JsZW0gbGlzdCBmcm9tIGEgMjAxNCB2aXNpdCBhbmQgaXMgbm90IGFuIGFjdGl2ZSBwcm9ibGVtLgo="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0052",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0052",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0052"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1965-06-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0052-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0052"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0052-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Metformin 500mg"
+            }
+          ],
+          "text": "Metformin 500mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0052"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0052-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Rosuvastatin 10mg"
+            }
+          ],
+          "text": "Rosuvastatin 10mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0052"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0052-m3",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Lisinopril 10mg"
+            }
+          ],
+          "text": "Lisinopril 10mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0052"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0052-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0052"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6ClNlZSBtZWRpY2F0aW9uIGxpc3QuCgpBU1NFU1NNRU5UIEFORCBQTEFOOgpNZWRpY2F0aW9ucyB3ZXJlIHJlZmlsbGVkLiBObyBuZXcgY29tcGxhaW50cyB3ZXJlIHJhaXNlZCBhdCB0aGlzIHZpc2l0Lgo="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

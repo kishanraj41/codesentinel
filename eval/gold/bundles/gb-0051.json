@@ -1,0 +1,119 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0051",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0051",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0051"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1964-05-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0051-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0051"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0051-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "42637-9",
+              "display": "BNP"
+            }
+          ],
+          "text": "BNP"
+        },
+        "subject": {
+          "reference": "Patient/gb-0051"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 880,
+          "unit": "pg/mL"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0051-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Furosemide 40mg"
+            }
+          ],
+          "text": "Furosemide 40mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0051"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0051-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0051"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6CkhlYXJ0IGZhaWx1cmUuCgpBU1NFU1NNRU5UIEFORCBQTEFOOgpUaGUgYXNzZXNzbWVudCByZWNvcmRzIHRoYXQgaGVhcnQgZmFpbHVyZSB3aXRoIHJlZHVjZWQgZWplY3Rpb24gZnJhY3Rpb24gYW5kIGl0IGlzIGFjdGl2ZS4gVGhlIGVqZWN0aW9uIGZyYWN0aW9uIGlzIDMyIHBlcmNlbnQuIEJOUCBpcyA4ODAuIENvbnRpbnVlIGZ1cm9zZW1pZGUuCg=="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0087",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0087",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0087"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1956-05-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0087-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0087"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0087-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "3016-3",
+              "display": "TSH"
+            }
+          ],
+          "text": "TSH"
+        },
+        "subject": {
+          "reference": "Patient/gb-0087"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 10.4,
+          "unit": "mIU/L"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0087-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Furosemide 40mg"
+            }
+          ],
+          "text": "Furosemide 40mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0087"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0087-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Levothyroxine 88mcg"
+            }
+          ],
+          "text": "Levothyroxine 88mcg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0087"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0087-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0087"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6ClNlZSBhc3Nlc3NtZW50LgoKQVNTRVNTTUVOVCBBTkQgUExBTjoKQ29uZ2VzdGl2ZSBoZWFydCBmYWlsdXJlIGlzIGxpc3RlZCBiZWxvdy4gVGhlIHByaW9yIGRpYWdub3NpcyB3YXMgcmV0cmFjdGVkIGFmdGVyIGEgbm9ybWFsIGVjaG9jYXJkaW9ncmFtIGFuZCB0aGUgbGlzdCBpcyB3cm9uZy4gRnVyb3NlbWlkZSBpcyBzdGlsbCBvbiB0aGUgbWVkaWNhdGlvbiBsaXN0IGZyb20gdGhhdCBlcGlzb2RlIGFuZCBzaG91bGQgYmUgc3RvcHBlZC4gVGhlIGFzc2Vzc21lbnQgcmVjb3JkcyB0aGF0IGh5cG90aHlyb2lkaXNtIGFuZCBpdCBpcyBhY3RpdmUuIFRTSCBpcyAxMC40LiBDb250aW51ZSBsZXZvdGh5cm94aW5lLgo="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

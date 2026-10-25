@@ -1,0 +1,170 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0090",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0090",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0090"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1957-06-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0090-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0090"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "gb-0090-c1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus without complications"
+        },
+        "subject": {
+          "reference": "Patient/gb-0090"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0090-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "HbA1c"
+            }
+          ],
+          "text": "HbA1c"
+        },
+        "subject": {
+          "reference": "Patient/gb-0090"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 9.5,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0090-o2",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "33914-3",
+              "display": "eGFR"
+            }
+          ],
+          "text": "eGFR"
+        },
+        "subject": {
+          "reference": "Patient/gb-0090"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 46,
+          "unit": "mL/min/1.73m2"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0090-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Metformin 1000mg"
+            }
+          ],
+          "text": "Metformin 1000mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0090"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0090-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0090"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6ClR5cGUgMiBkaWFiZXRlcyBtZWxsaXR1cy4gQ2hyb25pYyBraWRuZXkgZGlzZWFzZSBzdGFnZSAzLgoKQVNTRVNTTUVOVCBBTkQgUExBTjoKVGhlIGFzc2Vzc21lbnQgcmVjb3JkcyB0aGF0IHR5cGUgMiBkaWFiZXRlcyBtZWxsaXR1cyB3aXRoIGh5cGVyZ2x5Y2VtaWEgYW5kIGl0IGlzIGFjdGl2ZS4gSGJBMWMgaXMgOS41IHBlcmNlbnQuIENvbnRpbnVlIG1ldGZvcm1pbi4gQ2hyb25pYyBraWRuZXkgZGlzZWFzZSBzdGFnZSAzIGlzIGFjdGl2ZS4gVGhlIGVHRlIgaXMgNDYuIERpYWJldGljIG5lcGhyb3BhdGh5IGlzIGFjdGl2ZS4K"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "dataset": "gold-a",
+  "version": "1.0.0",
+  "labeled_on": "2026-10-24",
+  "labeler": "eval agent, from the chart text in test_dataset.py",
+  "review_status": "pending_coder_signoff",
+  "method": "Each chart was labeled from the note, labs, medications, and coded conditions. The rules pipeline was not used to decide a label. A code is expected only when the chart documents it. A code is a hard negative only when the chart contains a trap the coder should not add. Combination codes that the rules cannot emit, because a parent is not yet coded, stay in expected_gaps so the miss is visible.",
+  "vocabulary_note": "Scored codes use the ICD-10 strings this repository already emits (E78.0, N18.3, I50.9, I50.22). Sharper billable codes that the rules never propose, such as N18.32 for stage 3b and D63.1 for anemia of CKD, are named in label_notes and are not false negatives.",
+  "patients": [
+    {
+      "patient_id": "pt-001",
+      "source": "test_dataset.py",
+      "name": "Maria Elena Rodriguez",
+      "expected_gaps": [
+        {"code": "E11.65", "type": "specificity_upgrade", "from_code": "E11.9", "rationale": "E11.9 is coded. The assessment says uncontrolled type 2 diabetes with hyperglycemia and HbA1c is 8.4%."},
+        {"code": "N18.3", "type": "missing", "rationale": "Assessment says chronic kidney disease stage 3 and eGFR is 48."},
+        {"code": "E78.0", "type": "missing", "rationale": "Assessment says hypercholesterolemia and LDL is 198."},
+        {"code": "D64.9", "type": "missing", "rationale": "Assessment says anemia and hemoglobin is 11.2. D63.1 would be more specific for anemia of CKD and is outside this vocabulary, so it is not scored."},
+        {"code": "G62.9", "type": "missing", "rationale": "Assessment says developing peripheral neuropathy. E11.42 would be the diabetic-neuropathy code and is outside this vocabulary, so it is not scored."},
+        {"code": "E11.22", "type": "combination", "from_code": "E11.9", "rationale": "Assessment says likely diabetic nephropathy. CKD is not yet coded, so the rules' combination step will not propose E11.22. It is still a true gap."},
+        {"code": "I12.9", "type": "combination", "from_code": "I10", "rationale": "Hypertension is assessed and CKD stage 3 is assessed. N18 is not coded, so the rules will not propose I12.9. It is still a true combination gap."}
+      ],
+      "must_not_flag": [
+        {"code": "N18.9", "category": "unspecified_sibling", "rationale": "Stage 3 is documented, so unspecified CKD is the wrong code."},
+        {"code": "E78.5", "category": "wrong_specificity", "rationale": "The assessment says hypercholesterolemia, not unspecified hyperlipidemia. Triglycerides of 220 do not rename that assessment."}
+      ],
+      "unsupported_existing": [],
+      "label_notes": "E11.9 and I10 are supported. E11.9 is underspecified, not unsupported."
+    },
+    {
+      "patient_id": "pt-002",
+      "source": "test_dataset.py",
+      "name": "James Thompson",
+      "expected_gaps": [
+        {"code": "I50.22", "type": "specificity_upgrade", "from_code": "I50.9", "rationale": "Assessment says heart failure with reduced ejection fraction, EF 35%, BNP 580, furosemide and carvedilol. Relabeled from I50.9 to I50.22 because the note documents HFrEF."},
+        {"code": "J44.1", "type": "missing", "rationale": "Assessment says COPD, stable on tiotropium and albuterol."}
+      ],
+      "must_not_flag": [],
+      "unsupported_existing": [],
+      "label_notes": "Only I10 is coded. HbA1c 5.4 does not support diabetes. I50.22 replaces I50.9 because the note documents reduced ejection fraction."
+    },
+    {
+      "patient_id": "pt-003",
+      "source": "test_dataset.py",
+      "name": "Sarah Chen",
+      "expected_gaps": [
+        {"code": "F32.9", "type": "missing", "rationale": "Assessment says major depressive disorder, stable on sertraline, PHQ-9 8. That is treatment of a diagnosed disorder, not a screening-only mention."},
+        {"code": "E03.9", "type": "missing", "rationale": "Assessment says hypothyroidism, TSH 8.2, levothyroxine increased."}
+      ],
+      "must_not_flag": [],
+      "unsupported_existing": [],
+      "label_notes": "Nothing is coded."
+    },
+    {
+      "patient_id": "pt-004",
+      "source": "test_dataset.py",
+      "name": "Robert Williams",
+      "expected_gaps": [
+        {"code": "E11.65", "type": "specificity_upgrade", "from_code": "E11.9", "rationale": "E11.9 is coded and the assessment says poorly controlled diabetes with HbA1c 9.1%."},
+        {"code": "E11.22", "type": "combination", "from_code": "E11.9", "rationale": "E11.9 and N18.3 are both coded and the assessment says diabetic nephropathy."},
+        {"code": "I12.9", "type": "combination", "from_code": "I10", "rationale": "I10 and N18.3 are both coded. The guideline combination still applies when hypertension and CKD are both present, even though this note emphasizes diabetic nephropathy and does not restate hypertension."},
+        {"code": "I50.9", "type": "missing", "rationale": "Assessment says HFrEF, EF 30%, BNP 720, furosemide and carvedilol. This chart is still scored as I50.9. The I50.22 relabel was approved only for pt-002."},
+        {"code": "D64.9", "type": "missing", "rationale": "Assessment says anemia of chronic disease and hemoglobin is 10.5."},
+        {"code": "E78.0", "type": "missing", "rationale": "Assessment says hypercholesterolemia and total cholesterol is 265."},
+        {"code": "G62.9", "type": "missing", "rationale": "Assessment says peripheral neuropathy in both feet."}
+      ],
+      "must_not_flag": [
+        {"code": "E78.5", "category": "wrong_specificity", "rationale": "The assessment names hypercholesterolemia. Unspecified hyperlipidemia is the wrong target."}
+      ],
+      "unsupported_existing": [],
+      "label_notes": "N18.3, E11.9, and I10 are already coded. N18.3 covers the stage-3 family in this vocabulary; N18.32 is the sharper stage-3b code and is not scored."
+    },
+    {
+      "patient_id": "pt-005",
+      "source": "test_dataset.py",
+      "name": "Patricia Davis",
+      "expected_gaps": [],
+      "must_not_flag": [
+        {"code": "E11.65", "category": "negation", "rationale": "HbA1c is 5.2 and the note says there is no evidence of diabetes. Do not upgrade E11.9."},
+        {"code": "I50.9", "category": "negation", "rationale": "The note says no signs of heart failure."},
+        {"code": "J44.1", "category": "negation", "rationale": "The note says no signs of COPD."},
+        {"code": "F32.9", "category": "negation", "rationale": "The note says the patient denies depression and the PHQ-9 is 2."},
+        {"code": "F41.1", "category": "negation", "rationale": "The note says the patient denies anxiety."},
+        {"code": "E03.9", "category": "hypothetical_plan", "rationale": "Hypothyroidism is a rule-out. TSH has not been resulted."},
+        {"code": "N18.3", "category": "negation", "rationale": "The note says no history of kidney disease and eGFR is 92."},
+        {"code": "N18.9", "category": "negation", "rationale": "Same kidney-disease denial."}
+      ],
+      "unsupported_existing": [
+        {"code": "E11.9", "rationale": "E11.9 is on the condition list, but the note says no evidence of diabetes, the patient denies symptoms, and HbA1c is 5.2. Family history in the mother and sister is not the patient's diagnosis."},
+        {"code": "I10", "rationale": "I10 is coded. This chart has no hypertension mention, no blood pressure, and no antihypertensive."},
+        {"code": "E78.5", "rationale": "E78.5 is coded. This chart has no lipid mention, no lipid lab, and no statin."}
+      ],
+      "label_notes": "The rules already drop the negated mentions. The unsupported codes are the two-way findings."
+    },
+    {
+      "patient_id": "pt-006",
+      "source": "test_dataset.py",
+      "name": "Michael Johnson",
+      "expected_gaps": [
+        {"code": "E11.9", "type": "missing", "rationale": "Active metformin and no diabetes code. There is no note. This is a review item, not an auto-add, but the coder should see it."},
+        {"code": "E78.5", "type": "missing", "rationale": "Active rosuvastatin and no lipid code."},
+        {"code": "I10", "type": "missing", "rationale": "Active amlodipine and no hypertension code."}
+      ],
+      "must_not_flag": [
+        {"code": "N18.9", "category": "medication_only", "rationale": "Amlodipine is on the CKD medication list in the rules and is not evidence of CKD."},
+        {"code": "K21.0", "category": "medication_only", "rationale": "Omeprazole alone does not establish GERD."},
+        {"code": "F32.9", "category": "medication_only", "rationale": "Sertraline alone does not establish major depression."}
+      ],
+      "unsupported_existing": [],
+      "label_notes": "No notes and no labs, by design."
+    },
+    {
+      "patient_id": "pt-007",
+      "source": "test_dataset.py",
+      "name": "Linda Martinez",
+      "expected_gaps": [
+        {"code": "E11.65", "type": "missing", "rationale": "HbA1c 7.2 with no diabetes code. Lab-only, so it belongs on the review list."},
+        {"code": "E03.9", "type": "missing", "rationale": "TSH 12.5 with no thyroid code."},
+        {"code": "D50.9", "type": "missing", "rationale": "Ferritin 8 with no iron-deficiency code."},
+        {"code": "E55.9", "type": "missing", "rationale": "Vitamin D 15 with no deficiency code."},
+        {"code": "E79.0", "type": "missing", "rationale": "Uric acid 9.2 with no hyperuricemia code."}
+      ],
+      "must_not_flag": [],
+      "unsupported_existing": [],
+      "label_notes": "No note and no medications. These are review items. A coder still has to confirm MEAT before they are billed."
+    },
+    {
+      "patient_id": "pt-008",
+      "source": "test_dataset.py",
+      "name": "David Anderson",
+      "expected_gaps": [
+        {"code": "E11.65", "type": "specificity_upgrade", "from_code": "E11.9", "rationale": "E11.9 is coded, the assessment addresses type 2 diabetes, and HbA1c is 6.8%."},
+        {"code": "E78.5", "type": "missing", "rationale": "The assessment says hyperlipidemia, LDL is 165, and atorvastatin is active."}
+      ],
+      "must_not_flag": [
+        {"code": "I50.9", "category": "family_history", "rationale": "Grandmother had heart failure. That sentence is in the HPI, not an assessment of the patient."},
+        {"code": "I63.9", "category": "family_history", "rationale": "Father had a stroke. Family history, HPI only."}
+      ],
+      "unsupported_existing": [],
+      "label_notes": "The HPI cholesterol remark is also assessed in the plan, so hyperlipidemia is real."
+    },
+    {
+      "patient_id": "pt-009",
+      "source": "test_dataset.py",
+      "name": "Jennifer Wilson",
+      "expected_gaps": [],
+      "must_not_flag": [
+        {"code": "F32.9", "category": "screening", "rationale": "PHQ-9 was administered for screening and the score is 4. Escitalopram is on the list, but the note does not diagnose depression."},
+        {"code": "F41.1", "category": "hypothetical_plan", "rationale": "The note says possible anxiety and that criteria for GAD are not met."}
+      ],
+      "unsupported_existing": [],
+      "label_notes": "E78.5 is coded and the assessment says hyperlipidemia is stable, so it is supported. Colon screening is not a disease gap."
+    },
+    {
+      "patient_id": "pt-010",
+      "source": "test_dataset.py",
+      "name": "William Taylor",
+      "expected_gaps": [
+        {"code": "E11.65", "type": "specificity_upgrade", "from_code": "E11.9", "rationale": "E11.9 is coded and the assessment says uncontrolled diabetes with HbA1c 8.8%."},
+        {"code": "N18.3", "type": "missing", "rationale": "Assessment says CKD stage 3b and eGFR is 42. N18.32 is the sharper billable stage and is not scored."},
+        {"code": "E11.22", "type": "combination", "from_code": "E11.9", "rationale": "Diabetic nephropathy is assessed. N18 is not coded, so the rules will not propose E11.22."},
+        {"code": "I50.9", "type": "missing", "rationale": "Assessment says heart failure, BNP 450, EF 40%. The words systolic and reduced are absent, so I50.9 is the scored code. I50.22 is scored on Gold-B instead."},
+        {"code": "E03.9", "type": "missing", "rationale": "Assessment says hypothyroidism, TSH 6.8, levothyroxine 100mcg."},
+        {"code": "E78.0", "type": "missing", "rationale": "Assessment says hypercholesterolemia and LDL is 210."},
+        {"code": "D64.9", "type": "missing", "rationale": "Assessment says anemia and hemoglobin is 10.8."},
+        {"code": "G47.33", "type": "missing", "rationale": "Assessment says obstructive sleep apnea on CPAP."},
+        {"code": "G62.9", "type": "missing", "rationale": "Assessment says diabetic peripheral neuropathy."}
+      ],
+      "must_not_flag": [
+        {"code": "N18.9", "category": "unspecified_sibling", "rationale": "Stage 3b is documented."},
+        {"code": "E78.5", "category": "wrong_specificity", "rationale": "The assessment says hypercholesterolemia and LDL is 210."},
+        {"code": "K76.89", "category": "hypothetical_plan", "rationale": "ALT 72 with 'possible NAFLD' and a plan to monitor. The liver disease is not confirmed."}
+      ],
+      "unsupported_existing": [],
+      "label_notes": "I10 is coded. The note does not restate hypertension, and I12.9 is not scored because the CKD is attributed to diabetes and N18 is not coded."
+    }
+  ]
+}

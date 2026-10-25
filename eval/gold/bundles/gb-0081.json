@@ -1,0 +1,144 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0081",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0081",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0081"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1954-03-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0081-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0081"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0081-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2089-1",
+              "display": "LDL"
+            }
+          ],
+          "text": "LDL"
+        },
+        "subject": {
+          "reference": "Patient/gb-0081"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 177,
+          "unit": "mg/dL"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0081-o2",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "33914-3",
+              "display": "eGFR"
+            }
+          ],
+          "text": "eGFR"
+        },
+        "subject": {
+          "reference": "Patient/gb-0081"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 51,
+          "unit": "mL/min/1.73m2"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0081-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Atorvastatin 20mg"
+            }
+          ],
+          "text": "Atorvastatin 20mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0081"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0081-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0081"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6Ckh5cGVybGlwaWRlbWlhLgoKQVNTRVNTTUVOVCBBTkQgUExBTjoKVGhlIGFzc2Vzc21lbnQgcmVjb3JkcyB0aGF0IGh5cGVybGlwaWRlbWlhIGFuZCBpdCBpcyBhY3RpdmUuIExETCBpcyAxNzcuIENvbnRpbnVlIGF0b3J2YXN0YXRpbi4gQ3JlYXRpbmluZSBpcyB1cCBhZnRlciBhIGZldyBkYXlzIG9mIHBvb3IgaW50YWtlLiBSZXBlYXQgdGhlIHBhbmVsIG5leHQgbW9udGguIFRoaXMgcmVhZGluZyBpcyBhY3V0ZS4K"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

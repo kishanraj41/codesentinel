@@ -1,0 +1,120 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0074",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0074",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0074"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1952-01-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0074-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0074"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "gb-0074-c1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "J44.1",
+              "display": "Chronic obstructive pulmonary disease"
+            }
+          ],
+          "text": "Chronic obstructive pulmonary disease"
+        },
+        "subject": {
+          "reference": "Patient/gb-0074"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0074-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Lisinopril 10mg"
+            }
+          ],
+          "text": "Lisinopril 10mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0074"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0074-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0074"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6Ckh5cGVydGVuc2lvbi4KCkFTU0VTU01FTlQgQU5EIFBMQU46CkFzc2Vzc21lbnQ6IGh5cGVydGVuc2lvbiwgY3VycmVudGx5IGFjdGl2ZS4gQ29udGludWUgbGlzaW5vcHJpbC4gQ09QRCB3YXMgZW50ZXJlZCBvbiB0aGUgcHJvYmxlbSBsaXN0IGluIGVycm9yLiBQbGVhc2UgcmVtb3ZlIGl0Lgo="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

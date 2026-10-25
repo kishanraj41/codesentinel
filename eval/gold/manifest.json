@@ -1,0 +1,17 @@
+{
+  "dataset": "gold-b",
+  "seed": 20261024,
+  "n_charts": 90,
+  "n_scenarios": 30,
+  "paraphrases_per_scenario": 3,
+  "splits": {
+    "train": 12,
+    "test": 66,
+    "dev": 12
+  },
+  "text_source": "hand_paraphrase_bank_v1",
+  "not_model_authored": true,
+  "split_rule": "scenarios 0-11 paraphrase 0 = train; scenarios 12-23 paraphrase 0 = dev; all remaining charts = test",
+  "label_sha256": "f6ec5aad5880932982cb12132de4eac0f7989c382c32b5accd157035b8a790be",
+  "phi": "synthetic FHIR only; no names of real people, no addresses, no contact details"
+}

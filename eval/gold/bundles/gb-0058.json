@@ -1,0 +1,139 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0058",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0058",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0058"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1967-08-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0058-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0058"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0058-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2089-1",
+              "display": "LDL"
+            }
+          ],
+          "text": "LDL"
+        },
+        "subject": {
+          "reference": "Patient/gb-0058"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 164,
+          "unit": "mg/dL"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0058-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Atorvastatin 20mg"
+            }
+          ],
+          "text": "Atorvastatin 20mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0058"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0058-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Furosemide 40mg"
+            }
+          ],
+          "text": "Furosemide 40mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0058"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0058-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0058"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6Ckh5cGVybGlwaWRlbWlhLgoKQVNTRVNTTUVOVCBBTkQgUExBTjoKaHlwZXJsaXBpZGVtaWEgaXMgYWN0aXZlLiBMREwgaXMgMTY0LiBDb250aW51ZSBhdG9ydmFzdGF0aW4uIE1vdGhlciBwcmV2aW91c2x5IHRyZWF0ZWQgZm9yIGNvbmdlc3RpdmUgaGVhcnQgZmFpbHVyZS4gRnVyb3NlbWlkZSBvbiB0aGUgbGlzdCBiZWxvbmdzIHRvIGhlciBhbmQgaXMgbm90IGRpc3BlbnNlZCBoZXJlLgo="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

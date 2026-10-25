@@ -1,0 +1,144 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0084",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0084",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0084"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1955-04-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0084-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0084"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0084-o1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "HbA1c"
+            }
+          ],
+          "text": "HbA1c"
+        },
+        "subject": {
+          "reference": "Patient/gb-0084"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 8.8,
+          "unit": "%"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "gb-0084-o2",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "1742-6",
+              "display": "ALT"
+            }
+          ],
+          "text": "ALT"
+        },
+        "subject": {
+          "reference": "Patient/gb-0084"
+        },
+        "effectiveDateTime": "2026-02-15",
+        "valueQuantity": {
+          "value": 81,
+          "unit": "U/L"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0084-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Metformin 1000mg"
+            }
+          ],
+          "text": "Metformin 1000mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0084"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0084-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0084"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6ClR5cGUgMiBkaWFiZXRlcyBtZWxsaXR1cy4KCkFTU0VTU01FTlQgQU5EIFBMQU46ClRoZSBhc3Nlc3NtZW50IHJlY29yZHMgdGhhdCB0eXBlIDIgZGlhYmV0ZXMgbWVsbGl0dXMgd2l0aCBoeXBlcmdseWNlbWlhIGFuZCBpdCBpcyBhY3RpdmUuIEhiQTFjIGlzIDguOCBwZXJjZW50LiBDb250aW51ZSBtZXRmb3JtaW4uIEFMVCBpcyBtaWxkbHkgdXAuIFBvc3NpYmxlIGZhdHR5IGxpdmVyLiBUaGUgaGVwYXRpdGlzIHBhbmVsIGlzIG5lZ2F0aXZlLiBNb25pdG9yIG9ubHkuCg=="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

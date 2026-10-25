@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+fixtures/recorded/*.json
+!fixtures/recorded/.gitkeep
+fixtures/tavily_cache.json

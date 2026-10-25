@@ -1,0 +1,134 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0076",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0076",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0076"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1953-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0076-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0076"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0076-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Omeprazole 20mg"
+            }
+          ],
+          "text": "Omeprazole 20mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0076"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0076-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Sertraline 50mg"
+            }
+          ],
+          "text": "Sertraline 50mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0076"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0076-m3",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Amlodipine 5mg"
+            }
+          ],
+          "text": "Amlodipine 5mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0076"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0076-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0076"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6ClNlZSBtZWRpY2F0aW9uIGxpc3QuCgpBU1NFU1NNRU5UIEFORCBQTEFOOgpUaGUgcGF0aWVudCBkb2VzIG5vdCBoYXZlIGh5cGVydGVuc2lvbi4gT21lcHJhem9sZSBpcyBmb3IgdWxjZXIgcHJvcGh5bGF4aXMgZHVyaW5nIGEgc3Rlcm9pZCB0YXBlci4gU2VydHJhbGluZSBpcyBmb3IgbmVydmUgZGlzY29tZm9ydCBhZnRlciBhIHJhc2guIEFtbG9kaXBpbmUgaXMgZm9yIFJheW5hdWQgcGhlbm9tZW5vbi4K"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

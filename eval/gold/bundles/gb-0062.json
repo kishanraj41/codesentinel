@@ -1,0 +1,114 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0062",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0062",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0062"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1948-09-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0062-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0062"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0062-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Tiotropium 18mcg"
+            }
+          ],
+          "text": "Tiotropium 18mcg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0062"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0062-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Furosemide 40mg"
+            }
+          ],
+          "text": "Furosemide 40mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0062"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0062-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0062"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6CkNPUEQuCgpBU1NFU1NNRU5UIEFORCBQTEFOOgpBc3Nlc3NtZW50OiBDT1BELCBjdXJyZW50bHkgYWN0aXZlLiBDb250aW51ZSB0aW90cm9waXVtLiBIZWFydCBmYWlsdXJlIHJlc29sdmVkIGluIDIwMTkgYWZ0ZXIgdmlyYWwgbXlvY2FyZGl0aXMuIFRoZSBkaXVyZXRpYyBzdGFydGVkIGxhc3Qgd2VlayB3YXMgZm9yIGFua2xlIHN3ZWxsaW5nIGFmdGVyIGEgbG9uZyBmbGlnaHQuCg=="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "E11|combination-code-diabetes-ckd": {
+    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "title": "ICD-10-CM official guidelines (recorded fixture)",
+    "source": "cms.gov",
+    "quote": "Recorded offline fixture for E11 combination-code-diabetes-ckd. Not a live official excerpt. Live mode replaces this with a Tavily extract from cms.gov or cdc.gov about the ICD-10-CM with-convention and combination code E11.22."
+  },
+  "I12|combination-code-hypertensive-ckd": {
+    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "title": "ICD-10-CM official guidelines (recorded fixture)",
+    "source": "cms.gov",
+    "quote": "Recorded offline fixture for I12 combination-code-hypertensive-ckd. Not a live official excerpt. Live mode replaces this with a Tavily extract from cms.gov or cdc.gov about hypertensive chronic kidney disease combination coding."
+  },
+  "I13|combination-code-hypertensive-ckd": {
+    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "title": "ICD-10-CM official guidelines (recorded fixture)",
+    "source": "cms.gov",
+    "quote": "Recorded offline fixture for I13 combination-code-hypertensive-ckd. Not a live official excerpt. Live mode replaces this with a Tavily extract from cms.gov or cdc.gov."
+  },
+  "E11|specificity-hyperglycemia": {
+    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "title": "ICD-10-CM official guidelines (recorded fixture)",
+    "source": "cms.gov",
+    "quote": "Recorded offline fixture for E11 specificity-hyperglycemia. Not a live official excerpt. Live mode replaces this with a Tavily extract from cms.gov or cdc.gov about diabetes specificity when hyperglycemia is documented."
+  },
+  "*|combination-code": {
+    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "title": "ICD-10-CM official guidelines (recorded fixture)",
+    "source": "cms.gov",
+    "quote": "Recorded offline fixture for a combination-code issue. Not a live official excerpt. Live mode replaces this with a Tavily extract from cms.gov or cdc.gov."
+  },
+  "*|specificity-upgrade": {
+    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
+    "title": "ICD-10-CM official guidelines (recorded fixture)",
+    "source": "cms.gov",
+    "quote": "Recorded offline fixture for a specificity-upgrade issue. Not a live official excerpt. Live mode replaces this with a Tavily extract from cms.gov or cdc.gov."
+  }
+}

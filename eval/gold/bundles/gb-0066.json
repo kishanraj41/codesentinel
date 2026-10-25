@@ -1,0 +1,114 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "gb-0066",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "gb-0066",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://codesentinel.local/synthetic",
+              "code": "synthetic"
+            }
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "Case"
+            ],
+            "family": "GB-0066"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1949-10-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "gb-0066-enc",
+        "status": "finished",
+        "class": {
+          "code": "AMB"
+        },
+        "type": [
+          {
+            "text": "Office Visit"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/gb-0066"
+        },
+        "period": {
+          "start": "2026-02-15"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0066-m1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Lisinopril 10mg"
+            }
+          ],
+          "text": "Lisinopril 10mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0066"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "gb-0066-m2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "display": "Sertraline 50mg"
+            }
+          ],
+          "text": "Sertraline 50mg"
+        },
+        "subject": {
+          "reference": "Patient/gb-0066"
+        },
+        "authoredOn": "2026-02-15"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "gb-0066-note",
+        "status": "current",
+        "date": "2026-02-15",
+        "type": {
+          "text": "Progress Note"
+        },
+        "subject": {
+          "reference": "Patient/gb-0066"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain",
+              "data": "UFJPR1JFU1MgTk9URSDigJQgc3ludGhldGljIGNoYXJ0IOKAlCBub3QgYSByZWFsIHBhdGllbnQKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTOgpGb2xsb3ctdXAgdmlzaXQgYXQgdGhlIHN5bnRoZXRpYyBjbGluaWMuCgpQUk9CTEVNIExJU1Q6Ckh5cGVydGVuc2lvbi4KCkFTU0VTU01FTlQgQU5EIFBMQU46ClRoZSBhc3Nlc3NtZW50IHJlY29yZHMgdGhhdCBoeXBlcnRlbnNpb24gYW5kIGl0IGlzIGFjdGl2ZS4gQ29udGludWUgbGlzaW5vcHJpbC4gVGhlIGZvcm0gYXNrZWQgYWJvdXQgbWFqb3IgZGVwcmVzc2l2ZSBkaXNvcmRlciBhcyBhIHJvdXRpbmUgaXRlbSBhbmQgdGhlIHJlc3Qgb2YgdGhpcyBzZW50ZW5jZSBvbmx5IG5vdGVzIHRoYXQgdGhlIHdlYXRoZXIgd2FzIG1pbGQgZHVyaW5nIHRvZGF5J3Mgc3ludGhldGljIGNsaW5pYyB2aXNpdC4K"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
