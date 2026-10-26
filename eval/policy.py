@@ -529,6 +529,11 @@ def _apply_c4(item: Item, text: str) -> None:
         item.stage = "escalate" if item.code.startswith(("I50", "J44", "F32", "E11.2")) else item.stage
 
 
+def unsupported_existing_items(profile: dict) -> list[Item]:
+    """Coded conditions the note contradicts, or that have no MEAT at all."""
+    return _unsupported_existing(profile)
+
+
 def _unsupported_existing(profile: dict) -> list[Item]:
     """Two-way pass: coded conditions the note contradicts, or that have no MEAT at all."""
     text = note_text(profile)

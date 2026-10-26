@@ -283,13 +283,13 @@ class AuditAdapter:
         except Exception as exc:
             self.live_errors.append(f"{profile.get('fhir_patient_id')} {config}: {exc}")
             audit = cascade_audit(profile, mock=True, config=config)
-            payload = _audit_to_eval(audit, "mock_fallback")
+            payload = _audit_to_eval(audit, "mock_fallback", config)
             payload["live_error"] = str(exc)
             return payload
         mode_name = "mock" if chosen != "live" else (audit.get("mode") or "live")
         if chosen != "live":
             mode_name = "mock"
-        return _audit_to_eval(audit, mode_name)
+        return _audit_to_eval(audit, mode_name, config)
 
 
 def cascade_audit(profile: dict, *, mock: bool, config: str = "C4") -> dict[str, Any]:
@@ -324,7 +324,7 @@ def cascade_audit(profile: dict, *, mock: bool, config: str = "C4") -> dict[str,
     return audit
 
 
-def _audit_to_eval(audit: dict, mode: str) -> dict[str, Any]:
+def _audit_to_eval(audit: dict, mode: str, config: str = "C4") -> dict[str, Any]:
     items = []
     for row in audit.get("worklist") or []:
         items.append(_eval_item(row, shown=True))
@@ -333,10 +333,14 @@ def _audit_to_eval(audit: dict, mode: str) -> dict[str, Any]:
     receipt = audit.get("receipt") or {}
     totals = receipt.get("totals") or {}
     changes = 0
-    for row in audit.get("worklist") or []:
-        rationale = row.get("rationale") or ""
-        if row.get("gap_type") in {"combination", "specificity_upgrade"} and "Guideline evidence was missing" in rationale:
-            changes += 1
+    # C1 and C2 never call Tavily. The gate still stamps "Guideline evidence was
+    # missing" onto combination and specificity rationales, but that is not a
+    # decision the guideline step changed.
+    if config in {"C3", "C4"}:
+        for row in audit.get("worklist") or []:
+            rationale = row.get("rationale") or ""
+            if row.get("gap_type") in {"combination", "specificity_upgrade"} and "Guideline evidence was missing" in rationale:
+                changes += 1
     return {
         "items": items,
         "cost_usd": float(totals.get("cost_usd") or 0),

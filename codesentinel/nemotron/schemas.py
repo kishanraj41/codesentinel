@@ -14,6 +14,8 @@ ASSERTION_STATUS = (
     "screening_or_rule_out",
     "hypothetical_plan",
     "copied_forward_unclear",
+    "medication_supported",
+    "lab_only",
 )
 DECISIONS = ("accept", "review", "reject", "abstain")
 
@@ -34,6 +36,8 @@ class TriageResult(BaseModel):
         "screening_or_rule_out",
         "hypothetical_plan",
         "copied_forward_unclear",
+        "medication_supported",
+        "lab_only",
     ]
     supporting_quotes: list[str] = Field(default_factory=list)
     section: str = ""

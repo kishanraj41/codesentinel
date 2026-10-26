@@ -40,7 +40,7 @@ class WorklistItem(BaseModel):
     id: str
     icd10_code: str
     code_display: str
-    gap_type: Literal["missing", "specificity_upgrade", "combination"]
+    gap_type: Literal["missing", "specificity_upgrade", "combination", "unsupported_existing"]
     upgrade_from: Optional[str] = None
     decision: Literal["accept", "review", "abstain"]
     confidence: float
@@ -52,6 +52,9 @@ class WorklistItem(BaseModel):
         "screening_or_rule_out",
         "hypothetical_plan",
         "copied_forward_unclear",
+        "medication_supported",
+        "lab_only",
+        "unsupported_existing",
     ]
     section: str = ""
     supporting_quotes: list[str]

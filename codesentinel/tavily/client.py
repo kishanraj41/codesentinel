@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -64,6 +65,132 @@ def _hostname(url: str) -> str:
 def _official(url: str) -> bool:
     host = _hostname(url)
     return any(host == suffix or host.endswith("." + suffix) for suffix in OFFICIAL_SUFFIXES)
+
+
+# Distinctive terms. Generic "level of specificity" / code-length text is not enough,
+# and a kidney-transplant passage is not a diabetes combination citation.
+_ISSUE_NEEDLES: dict[str, tuple[tuple[str, int], ...]] = {
+    "specificity-hyperglycemia": (
+        ("e11.65", 8),
+        ("hyperglycemia", 6),
+        ("e11.9", 5),
+        ("diabetes", 4),
+        ("e11", 4),
+    ),
+    "combination-code-diabetes-ckd": (
+        ("e11.22", 8),
+        ("diabetic", 5),
+        ("diabetes", 5),
+        ("e11", 4),
+    ),
+    "combination-code-hypertensive-ckd": (
+        ("i12.9", 8),
+        ("i13", 6),
+        ("i12", 6),
+        ("hypertensive", 5),
+    ),
+    "combination-code": (
+        ("combination code", 6),
+        ("combination codes", 6),
+    ),
+}
+_FAMILY_NEEDLES: dict[str, tuple[tuple[str, int], ...]] = {
+    "E11": (("e11", 5), ("diabetes", 5), ("hyperglycemia", 4)),
+    "E78": (("e78", 5), ("hyperlipidemia", 5), ("cholesterol", 4)),
+    "I10": (("i10", 5), ("hypertension", 5)),
+    "I11": (("i11", 5), ("hypertensive heart", 5)),
+    "I12": (("i12", 5), ("hypertensive chronic kidney", 6), ("hypertensive ckd", 6)),
+    "I13": (("i13", 5), ("hypertensive heart", 5)),
+    "I50": (("i50", 6), ("heart failure", 6), ("congestive", 4)),
+    "J44": (("j44", 5), ("copd", 5), ("chronic obstructive", 5)),
+    "N18": (("n18", 5), ("chronic kidney", 5), ("ckd", 4)),
+    "E03": (("e03", 5), ("hypothyroid", 5)),
+}
+_CODE_LENGTH = re.compile(
+    r"highest number of characters|3,\s*4,\s*5,\s*6,?\s*or\s*7 characters|level of detail in coding",
+    re.IGNORECASE,
+)
+
+
+def _needles(code_family: str, issue: str) -> tuple[tuple[str, int], ...]:
+    family = (code_family or "").upper()
+    issue_key = (issue or "").lower()
+    if issue_key == "specificity-upgrade":
+        return _FAMILY_NEEDLES.get(family, ((family.lower(), 5),) if family else ())
+    specific = _ISSUE_NEEDLES.get(issue_key)
+    if specific:
+        return specific
+    return _FAMILY_NEEDLES.get(family, ((family.lower(), 5),) if family else ())
+
+
+def iter_passages(text: str) -> list[str]:
+    """Paragraphs and sentences, so a relevant sentence can beat a junk lead-in."""
+    raw = text or ""
+    found: list[str] = []
+    seen: set[str] = set()
+
+    def add(chunk: str) -> None:
+        cleaned = re.sub(r"\s+", " ", chunk or "").strip()
+        key = cleaned.lower()
+        if len(cleaned) < 24 or key in seen:
+            return
+        seen.add(key)
+        found.append(cleaned[:600])
+
+    for paragraph in re.split(r"\n+", raw):
+        add(paragraph)
+        for sentence in re.split(r"(?<=[.!?])\s+", paragraph):
+            add(sentence)
+    return found
+
+
+def passage_score(passage: str, code_family: str, issue: str) -> int:
+    """How well a passage matches the code family and guideline issue.
+
+    Zero means the passage does not mention the target code, category, or issue
+    terms. Generic code-length text and an off-topic code list score zero.
+    """
+    text = (passage or "").lower()
+    if len(text) < 24:
+        return 0
+    score = 0
+    for needle, weight in _needles(code_family, issue):
+        if needle and needle in text:
+            score += weight
+    if score <= 0:
+        return 0
+    # "Highest number of characters" mentions specificity without the condition.
+    if _CODE_LENGTH.search(passage) and score < 6:
+        return 0
+    issue_key = (issue or "").lower()
+    if issue_key == "combination-code-diabetes-ckd" and not any(
+        term in text for term in ("diabetes", "diabetic", "e11")
+    ):
+        return 0
+    if issue_key == "specificity-hyperglycemia" and not any(
+        term in text for term in ("hyperglycemia", "diabetes", "e11")
+    ):
+        return 0
+    if issue_key == "specificity-upgrade":
+        family = (code_family or "").upper()
+        family_terms = [needle for needle, _weight in _FAMILY_NEEDLES.get(family, ())]
+        if family_terms and not any(term in text for term in family_terms):
+            return 0
+    return score
+
+
+def relevant_quote(text: str, code_family: str, issue: str) -> Optional[str]:
+    """Pick the passage that mentions the target. None when every passage is off-topic."""
+    best = ""
+    best_score = 0
+    for passage in iter_passages(text):
+        score = passage_score(passage, code_family, issue)
+        if score > best_score or (score == best_score and score > 0 and best and len(passage) < len(best)):
+            best_score = score
+            best = passage
+    if best_score <= 0:
+        return None
+    return best[:600].strip()
 
 
 def _credits(payload: dict, default: float) -> float:
@@ -170,10 +297,16 @@ class GuidelineClient:
             return []
         citations = []
         for row in payload.get("citations") or []:
+            focused = relevant_quote(row.get("quote") or "", code_family, issue)
+            if not focused:
+                self.degraded_reasons.append(
+                    f"Dropped low-confidence cached citation for {code_family}|{issue}"
+                )
+                continue
             citations.append(
                 Citation(
                     url=row.get("url") or "",
-                    quote=row.get("quote") or "",
+                    quote=focused,
                     source=row.get("source") or _hostname(row.get("url") or ""),
                     title=row.get("title") or "",
                     retrieved="cache",
@@ -219,37 +352,61 @@ class GuidelineClient:
         results = [row for row in (search.get("results") or []) if _official(row.get("url") or "")]
         if not results:
             return []
-        top = results[0]
-        url = top.get("url") or ""
-        quote = (top.get("content") or "").strip()
-        title = top.get("title") or ""
-        try:
-            extracted = self._post_json(
-                EXTRACT_URL,
-                {
-                    "api_key": self.api_key,
-                    "urls": [url],
-                    "query": query,
-                    "chunks_per_source": 3,
-                    "include_usage": True,
-                },
-            )
+        best_url = ""
+        best_title = ""
+        best_quote = ""
+        best_score = 0
+
+        def consider(url: str, title: str, text: str) -> None:
+            nonlocal best_url, best_title, best_quote, best_score
+            focused = relevant_quote(text, code_family, issue)
+            if not focused:
+                return
+            score = passage_score(focused, code_family, issue)
+            if score > best_score:
+                best_score = score
+                best_url = url
+                best_title = title
+                best_quote = focused
+
+        for row in results:
+            consider(row.get("url") or "", row.get("title") or "", row.get("content") or "")
+        # One extract of the top page when a snippet already matches. Otherwise try the next pages.
+        extract_targets = results[:1] if best_score else results[:3]
+        for row in extract_targets:
+            url = row.get("url") or ""
+            if not url:
+                continue
+            try:
+                extracted = self._post_json(
+                    EXTRACT_URL,
+                    {
+                        "api_key": self.api_key,
+                        "urls": [url],
+                        "query": query,
+                        "chunks_per_source": 3,
+                        "include_usage": True,
+                    },
+                )
+            except Exception as exc:
+                self.degraded_reasons.append(f"Tavily extract failed for {url}: {exc}")
+                continue
             self.live_requests += 1
             self.credits += _credits(extracted, 1)
-            extracted_quote = _extract_quote(extracted)
-            if extracted_quote:
-                quote = extracted_quote
-        except Exception as exc:
-            self.degraded_reasons.append(f"Tavily extract failed for {url}: {exc}")
-        quote = quote[:600].strip()
-        if not quote:
+            consider(url, row.get("title") or "", _extract_quote(extracted))
+            if best_score:
+                break
+        if not best_quote:
+            self.degraded_reasons.append(
+                f"No relevant guideline passage for {code_family}|{issue}; dropped low-confidence citation"
+            )
             return []
         return [
             Citation(
-                url=url,
-                quote=quote,
-                source=_hostname(url),
-                title=title,
+                url=best_url,
+                quote=best_quote,
+                source=_hostname(best_url),
+                title=best_title,
                 retrieved="live",
                 cached_at=None,
                 code_family=code_family,

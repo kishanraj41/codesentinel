@@ -463,7 +463,7 @@ class ChartEvidenceTests(unittest.TestCase):
             "Medications were refilled. No new complaints were raised at this visit.",
             medications=[{"name": "Metformin 500mg", "status": "active", "medication_id": "m"}],
         ))
-        self.assertEqual(diabetes.assertion_status, "present")
+        self.assertEqual(diabetes.assertion_status, "medication_supported")
         self.assertLess(diabetes.confidence, 0.6)
         held = mock_adjudicate({
             "gap_type": "missing",
@@ -501,6 +501,218 @@ class ChartEvidenceTests(unittest.TestCase):
         self.assertIn("stops before Super", result["worklist"][0]["rationale"])
         self.assertEqual(result["timeline"][3]["status"], "skipped")
         self.assertEqual(result["timeline"][4]["status"], "skipped")
+
+
+class _StatusScript:
+    """Triage returns one assertion. Later steps accept unless reject_on_adjudicate is set."""
+
+    def __init__(self, status, *, reject=False):
+        self.mock = True
+        self.used_fallback = False
+        self.degraded_reasons = []
+        self.status = status
+        self.reject = reject
+
+    def ensure_models(self):
+        return None
+
+    def select_triage_model(self):
+        return "nvidia/Nemotron-3_5-Lightning"
+
+    def complete_json(self, **kwargs):
+        schema_name = kwargs["schema_name"]
+        model = kwargs["model"]
+        if schema_name == "triage":
+            data = TriageResult(
+                assertion_status=self.status,
+                supporting_quotes=["model quote that is not in the chart"],
+                section="unknown",
+                confidence=0.4,
+            )
+        else:
+            data = AdjudicationResult(
+                decision="reject" if self.reject else "accept",
+                icd10_code="E11.9",
+                code_display="Type 2 diabetes",
+                rationale="Scripted adjudicator.",
+                physician_query_needed=False,
+            )
+        return Completion(
+            data=data, raw="{}", input_tokens=10, output_tokens=5, latency_ms=1,
+            mock=True, usage_source="estimated", model=model,
+        )
+
+
+class LivePathFixTests(unittest.TestCase):
+    def test_refill_medication_list_is_not_dropped(self):
+        note = "See medication list. Refills were sent today. No new complaints were raised at this visit."
+        profile = {
+            "fhir_patient_id": "gb-med",
+            "clinical_notes": [{"text": note}],
+            "observations": [],
+            "medications": [{"name": "Metformin 500mg", "status": "active", "medication_id": "m1"}],
+            "conditions": [],
+        }
+        gap = {
+            "tier": "TIER_2_PHENOTYPE",
+            "icd10_code": "E11.9",
+            "condition_name": "Type 2 diabetes mellitus",
+            "evidence_sources": ["Medication: metformin"],
+        }
+        result = run_cascade(
+            profile, {"approved": [gap], "review": [], "rejected": []},
+            nemotron_client=_StatusScript("copied_forward_unclear", reject=True),
+            guideline_client=_EmptyGuidelines(),
+            config="C4",
+        )
+        self.assertEqual(result["dropped"], [])
+        item = result["worklist"][0]
+        self.assertEqual(item["assertion_status"], "medication_supported")
+        self.assertEqual(item["decision"], "abstain")
+        self.assertTrue(item["verified_quotes"])
+
+    def test_explicit_negation_still_drops_a_medication(self):
+        note = (
+            "See medication list. The patient does not have hypertension. "
+            "Amlodipine is for Raynaud phenomenon."
+        )
+        profile = {
+            "fhir_patient_id": "med-fp",
+            "clinical_notes": [{"text": note}],
+            "observations": [],
+            "medications": [{"name": "Amlodipine 5mg", "status": "active", "medication_id": "a1"}],
+            "conditions": [],
+        }
+        gap = {
+            "tier": "TIER_2_PHENOTYPE",
+            "icd10_code": "I10",
+            "condition_name": "Essential hypertension",
+            "evidence_sources": ["Medication: amlodipine"],
+        }
+        result = run_cascade(
+            profile, {"approved": [gap], "review": [], "rejected": []},
+            nemotron_client=_StatusScript("copied_forward_unclear"),
+            guideline_client=_EmptyGuidelines(),
+            config="C1",
+        )
+        self.assertEqual(result["worklist"], [])
+        self.assertEqual(result["dropped"][0]["reason"], "copied_forward_unclear")
+
+    def test_low_specificity_drug_stays_dropped(self):
+        note = "Refills were sent today. No new complaints were raised at this visit."
+        profile = {
+            "fhir_patient_id": "ace",
+            "clinical_notes": [{"text": note}],
+            "observations": [],
+            "medications": [{"name": "Lisinopril 10mg", "status": "active", "medication_id": "l1"}],
+            "conditions": [],
+        }
+        gap = {
+            "tier": "TIER_2_PHENOTYPE_WEAK",
+            "icd10_code": "N18.9",
+            "condition_name": "Chronic kidney disease",
+            "evidence_sources": ["Medication: lisinopril"],
+        }
+        result = run_cascade(
+            profile, {"approved": [gap], "review": [], "rejected": []},
+            nemotron_client=_StatusScript("copied_forward_unclear"),
+            guideline_client=_EmptyGuidelines(),
+            config="C1",
+        )
+        self.assertEqual(result["worklist"], [])
+        self.assertEqual(result["dropped"][0]["reason"], "copied_forward_unclear")
+
+    def test_empty_note_lab_is_not_negated(self):
+        profile = {
+            "fhir_patient_id": "pt-007",
+            "clinical_notes": [],
+            "observations": [{
+                "observation_id": "a1c",
+                "loinc": "4548-4",
+                "name": "HbA1c",
+                "value": 7.2,
+                "unit": "%",
+            }],
+            "medications": [],
+            "conditions": [],
+        }
+        gap = {
+            "tier": "TIER_1_STRUCTURED",
+            "icd10_code": "E11.65",
+            "condition_name": "Type 2 diabetes with hyperglycemia",
+            "lab_loinc": "4548-4",
+            "lab_value": 7.2,
+            "evidence_sources": ["Lab: HbA1c = 7.2"],
+        }
+        result = run_cascade(
+            profile, {"approved": [gap], "review": [], "rejected": []},
+            nemotron_client=_StatusScript("negated", reject=True),
+            guideline_client=_EmptyGuidelines(),
+            config="C2",
+        )
+        self.assertEqual(result["dropped"], [])
+        item = result["worklist"][0]
+        self.assertEqual(item["assertion_status"], "lab_only")
+        self.assertEqual(item["decision"], "review")
+        self.assertIn("HbA1c", item["verified_quotes"][0])
+
+    def test_negated_note_is_not_relabeled_lab_only(self):
+        profile = {
+            "fhir_patient_id": "neg-lab",
+            "clinical_notes": [{"text": "The patient does not have diabetes. HbA1c is 5.2."}],
+            "observations": [{
+                "observation_id": "a1c",
+                "loinc": "4548-4",
+                "name": "HbA1c",
+                "value": 5.2,
+                "unit": "%",
+            }],
+            "medications": [],
+            "conditions": [],
+        }
+        gap = {
+            "tier": "TIER_3_NOTE_NER",
+            "icd10_code": "E11.65",
+            "condition_name": "Type 2 diabetes with hyperglycemia",
+            "evidence_sources": ["The patient does not have diabetes."],
+        }
+        result = run_cascade(
+            profile, {"approved": [gap], "review": [], "rejected": []},
+            nemotron_client=_StatusScript("negated"),
+            guideline_client=_EmptyGuidelines(),
+            config="C1",
+        )
+        self.assertEqual(result["worklist"], [])
+        self.assertEqual(result["dropped"][0]["reason"], "negated")
+
+    def test_unsupported_existing_runs_on_the_cascade(self):
+        profile = {
+            "fhir_patient_id": "coded",
+            "clinical_notes": [{"text": "COPD was entered on the problem list in error. Please remove it."}],
+            "observations": [],
+            "medications": [
+                {"name": "Lisinopril 10mg", "status": "active", "medication_id": "l1"},
+                {"name": "Metformin 500mg", "status": "active", "medication_id": "m1"},
+            ],
+            "conditions": [
+                {"icd10_code": "J44.1", "display": "COPD"},
+                {"icd10_code": "E11.9", "display": "Type 2 diabetes"},
+            ],
+        }
+        result = run_cascade(
+            profile, {"approved": [], "review": [], "rejected": []},
+            nemotron_client=_StatusScript("present"),
+            guideline_client=_EmptyGuidelines(),
+            config="C1",
+        )
+        flagged = {
+            item["icd10_code"]: item
+            for item in result["worklist"]
+            if item["gap_type"] == "unsupported_existing"
+        }
+        self.assertIn("J44.1", flagged)
+        self.assertEqual(flagged["J44.1"]["decision"], "review")
+        self.assertNotIn("E11.9", flagged)
 
 
 def _row(code, display, decision, gap_type="missing"):

@@ -213,6 +213,8 @@ class PolicyTests(unittest.TestCase):
             }
         self.assertEqual(unsupported(c0), set())
         self.assertIn("J44.1", unsupported(c1))
+        c4 = adapter.audit(profile, "C4", mode="mock")
+        self.assertIn("J44.1", unsupported(c4))
 
     def test_guardrail_drops_hallucinated_quote(self):
         probe = guardrail_probe()
@@ -223,6 +225,30 @@ class PolicyTests(unittest.TestCase):
         shown = _shown(adapter.audit(self._profile("family_hf"), "C1", mode="mock"))
         self.assertNotIn("I50.9", shown)
         self.assertIn("E78.5", shown)
+
+
+class GuidelineCountTests(unittest.TestCase):
+    def test_missing_guideline_text_is_not_a_change_without_tavily(self):
+        from eval.adapter import _audit_to_eval
+
+        audit = {
+            "worklist": [{
+                "icd10_code": "E11.65",
+                "code_display": "Type 2 DM with hyperglycemia",
+                "gap_type": "specificity_upgrade",
+                "decision": "review",
+                "rationale": (
+                    "Guideline evidence was missing, so this combination or specificity "
+                    "code cannot be accepted. Triage held this candidate."
+                ),
+            }],
+            "dropped": [],
+            "receipt": {"totals": {}},
+        }
+        self.assertEqual(_audit_to_eval(audit, "live", "C1")["guideline_decision_changes"], 0)
+        self.assertEqual(_audit_to_eval(audit, "live", "C2")["guideline_decision_changes"], 0)
+        self.assertEqual(_audit_to_eval(audit, "live", "C3")["guideline_decision_changes"], 1)
+        self.assertEqual(_audit_to_eval(audit, "mock", "C4")["guideline_decision_changes"], 1)
 
 
 class LiveSwitchTests(unittest.TestCase):
