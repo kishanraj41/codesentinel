@@ -7,9 +7,11 @@ Additive fields may appear later. Existing fields, enums, and routes below stay 
 CodeSentinel is a clinical-coding integrity service. It is not a code-security scanner.
 Rules propose candidate ICD-10-CM gaps. NVIDIA Nemotron on Nebius Token Factory
 cross-examines them. A deterministic verifier drops any supporting quote that is not
-literally in the chart (or an exact structured lab/medication line). Tavily supplies
-official ICD-10-CM/CMS guideline excerpts for combination-code and specificity
-decisions. If that evidence is missing, those decisions cannot be `accept`.
+literally in the chart (or an exact structured lab/medication line). Combination-code
+and specificity decisions cite a curated section of the FY2026 ICD-10-CM Official
+Guidelines first. Tavily confirms that PDF is reachable and is the fallback for a
+code without a curated section. If that evidence is missing, those decisions cannot
+be `accept`.
 
 Synthetic charts only. Do not send real PHI.
 
@@ -22,15 +24,16 @@ python mcp_server.py
 
 The server listens on `PORT` (default `8000`).
 
-Keys are optional. When `NEBIUS_API_KEY` or `TAVILY_API_KEY` is unset, that step
-uses a recorded mock/fixture client. The response says so in `mode` and
+Keys are optional. When `NEBIUS_API_KEY` is unset, model steps use the recorded
+client. When `TAVILY_API_KEY` is unset, curated guideline sections are still cited
+and codes without one use a recorded fixture. The response says so in `mode` and
 `guideline_mode`. No network call is made for a missing key.
 
 | Env | Purpose |
 |---|---|
 | `NEBIUS_API_KEY` | Token Factory bearer token. Unset → mock Nemotron. |
 | `NEBIUS_BASE_URL` | Default `https://api.tokenfactory.nebius.com/v1/`. |
-| `TAVILY_API_KEY` | Tavily key. Unset → recorded fixtures. |
+| `TAVILY_API_KEY` | Tavily key. Confirms the official FY2026 PDF and fills codes with no curated section. Unset skips that check. |
 | `FHIR_ALLOWED_HOSTS` | Comma-separated extra FHIR hosts. |
 | `FHIR_ALLOW_ANY` | `1` allows any public host. Loopback, link-local, and private addresses stay blocked. |
 | `CODESENTINEL_VERIFY` | `0` skips Nemotron and returns the rules-only pipeline. Default `1`. |
@@ -142,7 +145,7 @@ Redirects and FHIR bundle `next` links must stay on the same host.
   "patient_id": "pt-001",
   "patient_name": "Maria Elena Rodriguez",
   "mode": "mock",
-  "guideline_mode": "fixture",
+  "guideline_mode": "anchor",
   "degraded_reasons": [],
   "summary": {
     "candidates_generated": 8,
@@ -180,10 +183,11 @@ Redirects and FHIR bundle `next` links must stay on the same host.
 
 | Value | Meaning |
 |---|---|
-| `fixture` | No Tavily key. Recorded fixtures only. Fixture quotes are labeled and are not live official excerpts. |
+| `anchor` | Every citation is a curated section of the FY2026 official guidelines. Mock mode uses these too. |
+| `fixture` | Every citation is a recorded fixture for a code with no curated section. Fixture quotes are labeled and are not live official excerpts. |
 | `live` | Every citation in this response was retrieved from Tavily on this request. |
 | `cache` | Every citation was served from the on-disk cache. |
-| `mixed` | More than one of live, cache, and fixture. |
+| `mixed` | More than one retrieved value (anchor, live, cache, fixture). |
 | `none` | No guideline lookup returned a citation. |
 
 #### summary counts
@@ -254,14 +258,17 @@ Candidates removed before the worklist.
 | Field | Type | Meaning |
 |---|---|---|
 | `url` | string | Page the excerpt came from. |
-| `quote` | string | Excerpt. Fixture quotes say they are recorded offline fixtures, not live guideline text. |
+| `quote` | string | Excerpt. Curated quotes are contiguous text from the FY2026 guidelines. Fixture quotes say they are recorded offline fixtures, not live guideline text. |
 | `source` | string | Hostname (`cms.gov`, `cdc.gov`, …). |
 | `title` | string | |
-| `retrieved` | enum | `live`, `cache`, `fixture`. |
+| `retrieved` | enum | `anchor`, `live`, `cache`, `fixture`. |
 | `cached_at` | string or null | ISO-8601 timestamp when `retrieved` is `cache` or `fixture`. |
 | `code_family` | string | First three characters of the ICD-10-CM code (`E11`, `I12`, …). |
 | `issue` | string | Stable issue key, for example `combination-code-diabetes-ckd` or `specificity-hyperglycemia`. |
-| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (FY2026 first). `secondary` for another cms.gov or cdc.gov page. Empty on recorded fixtures. |
+| `section` | string | Guideline section id when `retrieved` is `anchor`, for example `I.A.15`. Empty otherwise. |
+| `page` | number or null | Printed page in the FY2026 guidelines PDF when `retrieved` is `anchor`. |
+| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (FY2026 first). `secondary` for another cms.gov or cdc.gov page. Recorded fixtures use the tier of their URL; the bundled fixture points at a CMS code page, so it is `secondary`, and `retrieved` stays `fixture`. |
+| `source_label` | string | `Official guidelines` or `Secondary source`. Empty when `source_tier` is empty. A secondary page is cited only when every code-and-description pair in the excerpt agrees with the official title. A mismatched label, including a code list that calls I50.20 acute combined systolic and diastolic failure, is dropped. No accepted passage means no citation. |
 
 Top-level `citations` is the de-duplicated union of worklist citations, in first-seen order.
 

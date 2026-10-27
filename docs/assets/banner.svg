@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" role="img" aria-label="CodeSentinel, guideline-cited clinical coding audits">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102824"/>
+      <stop offset="1" stop-color="#1c3a34"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="360" fill="url(#bg)"/>
+  <g opacity="0.18" stroke="#dff25a" fill="none" stroke-width="1">
+    <path d="M860 40h280M860 70h220M860 100h250M860 130h180"/>
+    <path d="M980 210h220M980 240h160M980 270h200"/>
+  </g>
+  <g transform="translate(72 78) scale(3.2)">
+    <path fill="#f4efe4" d="M32 3.5 54.5 12.2v18.4c0 14.2-10.2 24.6-22.5 29.9C19.7 55.2 9.5 44.8 9.5 30.6V12.2L32 3.5z"/>
+    <path fill="none" stroke="#08382d" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" d="M20 34.5h7.2l3.6-9.2 4.2 16.4 3.4-7.2H44"/>
+    <path fill="none" stroke="#3f6b12" stroke-width="2.2" stroke-linecap="round" d="M32 14.5v8M28 18.5h8"/>
+  </g>
+  <text x="300" y="168" fill="#f6f1e6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="64" font-weight="650">CodeSentinel</text>
+  <text x="302" y="214" fill="#dff25a" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22">Guideline-cited clinical coding audits</text>
+  <text x="302" y="252" fill="#cfc6b4" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">NVIDIA Nemotron on Nebius Token Factory, Tavily citations, synthetic charts only</text>
+</svg>

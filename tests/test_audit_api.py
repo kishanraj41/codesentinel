@@ -49,8 +49,13 @@ class AuditApiTests(unittest.TestCase):
         upgrade = next(item for item in body["worklist"] if item["icd10_code"] == "E11.65")
         self.assertEqual(upgrade["gap_type"], "specificity_upgrade")
         self.assertTrue(upgrade["verified_quotes"])
-        self.assertEqual(upgrade["guideline_citations"][0]["retrieved"], "fixture")
-        self.assertIn("Not a live official excerpt", upgrade["guideline_citations"][0]["quote"])
+        citation = upgrade["guideline_citations"][0]
+        self.assertEqual(citation["retrieved"], "anchor")
+        self.assertEqual(citation["source_tier"], "official")
+        self.assertEqual(citation["section"], "I.C.4.a")
+        self.assertEqual(citation["page"], 39)
+        self.assertNotIn("[...]", citation["quote"])
+        self.assertNotIn("Not a live official excerpt", citation["quote"])
         self.assertIsInstance(body["rules_only"], dict)
         self.assertIn("approved", body["rules_only"])
 

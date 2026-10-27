@@ -51,10 +51,15 @@ def upstream_message(audit: dict) -> str:
     if mode == "live":
         if guideline == "live":
             return "Live audit. Token Factory and Tavily ran for this chart."
+        if guideline == "anchor":
+            return (
+                "Live audit. Token Factory ran. Guideline citations came from curated "
+                "sections of the official FY2026 guidelines."
+            )
         if guideline == "cache":
             return "Live audit. Token Factory ran. Guideline citations came from cache."
         if guideline == "mixed":
-            return "Live audit. Token Factory ran. Guideline citations are a mix of live and cache."
+            return "Live audit. Token Factory ran. Guideline citations came from more than one source."
         return "Live audit. Token Factory was called for this chart."
     if mode == "degraded":
         return "Degraded audit. A model step failed and that step used the recorded client."

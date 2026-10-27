@@ -351,6 +351,7 @@ def _audit_to_eval(audit: dict, mode: str, config: str = "C4") -> dict[str, Any]
         "tokens_in": int(totals.get("input_tokens") or 0),
         "tokens_out": int(totals.get("output_tokens") or 0),
         "mode": mode,
+        "degraded_reasons": [str(item) for item in (audit.get("degraded_reasons") or []) if str(item).strip()],
     }
 
 

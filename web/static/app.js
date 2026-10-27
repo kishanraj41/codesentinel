@@ -472,11 +472,15 @@ function renderRow(payload, item) {
 function renderCitation(citation) {
   const retrieved = citation.retrieved || "fixture";
   let label = "Fixture";
-  if (retrieved === "live") label = "Tavily · live";
+  if (retrieved === "anchor") {
+    label = citation.section ? citation.section + (citation.page ? " · p. " + citation.page : "") : "Curated section";
+  } else if (retrieved === "live") label = "Tavily · live";
   else if (retrieved === "cache") label = "Tavily · cached" + (citation.cached_at ? " " + citation.cached_at : "");
   else label = "Fixture · not a live excerpt";
   const block = el("div", { class: "query" });
   const line = el("p", {}, chip(label, "cite"));
+  const tierLabel = citation.source_label || (citation.source_tier === "secondary" ? "Secondary source" : citation.source_tier === "official" ? "Official guidelines" : "");
+  if (tierLabel) line.append(chip(tierLabel, citation.source_tier === "secondary" ? "review" : "cite"));
   const href = safeUrl(citation.url);
   if (href) {
     line.append(el("a", { href: href, target: "_blank", rel: "noopener noreferrer", text: citation.title || citation.source || "Official source" }));
