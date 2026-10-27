@@ -14,6 +14,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from codesentinel.policy import UnsupportedExisting, unsupported_existing_items
 from eval.lexicon import (
     CODE_TERMS,
     FAMILY_CUES,
@@ -529,94 +530,25 @@ def _apply_c4(item: Item, text: str) -> None:
         item.stage = "escalate" if item.code.startswith(("I50", "J44", "F32", "E11.2")) else item.stage
 
 
-def unsupported_existing_items(profile: dict) -> list[Item]:
-    """Coded conditions the note contradicts, or that have no MEAT at all."""
-    return _unsupported_existing(profile)
-
-
 def _unsupported_existing(profile: dict) -> list[Item]:
-    """Two-way pass: coded conditions the note contradicts, or that have no MEAT at all."""
-    text = note_text(profile)
-    sentences = _sentences(text)
-    items: list[Item] = []
-    meds = " ".join(_med_names(profile))
-    for cond in profile.get("conditions") or []:
-        code = (cond.get("icd10_code") or "").upper()
-        if not code:
-            continue
-        terms = _terms_for(code)
-        matched = [(s, sec) for s, sec in sentences if terms and _sentence_matches(s, terms)]
-        contradicted = None
-        affirmed = False
-        for sentence, _sec in matched:
-            low = sentence.lower()
-            if _has_cue(sentence, NEGATION_CUES) or "in error" in low or "please remove" in low:
-                contradicted = sentence
-            elif not _has_cue(sentence, FAMILY_CUES):
-                affirmed = True
-        if contradicted and not affirmed:
-            items.append(Item(
-                code=code,
-                condition_name=cond.get("display") or code,
-                gap_type="unsupported_existing",
-                source_tier="TWO_WAY",
-                decision="accept",
-                shown_to_coder=True,
-                assertion_status="negated",
-                quote=contradicted,
-                quote_verified=True,
-                drop_reason=None,
-                stage="triage",
-            ))
-            continue
-        if matched or affirmed:
-            continue
-        # No mention. Unsupported only when the chart also lacks a supporting drug and lab.
-        high = HIGH_SPECIFICITY_DRUGS.get(code, ())
-        if any(drug in meds for drug in high):
-            continue
-        # Labs that would support the code.
-        if _lab_supports(code, profile):
-            continue
-        if not text.strip() and not profile.get("medications") and not profile.get("observations"):
-            continue
-        items.append(Item(
-            code=code,
-            condition_name=cond.get("display") or code,
-            gap_type="unsupported_existing",
-            source_tier="TWO_WAY",
-            decision="review",
-            shown_to_coder=True,
-            assertion_status="unsupported_existing",
-            quote="No mention, medication, or supporting lab in this chart",
-            quote_verified=True,
-            drop_reason="no_meat",
-            stage="triage",
-        ))
-    return items
+    """Eval-item view of the production two-way check."""
+    return [_item_from_unsupported(row) for row in unsupported_existing_items(profile)]
 
 
-def _lab_supports(code: str, profile: dict) -> bool:
-    obs = profile.get("observations") or []
-    for o in obs:
-        loinc = o.get("loinc") or ""
-        try:
-            value = float(o.get("value"))
-        except (TypeError, ValueError):
-            continue
-        if code.startswith("E11") and loinc == "4548-4" and value >= 6.5:
-            return True
-        if code.startswith("N18") and loinc == "33914-3" and value < 60:
-            return True
-        if code.startswith("I50") and loinc == "42637-9" and value > 100:
-            return True
-        if code.startswith("E03") and loinc == "3016-3" and value > 4.5:
-            return True
-        if code.startswith("E78") and loinc in {"2089-1", "2093-3"} and value >= 160:
-            return True
-        if code.startswith("D64") and loinc == "718-7" and value < 12:
-            return True
-    return False
+def _item_from_unsupported(row: UnsupportedExisting) -> Item:
+    return Item(
+        code=row.code,
+        condition_name=row.condition_name,
+        gap_type=row.gap_type,
+        source_tier=row.source_tier,
+        decision=row.decision,
+        shown_to_coder=row.shown_to_coder,
+        assertion_status=row.assertion_status,
+        quote=row.quote,
+        quote_verified=row.quote_verified,
+        drop_reason=row.drop_reason,
+        stage=row.stage,
+    )
 
 
 def _sibling_pass(items: list[Item]) -> None:

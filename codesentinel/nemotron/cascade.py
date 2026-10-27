@@ -32,6 +32,7 @@ from codesentinel.nemotron.schemas import (
     limit_words,
 )
 from codesentinel.nemotron.verifier import build_corpus, verified_quotes
+from codesentinel.policy import unsupported_existing_items
 from codesentinel.tavily.client import GuidelineClient
 
 _TIMELINE = (
@@ -766,8 +767,6 @@ def _unsupported_existing_rows(profile: dict) -> list[dict]:
     approved adds, so the decision stays review even when the policy would
     accept the finding.
     """
-    from eval.policy import unsupported_existing_items
-
     rows = []
     patient = str(profile.get("fhir_patient_id") or "chart")
     for item in unsupported_existing_items(profile):

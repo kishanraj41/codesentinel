@@ -23,7 +23,7 @@ Every chart in this repository is synthetic. `pt-001` through `pt-010` live in `
 | Adjudication | `nvidia/nemotron-3-super-120b-a12b` | Medium-confidence survivors, plus every specificity upgrade and combination code. Temperature 0.6, thinking on, reasoning effort low. |
 | Escalation and physician query | `nvidia/Nemotron-3-Ultra-550b-a55b` | Conflicts, high-value HCC upgrades (RAF at least 0.3), and non-leading physician queries. Temperature 0.6, thinking on. |
 | Quote verifier | none | Deterministic. A supporting quote must be a whitespace-normalized substring of the note (at least 12 characters), an exact structured lab or medication line, or a structured record id. Anything else is dropped as `unsupported`. |
-| Guidelines | Tavily | Combination codes and specificity upgrades. Live search uses `search_depth=advanced`, `include_domains=["cms.gov","cdc.gov"]`, `chunks_per_source=3`, and `max_results=5`, then extract on the top official URL. A row with no citation is forced to `review` in code after the model returns. |
+| Guidelines | Tavily | Combination codes and specificity upgrades. Live search uses `search_depth=advanced`, `include_domains=["cms.gov","cdc.gov"]`, `chunks_per_source=3`, and `max_results=5`, with a query suffix for the FY2026 ICD-10-CM Official Guidelines for Coding and Reporting. That PDF outranks other CMS pages. A row with no citation is forced to `review` in code after the model returns. |
 
 The same cascade has four depths. C1 stops after triage and the quote verifier. C2 adds Super. C3 adds the guideline lookup. C4 adds Ultra.
 

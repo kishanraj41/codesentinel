@@ -34,6 +34,7 @@ class CitationModel(BaseModel):
     cached_at: Optional[str] = None
     code_family: str
     issue: str
+    source_tier: Literal["official", "secondary", ""] = ""
 
 
 class WorklistItem(BaseModel):
