@@ -6,6 +6,7 @@ running" lock.
 
 from __future__ import annotations
 
+import asyncio
 import copy
 from dataclasses import dataclass
 
@@ -28,6 +29,8 @@ class Settings:
     max_daily_usd: float = 3.0
     estimated_live_usd: float = 0.03
     live_rate_per_hour: int = 10
+    # Live cascades running at once. Extra visitors get the labeled cache.
+    live_max_concurrent: int = 3
     # When no remote base is set, Audit chart POSTs to the in-process /audit route.
     local_audit: bool = True
 
@@ -38,6 +41,7 @@ FALLBACK_MESSAGES = {
     "api_error": "The audit service did not respond. Showing the cached run.",
     "budget": "Live quota reached, showing cached run.",
     "rate_limit": "Live run limit reached for this network. Showing the cached run.",
+    "busy": "Several live audits are already running. Showing the cached run.",
 }
 PASTE_OFFLINE = (
     "No identifiers detected. Nothing was stored. "
@@ -115,6 +119,7 @@ class AuditService:
         self.budget = budget
         self.limiter = limiter
         self.upstream = upstream
+        self._live_slots = asyncio.Semaphore(max(1, settings.live_max_concurrent))
 
     async def perform(
         self,
@@ -167,8 +172,15 @@ class AuditService:
                 return self._from_cache(patient_id, "rate_limit")
             raise AuditError(429, "Live run limit reached for this network. Try a bundled chart for the cached audit.")
 
+        if self._live_slots.locked():
+            await self.budget.refund(reserved)
+            if known:
+                return self._from_cache(patient_id, "busy")
+            raise AuditError(429, "Several live audits are already running. Try again in a minute.")
+
         try:
-            audit = await self.upstream.audit(self._body(patient_id, profile if not known else None))
+            async with self._live_slots:
+                audit = await self.upstream.audit(self._body(patient_id, profile if not known else None))
         except UpstreamError:
             await self.budget.refund(reserved)
             if known:

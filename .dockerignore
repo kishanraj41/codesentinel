@@ -1,0 +1,15 @@
+.git
+.github
+**/__pycache__
+**/*.pyc
+.venv
+venv
+.env
+*.env
+.pytest_cache
+.mypy_cache
+docs
+web/tests
+tests
+eval/fixtures/nemotron
+**/.DS_Store

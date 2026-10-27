@@ -29,6 +29,8 @@ Optional:
 set AUDIT_API_BASE=http://127.0.0.1:8000
 set MAX_DAILY_USD=3
 set LIVE_RATE_PER_HOUR=10
+set LIVE_MAX_CONCURRENT=3
+set TRUSTED_PROXY_HOPS=1
 ```
 
 `AUDIT_API_BASE` is optional. Leave it empty to call the in-process `POST /audit`. Set it to `http://127.0.0.1:8000` when the audit service is already running on that port.
@@ -39,6 +41,10 @@ set LIVE_RATE_PER_HOUR=10
 pip install pytest
 pytest
 ```
+
+## Hosting
+
+The public demo image is `Dockerfile.web` at the repo root (UI plus in-process audit cascade). See [docs/DEPLOY.md](../docs/DEPLOY.md) for Nebius Serverless AI and the free Render fallback. `web/Dockerfile` below only holds the UI, so use it with `AUDIT_API_BASE` pointing at a separate audit service.
 
 ## Cloud Run
 

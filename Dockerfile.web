@@ -1,0 +1,35 @@
+# CodeSentinel public web demo: the judge UI plus the in-process audit cascade.
+# Build from the repo root:  docker build -f Dockerfile.web -t codesentinel-web .
+# Runs live when NEBIUS_API_KEY (and TAVILY_API_KEY) are set at runtime; never bake keys in.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PORT=8080 \
+    MAX_DAILY_USD=3 \
+    LIVE_RATE_PER_HOUR=10 \
+    LIVE_MAX_CONCURRENT=3 \
+    TRUSTED_PROXY_HOPS=1
+
+WORKDIR /srv
+
+COPY requirements.txt ./requirements.txt
+COPY web/requirements.txt ./web/requirements.txt
+RUN pip install -r requirements.txt -r web/requirements.txt
+
+COPY . .
+
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /srv
+USER appuser
+
+WORKDIR /srv/web
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import os,urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\",\"8080\")}/health', timeout=4)" || exit 1
+
+# No --forwarded-allow-ips=*: the app reads X-Forwarded-For itself, counting
+# TRUSTED_PROXY_HOPS from the right so a forged header can't reset the IP limit.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --timeout-keep-alive 75"]
