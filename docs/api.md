@@ -202,7 +202,7 @@ Shown to the coder. Ordered `accept`, then `review`, then `abstain`, and by desc
 | `id` | string | `"{patient_id}:{icd10_code}"`. |
 | `icd10_code` | string | Proposed code. |
 | `code_display` | string | Short name. |
-| `gap_type` | enum | `missing`, `specificity_upgrade`, `combination`. |
+| `gap_type` | enum | `missing`, `specificity_upgrade`, `combination`, `unsupported_existing`. |
 | `upgrade_from` | string or null | Code being replaced, when this is an upgrade or combination. |
 | `decision` | enum | `accept`, `review`, `abstain`. |
 | `confidence` | number | 0–1 from triage. |
@@ -226,7 +226,9 @@ Shown to the coder. Ordered `accept`, then `review`, then `abstain`, and by desc
 
 `assertion_status` enum:
 
-`present`, `negated`, `historical_resolved`, `family_history`, `screening_or_rule_out`, `hypothetical_plan`, `copied_forward_unclear`.
+`present`, `negated`, `historical_resolved`, `family_history`, `screening_or_rule_out`, `hypothetical_plan`, `copied_forward_unclear`, `medication_supported`, `lab_only`, `unsupported_existing`.
+
+`medication_supported` is an active medication list plus a current refill, held for a person. `lab_only` is an empty note whose abnormal lab supports the code. Neither is a negation. `unsupported_existing` is a coded condition the two-way check found with no supporting mention, drug, or lab.
 
 ### dropped[]
 
@@ -259,6 +261,7 @@ Candidates removed before the worklist.
 | `cached_at` | string or null | ISO-8601 timestamp when `retrieved` is `cache` or `fixture`. |
 | `code_family` | string | First three characters of the ICD-10-CM code (`E11`, `I12`, …). |
 | `issue` | string | Stable issue key, for example `combination-code-diabetes-ckd` or `specificity-hyperglycemia`. |
+| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (FY2026 first). `secondary` for another cms.gov or cdc.gov page. Empty on recorded fixtures. |
 
 Top-level `citations` is the de-duplicated union of worklist citations, in first-seen order.
 
@@ -366,8 +369,8 @@ Advanced search is counted as 2 credits when the provider does not return a usag
 
 1. **Rules.** Existing tiers 1–4 in `gap_pipeline.py`. Approved and review candidates are both sent on. Rules-rejected candidates are not sent to a model.
 2. **Triage.** One structured JSON call per candidate, in parallel (cap 8). Reasoning off. Temperature 0. Output schema: `assertion_status`, `supporting_quotes`, `section`, `meat`, `confidence`.
-3. **Verifier.** Outside the model. A quote counts only if its whitespace-normalized form (length ≥ 12) is a substring of the note text, or it equals a full structured lab or medication line, or it equals a structured record id. No surviving quote → drop `unsupported`. `assertion_status` other than `present` → drop with that status as `reason`.
-4. **Guidelines.** Tavily search (`search_depth=advanced`, `include_domains=["cms.gov","cdc.gov"]`, `chunks_per_source=3`, `max_results=5`) plus extract on the top official URL, per code family and issue. Cached on disk by `(code_family, issue)`. Combination and specificity candidates always request a lookup.
+3. **Verifier.** Outside the model. A quote counts only if its whitespace-normalized form (length ≥ 12) is a substring of the note text, or it equals a full structured lab or medication line, or it equals a structured record id. No surviving quote → drop `unsupported`. `assertion_status` other than `present`, `medication_supported`, or `lab_only` → drop with that status as `reason`. A deterministic pass rewrites a `copied_forward_unclear` or `negated` tag to `medication_supported` when an active, condition-specific medication list was refilled and the note does not negate the condition, and to `lab_only` when the note is empty and a lab threshold supports the code. Those rows stay for a human. After the model steps, the same cascade runs the unsupported-existing check from `codesentinel/policy.py` and adds contradicted or meat-less coded conditions as `gap_type: unsupported_existing` review rows.
+4. **Guidelines.** Tavily search (`search_depth=advanced`, `include_domains=["cms.gov","cdc.gov"]`, `chunks_per_source=3`, `max_results=5`) plus extract, per code family and issue. The query ends with `"ICD-10-CM Official Guidelines for Coding and Reporting" FY2026`. Heart-failure specificity (I50) also names chronic, acute on chronic, systolic, diastolic, and HFrEF/HFpEF, so a passage can match without the literal code `I50.22`. The citation quote is the passage that mentions the target code, category, or issue terms. A passage that does not match (a chest-pain code list, generic code-length text, a kidney-transplant paragraph for a diabetes combination) is dropped instead of cited. The FY2026 official guidelines PDF is chosen over other cms.gov or cdc.gov pages; a secondary page is used only when no official passage matches, and the citation is marked `source_tier` `official` or `secondary`. Matches and no-match lookups are cached on disk by the query and the filter version. Combination and specificity candidates always request a lookup on C3 and C4. C1 and C2 skip this step, so a "guideline evidence was missing" rationale there is not counted as a guideline decision change.
 5. **Adjudication.** Super, reasoning on, for medium-confidence survivors (confidence < 0.8) and for every specificity upgrade and combination code. High-confidence simple `missing` rows can be accepted from triage + verifier without Super. JSON schema: `decision`, `icd10_code`, `code_display`, `guideline_citations`, `rationale`, `physician_query_needed`. Parse failure → one repair retry → else `review`.
 6. **Guideline gate.** Combination or specificity with `decision: accept` and zero citations is rewritten to `review`.
 7. **Escalation.** Ultra when triage and Super disagree, or the row is a high-value HCC upgrade (`raf_value` ≥ 0.3 and gap type is `specificity_upgrade` or `combination`). Thin or conflicting evidence becomes `abstain`, which stays on the worklist for a human.

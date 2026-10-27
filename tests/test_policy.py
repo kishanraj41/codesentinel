@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from codesentinel.nemotron.mock_reasoner import (
     apply_guideline_gate,
@@ -66,6 +67,34 @@ class PolicyTests(unittest.TestCase):
         )
         self.assertNotIn("please add", text.lower())
         self.assertIn("does not ask you to add", text.lower())
+
+
+class ProductionBoundaryTests(unittest.TestCase):
+    def test_cascade_does_not_import_eval(self):
+        root = Path(__file__).resolve().parents[1] / "codesentinel"
+        for path in root.rglob("*.py"):
+            text = path.read_text(encoding="utf-8")
+            self.assertNotIn("import eval", text, path.name)
+            self.assertNotIn("from eval", text, path.name)
+
+    def test_eval_reexports_the_production_check(self):
+        from codesentinel.policy import unsupported_existing_items as production
+        from eval.policy import unsupported_existing_items as reexported
+
+        self.assertIs(reexported, production)
+        profile = {
+            "clinical_notes": [{"text": "COPD was entered on the problem list in error. Please remove it."}],
+            "observations": [],
+            "medications": [{"name": "Metformin 500mg"}],
+            "conditions": [
+                {"icd10_code": "J44.1", "display": "COPD"},
+                {"icd10_code": "E11.9", "display": "Type 2 diabetes"},
+            ],
+        }
+        found = {item.code: item for item in production(profile)}
+        self.assertEqual(set(found), {"J44.1"})
+        self.assertEqual(found["J44.1"].assertion_status, "negated")
+        self.assertIn("in error", found["J44.1"].quote.lower())
 
 
 if __name__ == "__main__":

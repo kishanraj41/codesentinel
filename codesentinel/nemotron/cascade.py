@@ -13,6 +13,7 @@ from codesentinel.nemotron.mock_reasoner import (
     TRIAGE_INSTRUCTIONS,
     apply_guideline_gate,
     kidney_disease_is_established,
+    reconcile_triage,
     gap_type_of,
     guideline_issue,
     keywords_for,
@@ -31,6 +32,7 @@ from codesentinel.nemotron.schemas import (
     limit_words,
 )
 from codesentinel.nemotron.verifier import build_corpus, verified_quotes
+from codesentinel.policy import unsupported_existing_items
 from codesentinel.tavily.client import GuidelineClient
 
 _TIMELINE = (
@@ -53,6 +55,10 @@ _DROP_DETAIL = {
     "unsupported": "No supporting quote was found verbatim in the chart.",
     "rejected": "The adjudicator rejected this candidate.",
 }
+
+# These statuses stay on the worklist. Medication-list and lab-only charts are
+# review evidence, not negations, even when Lightning tagged them as dropped.
+_KEEP_ASSERTIONS = {"present", "medication_supported", "lab_only"}
 
 
 def run_cascade(
@@ -143,7 +149,15 @@ def run_cascade(
                 section="unknown",
                 confidence=0.5,
             )
-        if triage.assertion_status != "present":
+        triage = reconcile_triage(
+            triage,
+            code=str(gap.get("icd10_code") or ""),
+            condition=str(gap.get("condition_name") or ""),
+            notes=notes,
+            profile=profile,
+            gap=gap,
+        )
+        if triage.assertion_status not in _KEEP_ASSERTIONS:
             asserted += 1
             dropped.append(
                 _dropped(
@@ -286,6 +300,16 @@ def run_cascade(
             final_by = ULTRA
 
         decision, rationale = apply_guideline_gate(decision, gap_type, citation_dicts, rationale)
+        if triage.assertion_status == "medication_supported" and decision in {"accept", "reject"}:
+            decision = "abstain"
+            rationale = (
+                "An active medication list with a current refill supports human review, not an automatic add."
+            )
+            query_needed = True
+        elif triage.assertion_status == "lab_only" and decision in {"accept", "reject"}:
+            decision = "review"
+            rationale = "The chart has lab evidence only. A coder should confirm MEAT before this is billed."
+            query_needed = True
         if decision == "review" and gap_type in {"specificity_upgrade", "combination"} and not citation_dicts:
             query_needed = True
         if decision == "accept":
@@ -386,6 +410,14 @@ def run_cascade(
         legacy_review = [gap for gap in legacy_review if gap.get("icd10_code") not in dropped_codes]
         for item in sibling_dropped:
             legacy_rejected.append({"icd10_code": item["icd10_code"], "condition_name": item["code_display"], "decision": "reject"})
+    for row in _unsupported_existing_rows(profile):
+        worklist.append(row)
+        legacy_review.append({
+            "icd10_code": row["icd10_code"],
+            "condition_name": row["code_display"],
+            "tier": "TWO_WAY",
+            "decision": "review",
+        })
 
     order = {"accept": 0, "review": 1, "abstain": 2}
     worklist.sort(key=lambda row: (order.get(row["decision"], 9), -row["confidence"], row["icd10_code"]))
@@ -522,6 +554,8 @@ def _adjudicate(client, gap, triage: TriageResult, quotes, citations, windows=No
                 "Do not accept a code the note denies, attributes to a relative, or marks as screening or a rule-out. "
                 "A non-specific medication with no assessment is a reject. "
                 "A specific medication alone is an abstain, not an accept. "
+                "medication_supported and lab_only are human-review evidence, not negations: "
+                "abstain or review, and do not reject them. "
                 "If evidence is thin, abstain. rationale must be 60 words or fewer. "
                 "Return JSON matching this schema:\n"
                 + json.dumps(ADJUDICATION_SCHEMA)
@@ -689,12 +723,17 @@ def _suppress_unspecified_siblings(worklist: list[dict]) -> tuple[list[dict], li
     """
     accepted = [
         item for item in worklist
-        if item.get("decision") == "accept" and not _is_unspecified(str(item.get("icd10_code") or ""))
+        if item.get("decision") == "accept"
+        and item.get("gap_type") != "unsupported_existing"
+        and not _is_unspecified(str(item.get("icd10_code") or ""))
     ]
     kept: list[dict] = []
     removed: list[dict] = []
     for item in worklist:
         code = str(item.get("icd10_code") or "")
+        if item.get("gap_type") == "unsupported_existing":
+            kept.append(item)
+            continue
         family = _code_family(code)
         more_specific = any(
             _code_family(str(other.get("icd10_code") or "")) == family
@@ -719,6 +758,52 @@ def _suppress_unspecified_siblings(worklist: list[dict]) -> tuple[list[dict], li
         else:
             kept.append(item)
     return kept, removed
+
+
+def _unsupported_existing_rows(profile: dict) -> list[dict]:
+    """Same two-way check the offline policy runs, attached to the live cascade.
+
+    Contradicted or meat-less coded conditions are review items. They are not
+    approved adds, so the decision stays review even when the policy would
+    accept the finding.
+    """
+    rows = []
+    patient = str(profile.get("fhir_patient_id") or "chart")
+    for item in unsupported_existing_items(profile):
+        quote = item.quote or "No mention, medication, or supporting lab in this chart"
+        if item.assertion_status == "negated":
+            rationale = "This coded condition is contradicted by the chart and should be reviewed for removal."
+        else:
+            rationale = "No mention, medication, or supporting lab supports this coded condition."
+        rows.append({
+            "id": f"{patient}:{item.code}",
+            "icd10_code": item.code,
+            "code_display": item.condition_name or item.code,
+            "gap_type": "unsupported_existing",
+            "upgrade_from": None,
+            "decision": "review",
+            "confidence": 0.86 if item.assertion_status == "negated" else 0.7,
+            "assertion_status": item.assertion_status if item.assertion_status in {
+                "negated", "unsupported_existing",
+            } else "unsupported_existing",
+            "section": "chart",
+            "supporting_quotes": [quote],
+            "verified_quotes": [quote],
+            "meat": {"monitor": None, "evaluate": None, "assess": None, "treat": None},
+            "lab": None,
+            "hcc_category": "",
+            "hcc_description": "",
+            "raf_value": 0.0,
+            "annual_revenue_impact": 0.0,
+            "rationale": rationale,
+            "physician_query_needed": False,
+            "physician_query": None,
+            "decided_by": "codesentinel.unsupported_existing",
+            "tier": "TWO_WAY",
+            "guideline_citations": [],
+            "evidence_sources": [quote],
+        })
+    return rows
 
 
 def _patient_id(profile: dict, gap: dict) -> str:
