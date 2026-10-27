@@ -1,4 +1,4 @@
-"""Run the six-config eval and write eval/results plus eval/RESULTS.md.
+"""Run the six-config eval and write eval/results/<mode>/ (summary.json, RESULTS.md, per-config files).
 
 Default dataset is the Gold-B held-out test split. Gold-A is written beside it.
 Live Nemotron/Tavily runs only when the API keys are set and EVAL_OFFLINE is not 1.
@@ -14,7 +14,19 @@ from pathlib import Path
 from typing import Any
 
 from eval.adapter import AuditAdapter, guardrail_probe
-from eval.charts import GOLD_DIR, RESULTS_DIR, iter_gold_b, load_gold_a
+from eval.charts import GOLD_DIR, RESULTS_DIR as RESULTS_ROOT, iter_gold_b, load_gold_a
+
+# Live runs publish to eval/results/live; mock and replay runs are regression output in
+# eval/results/mock. EVAL_OUT_DIR overrides both.
+RESULTS_DIR = RESULTS_ROOT / "mock"
+
+
+def _set_results_dir(run_mode: str) -> Path:
+    global RESULTS_DIR
+    override = os.environ.get("EVAL_OUT_DIR", "").strip()
+    RESULTS_DIR = Path(override) if override else RESULTS_ROOT / ("live" if run_mode == "live" else "mock")
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    return RESULTS_DIR
 from eval.generate import write_corpus
 from eval.lexicon import CONFIG_LABELS, CONFIGS
 from eval.mtsamples_eval import measure as measure_mtsamples
@@ -223,29 +235,21 @@ def _comparisons(configs: list[dict]) -> dict[str, Any]:
     return {"versus": "C0+", "configs": out}
 
 
-def _markdown(summary: dict) -> str:
-    lines = []
-    lines.append("# CodeSentinel eval results")
-    lines.append("")
-    lines.append(summary["mode_detail"])
-    lines.append("")
-    ds = summary["dataset"]
-    lines.append(
-        f"Dataset **{ds['name']}** split `{ds['split']}`: {ds['n_charts']} synthetic FHIR charts, "
-        f"seed {ds.get('seed')}. Text source: {ds.get('text_source')}."
-    )
-    lines.append("")
-    lines.append("## Configuration table")
-    lines.append("")
-    lines.append("| Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart |")
-    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
-    for cfg in summary["configs"]:
-        def fmt(value: Any, digits: int = 3) -> str:
-            if value is None:
-                return "—"
-            if isinstance(value, float):
-                return f"{value:.{digits}f}"
-            return str(value)
+def _fmt(value: Any, digits: int = 3) -> str:
+    if value is None:
+        return "—"
+    if isinstance(value, float):
+        return f"{value:.{digits}f}"
+    return str(value)
+
+
+def _config_table(configs: list[dict]) -> list[str]:
+    fmt = _fmt
+    lines = [
+        "| Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for cfg in configs:
         hard = (cfg.get("hard_negative_pass_rate") or {}).get("overall")
         lines.append(
             "| {id} | {p} | {r} | {f} | {tp} | {fp} | {fn} | {rev} | {fpc} | {hard} | {abs_} | {p50} | {p95} | {cost} | {tav} |".format(
@@ -264,11 +268,58 @@ def _markdown(summary: dict) -> str:
                 tav=fmt(cfg["tavily_credits_per_chart"], 2),
             )
         )
+    return lines
+
+
+def _markdown(summary: dict) -> str:
+    lines = []
+    if summary.get("mode") == "live":
+        lines.append("# CodeSentinel eval results: live run on Nebius Token Factory")
+    else:
+        lines.append("# CodeSentinel eval results: mock regression run (not live model quality)")
+        lines.append("")
+        lines.append(
+            "> This file is offline regression output from the recorded client. The published live "
+            "numbers are in [eval/results/live/RESULTS.md](../live/RESULTS.md)."
+        )
+    lines.append("")
+    lines.append(summary["mode_detail"])
+    lines.append("")
+    gold_a = summary.get("gold_a")
+    if isinstance(gold_a, dict) and gold_a.get("configs"):
+        lines.append("## Gold-A: 10 hand-labeled charts" + (" (headline)" if summary.get("mode") == "live" else ""))
+        lines.append("")
+        lines.append(
+            "Ten outpatient charts (`pt-001` to `pt-010`), labeled by hand. Labels are pending "
+            "certified-coder sign-off (`review_status` in `eval/gold/gold_a.json`), and ten charts "
+            "give wide confidence intervals."
+        )
+        lines.append("")
+        lines.extend(_config_table(gold_a["configs"]))
+        lines.append("")
+    lines.append("## Gold-B: hard-negative and regression suite")
+    lines.append("")
+    lines.append(
+        "Author-constructed charts built around specific traps (negation, family history, screening, "
+        "medication-only, wrong specificity). Use it to catch regressions, not as a benchmark."
+    )
+    lines.append("")
+    ds = summary["dataset"]
+    lines.append(
+        f"Dataset **{ds['name']}** split `{ds['split']}`: {ds['n_charts']} generated FHIR test charts, "
+        f"seed {ds.get('seed')}. Text source: {ds.get('text_source')}."
+    )
+    lines.append("")
+    lines.extend(_config_table(summary["configs"]))
     lines.append("")
     lines.append("C0 is the approved bucket only. C0+ is approved plus review, which is the queue a coder actually sees. The headline comparison is C4 against C0+.")
     lines.append("")
-    lines.append("Latency on a mock run is local Python time. It is not Token Factory latency. Cost on a mock run is `characters/4` times the public catalog price and is labeled as an estimate.")
-    lines.append("")
+    if summary.get("mode") != "live":
+        lines.append("Latency on a mock run is local Python time. It is not Token Factory latency. Cost on a mock run is `characters/4` times the public catalog price and is labeled as an estimate.")
+        lines.append("")
+    else:
+        lines.append("Latency is wall time per chart against Token Factory. Cost is reported token usage times the public catalog price.")
+        lines.append("")
     lines.append("## Review burden vs recall")
     lines.append("")
     lines.append("| Config | Recall | Review items / chart | $ / chart |")
@@ -381,7 +432,7 @@ def _markdown(summary: dict) -> str:
     lines.append("")
     lines.append("- Do not cite mock precision, recall, or dollars as Nemotron or Tavily measurements.")
     lines.append("- Do not cite MTSamples for accuracy.")
-    lines.append("- Gold-A is 10 hand labels and is not the headline benchmark. A human coder has not signed those labels yet (`review_status` in `eval/gold/gold_a.json`).")
+    lines.append("- Gold-A is the headline set, but it is 10 hand-labeled charts and a certified coder has not signed those labels yet (`review_status` in `eval/gold/gold_a.json`).")
     lines.append("- Gold-B labels were written by construction, by the same author as the offline policy. The policy does not read the labels, but it was designed around the same phenomena. Held-out means the test charts were not used to edit prompts; it does not mean an independent model.")
     lines.append("")
     return "\n".join(lines) + "\n"
@@ -447,6 +498,13 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
                 "mode=live needs both NEBIUS_API_KEY and TAVILY_API_KEY "
                 f"({', '.join(missing)} unset). This command will not relabel a mock run as live."
             )
+    if mode == "live":
+        planned_mode = "live"
+    elif mode == "mock" or not os.environ.get("NEBIUS_API_KEY") or os.environ.get("EVAL_OFFLINE") == "1":
+        planned_mode = "mock"
+    else:
+        planned_mode = "live"
+    _set_results_dir(planned_mode)
     _ensure_gold_b()
     adapter = AuditAdapter()
     rows = iter_gold_b(split)
@@ -521,6 +579,14 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
         "backend": "codesentinel.nemotron" if adapter.backend else None,
         "live_errors": adapter.live_errors,
         "dataset": _dataset_block("gold-b", split, len(rows)),
+        "gold_a": (
+            {
+                "dataset": {"name": "gold-a", "split": "gold-a", "n_charts": len(gold_a_rows)},
+                "configs": [_round(gold_a[cid]["summary"]) for cid in CONFIGS],
+            }
+            if gold_a is not None
+            else None
+        ),
         "configs": configs,
         "chart_series": [
             {
@@ -553,7 +619,7 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     _write_config_files(per_config, prefix="")
     (RESULTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    results_md = Path(__file__).resolve().parent / "RESULTS.md"
+    results_md = RESULTS_DIR / "RESULTS.md"
     results_md.write_text(_markdown(summary), encoding="utf-8")
     print(f"Wrote {RESULTS_DIR / 'summary.json'}")
     print(f"Wrote {results_md}")

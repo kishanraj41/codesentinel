@@ -1,0 +1,1607 @@
+{
+  "summary": {
+    "n_charts": 66,
+    "tp": 79,
+    "fp": 53,
+    "fn": 0,
+    "precision": 0.598485,
+    "precision_ci95": [
+      0.513217,
+      0.678183
+    ],
+    "recall": 1.0,
+    "recall_ci95": [
+      0.953627,
+      1.0
+    ],
+    "f1": 0.748815,
+    "review_items": 132,
+    "review_burden_per_chart": 2.0,
+    "false_positives_per_chart": 0.80303,
+    "hard_negative_pass_rate": {
+      "overall": 0.0,
+      "pass": 0,
+      "total": 53,
+      "by_category": {
+        "acute_not_chronic": {
+          "pass": 0,
+          "total": 3,
+          "rate": 0.0
+        },
+        "copied_forward": {
+          "pass": 0,
+          "total": 2,
+          "rate": 0.0
+        },
+        "cross_sentence_negation": {
+          "pass": 0,
+          "total": 3,
+          "rate": 0.0
+        },
+        "family_history": {
+          "pass": 0,
+          "total": 2,
+          "rate": 0.0
+        },
+        "hypothetical_plan": {
+          "pass": 0,
+          "total": 5,
+          "rate": 0.0
+        },
+        "medication_only": {
+          "pass": 0,
+          "total": 20,
+          "rate": 0.0
+        },
+        "negation": {
+          "pass": 0,
+          "total": 7,
+          "rate": 0.0
+        },
+        "resolved": {
+          "pass": 0,
+          "total": 2,
+          "rate": 0.0
+        },
+        "screening": {
+          "pass": 0,
+          "total": 2,
+          "rate": 0.0
+        },
+        "unspecified_sibling": {
+          "pass": 0,
+          "total": 5,
+          "rate": 0.0
+        },
+        "wrong_specificity": {
+          "pass": 0,
+          "total": 2,
+          "rate": 0.0
+        }
+      }
+    },
+    "unsupported_existing": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "precision": null,
+      "recall": 0.0
+    },
+    "unsupported_claim_drops": 0,
+    "abstain_count": 0,
+    "abstain_rate": 0.0,
+    "candidates_considered": 132,
+    "latency_p50_s": 2e-06,
+    "latency_p95_s": 3e-06,
+    "cost_per_chart_usd": 0.0,
+    "tavily_credits_per_chart": 0.0,
+    "tavily_cache_hits_per_chart": 0.0,
+    "tavily_credits_if_uncached_per_chart": 0.0,
+    "guideline_decision_changes": 0,
+    "id": "C0+",
+    "label": "Rules only, approved + review",
+    "latency_scope": "local_offline",
+    "cost_basis": "none"
+  },
+  "charts": [
+    {
+      "patient_id": "gb-0002",
+      "scenario": "missing_dm",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 1,
+      "latency_s": 3.3570104278624058e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0003",
+      "scenario": "missing_dm",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 1,
+      "latency_s": 1.8550199456512928e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0005",
+      "scenario": "missing_ckd",
+      "tp": [
+        "N18.3"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "N18.3",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "N18.3"
+      ],
+      "review_items": 2,
+      "latency_s": 2.341985236853361e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0006",
+      "scenario": "missing_ckd",
+      "tp": [
+        "N18.3"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "N18.3",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "N18.3"
+      ],
+      "review_items": 2,
+      "latency_s": 2.4529872462153435e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0008",
+      "scenario": "missing_hf",
+      "tp": [
+        "I50.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I50.9"
+      ],
+      "gold_codes": [
+        "I50.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.4319957699626684e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0009",
+      "scenario": "missing_hf",
+      "tp": [
+        "I50.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I50.9"
+      ],
+      "gold_codes": [
+        "I50.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.6840058378875256e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0011",
+      "scenario": "missing_copd",
+      "tp": [
+        "J44.1"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "J44.1"
+      ],
+      "gold_codes": [
+        "J44.1"
+      ],
+      "review_items": 1,
+      "latency_s": 1.3769895303994417e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0012",
+      "scenario": "missing_copd",
+      "tp": [
+        "J44.1"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "J44.1"
+      ],
+      "gold_codes": [
+        "J44.1"
+      ],
+      "review_items": 1,
+      "latency_s": 1.7929996829479933e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0014",
+      "scenario": "missing_hypothyroid",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E03.9"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.4719844330102205e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0015",
+      "scenario": "missing_hypothyroid",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E03.9"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.3360113371163607e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0017",
+      "scenario": "missing_hld",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E78.5"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 1,
+      "latency_s": 1.4179968275129795e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0018",
+      "scenario": "missing_hld",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E78.5"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 1,
+      "latency_s": 1.3230019249022007e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0020",
+      "scenario": "missing_htn",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 2,
+      "latency_s": 2.3109896574169397e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0021",
+      "scenario": "missing_htn",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 2,
+      "latency_s": 2.188986400142312e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0023",
+      "scenario": "missing_anemia",
+      "tp": [
+        "D64.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "D64.9"
+      ],
+      "gold_codes": [
+        "D64.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.3090029824525118e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0024",
+      "scenario": "missing_anemia",
+      "tp": [
+        "D64.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "D64.9"
+      ],
+      "gold_codes": [
+        "D64.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.3590033631771803e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0026",
+      "scenario": "missing_depression",
+      "tp": [
+        "F32.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "F32.9"
+      ],
+      "gold_codes": [
+        "F32.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.28799001686275e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0027",
+      "scenario": "missing_depression",
+      "tp": [
+        "F32.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "F32.9"
+      ],
+      "gold_codes": [
+        "F32.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.36898597702384e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0029",
+      "scenario": "specificity_e1165",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 1,
+      "latency_s": 1.5989935491234064e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0030",
+      "scenario": "specificity_e1165",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 1,
+      "latency_s": 1.5439873095601797e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0032",
+      "scenario": "combo_e1122",
+      "tp": [
+        "E11.22",
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 2.28799763135612e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0033",
+      "scenario": "combo_e1122",
+      "tp": [
+        "E11.22",
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 2.0650040823966265e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0035",
+      "scenario": "combo_i129",
+      "tp": [
+        "I12.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I12.9"
+      ],
+      "gold_codes": [
+        "I12.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.569977030158043e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0036",
+      "scenario": "combo_i129",
+      "tp": [
+        "I12.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I12.9"
+      ],
+      "gold_codes": [
+        "I12.9"
+      ],
+      "review_items": 1,
+      "latency_s": 1.5420082490891218e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0038",
+      "scenario": "combo_with_convention",
+      "tp": [
+        "E11.22",
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 1.8589780665934086e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0039",
+      "scenario": "combo_with_convention",
+      "tp": [
+        "E11.22",
+        "E11.65"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 2.161978045478463e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0041",
+      "scenario": "combo_forbid",
+      "tp": [
+        "E11.65",
+        "I12.9"
+      ],
+      "fp": [
+        "E11.22"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65",
+        "I12.9"
+      ],
+      "gold_codes": [
+        "E11.65",
+        "I12.9"
+      ],
+      "review_items": 3,
+      "latency_s": 2.5439949240535498e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0042",
+      "scenario": "combo_forbid",
+      "tp": [
+        "E11.65",
+        "I12.9"
+      ],
+      "fp": [
+        "E11.22"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65",
+        "I12.9"
+      ],
+      "gold_codes": [
+        "E11.65",
+        "I12.9"
+      ],
+      "review_items": 3,
+      "latency_s": 2.8469949029386044e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0044",
+      "scenario": "missing_osa",
+      "tp": [
+        "G47.33"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "G47.33"
+      ],
+      "gold_codes": [
+        "G47.33"
+      ],
+      "review_items": 1,
+      "latency_s": 1.981999957934022e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0045",
+      "scenario": "missing_osa",
+      "tp": [
+        "G47.33"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "G47.33"
+      ],
+      "gold_codes": [
+        "G47.33"
+      ],
+      "review_items": 1,
+      "latency_s": 1.8200080376118422e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0047",
+      "scenario": "missing_afib",
+      "tp": [
+        "I48.91"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I48.91"
+      ],
+      "gold_codes": [
+        "I48.91"
+      ],
+      "review_items": 1,
+      "latency_s": 1.281994627788663e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0048",
+      "scenario": "missing_afib",
+      "tp": [
+        "I48.91"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I48.91"
+      ],
+      "gold_codes": [
+        "I48.91"
+      ],
+      "review_items": 1,
+      "latency_s": 1.380016328766942e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0050",
+      "scenario": "hf_specificity",
+      "tp": [
+        "I50.22"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I50.22",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "I50.22"
+      ],
+      "review_items": 2,
+      "latency_s": 2.154003595933318e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0051",
+      "scenario": "hf_specificity",
+      "tp": [
+        "I50.22"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I50.22",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "I50.22"
+      ],
+      "review_items": 2,
+      "latency_s": 2.5640183594077826e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0053",
+      "scenario": "med_only_true",
+      "tp": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.9",
+        "E78.5",
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "review_items": 4,
+      "latency_s": 3.455003025010228e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0054",
+      "scenario": "med_only_true",
+      "tp": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.9",
+        "E78.5",
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "review_items": 4,
+      "latency_s": 3.04199056699872e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0056",
+      "scenario": "negation_hf",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "I50.9",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "I50.9",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 3,
+      "latency_s": 2.9730144888162613e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0057",
+      "scenario": "negation_hf",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "I50.9",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "I50.9",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 3,
+      "latency_s": 2.4189939722418785e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0059",
+      "scenario": "family_hf",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E78.5",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 2,
+      "latency_s": 2.115004463121295e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0060",
+      "scenario": "family_hf",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E78.5",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 2,
+      "latency_s": 2.0180013962090015e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0062",
+      "scenario": "resolved_hf",
+      "tp": [
+        "J44.1"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I50.9",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "J44.1"
+      ],
+      "review_items": 2,
+      "latency_s": 2.255983417853713e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0063",
+      "scenario": "resolved_hf",
+      "tp": [
+        "J44.1"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I50.9",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "J44.1"
+      ],
+      "review_items": 2,
+      "latency_s": 2.2809836082160473e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0065",
+      "scenario": "screening_mdd",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "F32.9",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "F32.9",
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 3,
+      "latency_s": 3.048015059903264e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0066",
+      "scenario": "screening_mdd",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "F32.9",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "F32.9",
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 3,
+      "latency_s": 2.654996933415532e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0068",
+      "scenario": "evaluate_copd",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [
+        "J44.1"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E03.9",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 2,
+      "latency_s": 2.0599982235580683e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0069",
+      "scenario": "evaluate_copd",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [
+        "J44.1"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E03.9",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 2,
+      "latency_s": 2.142012817785144e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0071",
+      "scenario": "copy_forward_copd",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [
+        "J44.1"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.65",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 2.4679757189005613e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0072",
+      "scenario": "copy_forward_copd",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [
+        "J44.1"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.65",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 1.934007741510868e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0073",
+      "scenario": "unsupported_copd",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 2,
+      "latency_s": 2.1329906303435564e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0074",
+      "scenario": "unsupported_copd",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 2,
+      "latency_s": 1.9859871827065945e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0075",
+      "scenario": "unsupported_copd",
+      "tp": [
+        "I10"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "I10",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "I10"
+      ],
+      "review_items": 2,
+      "latency_s": 1.84800592251122e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0076",
+      "scenario": "med_fp_multi",
+      "tp": [],
+      "fp": [
+        "F32.9",
+        "I10",
+        "K21.0",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "F32.9",
+        "I10",
+        "K21.0",
+        "N18.9"
+      ],
+      "gold_codes": [],
+      "review_items": 4,
+      "latency_s": 3.556982846930623e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0077",
+      "scenario": "med_fp_multi",
+      "tp": [],
+      "fp": [
+        "F32.9",
+        "I10",
+        "K21.0",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "F32.9",
+        "I10",
+        "K21.0",
+        "N18.9"
+      ],
+      "gold_codes": [],
+      "review_items": 4,
+      "latency_s": 2.8050271794199944e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0078",
+      "scenario": "med_fp_multi",
+      "tp": [],
+      "fp": [
+        "F32.9",
+        "I10",
+        "K21.0",
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "F32.9",
+        "I10",
+        "K21.0",
+        "N18.9"
+      ],
+      "gold_codes": [],
+      "review_items": 4,
+      "latency_s": 2.849003067240119e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0079",
+      "scenario": "acute_egfr",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [
+        "N18.3"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E78.5",
+        "N18.3"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 2,
+      "latency_s": 2.1939922589808702e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0080",
+      "scenario": "acute_egfr",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [
+        "N18.3"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E78.5",
+        "N18.3"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 2,
+      "latency_s": 1.7250131350010633e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0081",
+      "scenario": "acute_egfr",
+      "tp": [
+        "E78.5"
+      ],
+      "fp": [
+        "N18.3"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E78.5",
+        "N18.3"
+      ],
+      "gold_codes": [
+        "E78.5"
+      ],
+      "review_items": 2,
+      "latency_s": 1.981999957934022e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0082",
+      "scenario": "possible_nafld",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [
+        "K76.89"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.65",
+        "K76.89"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 1.7949787434190512e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0083",
+      "scenario": "possible_nafld",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [
+        "K76.89"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.65",
+        "K76.89"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 1.6980047803372145e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0084",
+      "scenario": "possible_nafld",
+      "tp": [
+        "E11.65"
+      ],
+      "fp": [
+        "K76.89"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.65",
+        "K76.89"
+      ],
+      "gold_codes": [
+        "E11.65"
+      ],
+      "review_items": 2,
+      "latency_s": 1.6250123735517263e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0085",
+      "scenario": "cross_sentence_retraction",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E03.9",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 2,
+      "latency_s": 1.8719874788075686e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0086",
+      "scenario": "cross_sentence_retraction",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E03.9",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 2,
+      "latency_s": 1.8700084183365107e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0087",
+      "scenario": "cross_sentence_retraction",
+      "tp": [
+        "E03.9"
+      ],
+      "fp": [
+        "I50.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E03.9",
+        "I50.9"
+      ],
+      "gold_codes": [
+        "E03.9"
+      ],
+      "review_items": 2,
+      "latency_s": 1.7770216800272465e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0088",
+      "scenario": "combo_parent_uncoded",
+      "tp": [
+        "E11.22",
+        "E11.65",
+        "N18.3"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65",
+        "N18.3",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65",
+        "N18.3"
+      ],
+      "review_items": 4,
+      "latency_s": 2.889020834118128e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0089",
+      "scenario": "combo_parent_uncoded",
+      "tp": [
+        "E11.22",
+        "E11.65",
+        "N18.3"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65",
+        "N18.3",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65",
+        "N18.3"
+      ],
+      "review_items": 4,
+      "latency_s": 2.6779889594763517e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "gb-0090",
+      "scenario": "combo_parent_uncoded",
+      "tp": [
+        "E11.22",
+        "E11.65",
+        "N18.3"
+      ],
+      "fp": [
+        "N18.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "E11.22",
+        "E11.65",
+        "N18.3",
+        "N18.9"
+      ],
+      "gold_codes": [
+        "E11.22",
+        "E11.65",
+        "N18.3"
+      ],
+      "review_items": 4,
+      "latency_s": 2.8529902920126915e-06,
+      "cost_usd": 0.0,
+      "mode": "rules",
+      "degraded_reasons": []
+    }
+  ]
+}

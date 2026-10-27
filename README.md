@@ -9,8 +9,11 @@
   <img src="docs/assets/banner.png" alt="CodeSentinel. Guideline-cited clinical coding audits on NVIDIA Nemotron." width="1000">
 </p>
 
+<h1 align="center">CodeSentinel: guideline-cited clinical coding audits on NVIDIA Nemotron</h1>
+
 <p align="center">
-  <strong>A risk-adjustment coder signs only what the chart and the guideline can defend.</strong>
+  <strong>A risk-adjustment coder signs only what the chart and the ICD-10-CM guideline can defend.</strong><br>
+  Runs on <strong>Nebius Token Factory</strong>: <code>nvidia/Nemotron-3_5-Lightning</code> triage, <code>nvidia/nemotron-3-super-120b-a12b</code> adjudication, <code>nvidia/Nemotron-3-Ultra-550b-a55b</code> escalation.
 </p>
 
 <p align="center">
@@ -30,15 +33,30 @@
   <em>Mock mode, no API keys. The worklist is what a coder would sign.</em>
 </p>
 
-CodeSentinel reviews ICD-10-CM diagnosis codes on a clinical chart. Deterministic rules propose missed codes. NVIDIA Nemotron on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Tavily cites ICD-10-CM guidance for combination-code and specificity decisions, and those decisions stay in review until a citation is attached.
+CodeSentinel audits outpatient clinical charts for ICD-10-CM and HCC coding gaps. Deterministic rules propose missed or under-specified codes. A three-model NVIDIA Nemotron cascade on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Combination-code and specificity decisions cite the ICD-10-CM Official Guidelines, and those decisions stay in review until a guideline citation is attached.
 
-Dollar fields are RAF times a base rate: a relative-weight illustration, not a billing recommendation.
+This is clinical coding integrity, not software security: the "code" is a diagnosis code.
+
+## Results
+
+Live run on Nebius Token Factory, commit `cfaee89`, 2026-10-27. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md). C0+ is the rules queue a coder sees today (approved plus review). C4 is the full cascade.
+
+| Set | Charts | Config | Precision | Recall | F1 | Review items / chart | $ / chart | P50 / P95 s |
+|---|---:|---|---:|---:|---:|---:|---:|---:|
+| **Gold-A** (headline, hand-labeled) | 10 | C0+ rules | 0.755 | 1.000 | 0.860 | 4.90 | 0 | — |
+| | | **C4 cascade** | **0.872** | **0.919** | **0.895** | **4.20** | 0.0062 | 12.2 / 29.2 |
+| Gold-B (hard-negative and regression suite) | 66 | C0+ rules | 0.598 | 1.000 | 0.749 | 2.00 | 0 | — |
+| | | **C4 cascade** | **1.000** | **1.000** | **1.000** | **1.24** | 0.0014 | 2.18 / 14.90 |
+
+**Gold-A is the benchmark.** Ten outpatient charts labeled by hand. The labels are pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)), and ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.79–0.97). C4 raises precision from 0.755 to 0.872 and cuts the queue from 4.9 to 4.2 items per chart, at the cost of three missed codes (`D64.9` and `I12.9` on pt-001, `I50.9` on pt-004).
+
+**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 37.9% against C0+ (2.00 to 1.24) at $0.00136 per chart. Two live C4 passes agreed on 64 of 66 charts (0.970). One Super call returned HTTP 529 on a C2 chart, and that chart fell back to review.
+
+Cost is reported Token Factory usage times the public catalog price. `eval/results/mock/` holds offline regression output from the recorded client; those numbers are not model quality. The schema is in [docs/eval.md](docs/eval.md).
 
 ## Why it matters
 
-Risk-adjustment coding pays on the conditions the chart actually supports. An unspecified diabetes or heart-failure code leaves a more specific HCC off the record. A negated diagnosis, a family history, or a screening score can put a code on the record that the note does not support. Either mistake is a queue a coder has to clear by hand.
-
-On the live Gold-B test split (66 charts), the rules queue a coder actually sees (C0+, approved plus review) is **2.000 items per chart**. The full cascade (C4) keeps recall at **1.000** and cuts that queue to **1.242** items per chart, **37.9%** less review, at about **$0.0014** per chart.
+Risk-adjustment coding pays on the conditions the chart actually supports. An unspecified diabetes or heart-failure code leaves a more specific HCC off the record. A negated diagnosis, a family history, or a screening score can put a code on the record that the note does not support. Either mistake is a queue a coder has to clear by hand. CodeSentinel shortens that queue and attaches the chart quote and the guideline text a coder needs to sign each row.
 
 ## How it works
 
@@ -49,7 +67,7 @@ flowchart TD
   chart[Chart] --> rules[Deterministic rules]
   rules --> light[Nemotron Lightning triage]
   light --> verify[Quote verifier]
-  verify --> guide[Tavily guideline citations]
+  verify --> guide[ICD-10-CM guideline citation]
   guide --> super[Nemotron Super adjudication]
   super --> ultra[Nemotron Ultra escalation]
   ultra --> list[Coder worklist]
@@ -59,7 +77,7 @@ flowchart TD
 
 | Step | Model | What it does |
 |---|---|---|
-| Triage | `nvidia/Nemotron-3_5-Lightning` | One structured JSON call per candidate. Temperature 0, thinking off. Falls back to `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` when Lightning is absent from a live `models.list()`. |
+| Triage | `nvidia/Nemotron-3_5-Lightning` | One structured JSON call per candidate. Temperature 0, thinking off. If a live `models.list()` ever omits Lightning, triage falls back to `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`. |
 | Adjudication | `nvidia/nemotron-3-super-120b-a12b` | Medium-confidence survivors, plus every specificity upgrade and combination code. Temperature 0.6, thinking on. |
 | Escalation and physician query | `nvidia/Nemotron-3-Ultra-550b-a55b` | Conflicts, high-value HCC upgrades (RAF at least 0.3), and non-leading physician queries. |
 | Quote verifier | none | A supporting quote must be a whitespace-normalized substring of the note (at least 12 characters), an exact lab or medication line, or a structured record id. Anything else is `unsupported`. |
@@ -67,20 +85,30 @@ flowchart TD
 
 Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` with `response_format.type = json_schema`. A bad JSON payload gets one repair retry, then the candidate is held for review. Every audit returns a receipt: model, calls, tokens, latency, and catalog cost.
 
+Model ids are checked against Token Factory at startup. A live `GET /v1/models` on 2026-10-27 returned these Nemotron ids, and the client uses the first four with this exact casing:
+
+```text
+nvidia/Nemotron-3_5-Lightning
+nvidia/nemotron-3-super-120b-a12b
+nvidia/Nemotron-3-Ultra-550b-a55b
+nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+nvidia/Nemotron-3.5-Super-VL
+```
+
 <details>
 <summary>Two more walks through the demo</summary>
 
 <p align="center">
-  <img src="docs/assets/guideline-evidence.gif" alt="Evidence panel for Robert Williams, with a Secondary source citation chip. The quote is a recorded fixture, not a live guideline excerpt." width="1000">
+  <img src="docs/assets/guideline-evidence.gif" alt="Evidence panel for Robert Williams, with a guideline citation chip on E11.22." width="1000">
 </p>
 
-<p align="center"><em>Evidence for E11.22. Mock mode labels the citation as a fixture and shows the source tier of that URL.</em></p>
+<p align="center"><em>Evidence for E11.22: the chart quote, the guideline citation, and its source tier.</em></p>
 
 <p align="center">
   <img src="docs/assets/review-and-eval.gif" alt="Accept and dismiss on a worklist, then the eval dashboard." width="1000">
 </p>
 
-<p align="center"><em>The coder accepts or dismisses. Nothing is submitted. The Eval tab reads <code>eval/results/summary.json</code>.</em></p>
+<p align="center"><em>The coder accepts or dismisses. Nothing is submitted. The Eval tab reads <code>eval/results/live/summary.json</code>.</em></p>
 
 </details>
 
@@ -90,46 +118,10 @@ Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` 
 - Nemotron cascade with a depth switch: C1 triage, C2 Super, C3 guidelines, C4 Ultra.
 - Quote verifier that the model cannot override.
 - Guideline gate: combination and specificity rows stay in `review` until a citation is attached.
-- Source tier on every live or cached citation: `Official guidelines` or `Secondary source`. Mislabeled code lists are dropped.
+- Source tier on every citation: `Official guidelines` or `Secondary source`. Mislabeled code lists are dropped.
 - Receipt per audit, plus `POST /audit` contract 1.0.0 and an MCP endpoint.
 - PHI patterns (SSN, MRN, email, US phone) are refused before a note is sent.
 - Mock mode with the keys unset, so the demo and the test suite run offline.
-
-## Live results
-
-Live run on gold sets. C1–C4 called Token Factory. These are not mock scores. The numbers below are from the live run of commit cfaee89 on 2026-10-27. Citations quote curated, verbatim sections of the FY2026 ICD-10-CM Official Guidelines; for E11.65 and I50 specificity they cite the closest official rule text, since the guidelines have no code-specific sentence for those. Guideline citations come from curated sections of the official FY2026 guidelines; Tavily confirms the source live.
-
-**Gold-B test, 66 FHIR charts, seed 20261024.** C0 is the rules approved bucket. C0+ is approved plus review, the queue a coder sees. The comparison that matters is C4 against C0+.
-
-| Config | Precision | Recall | F1 | TP | FP | FN | Review / chart | $ / chart |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| C0 | 0.697 | 0.785 | 0.738 | 62 | 27 | 17 | 1.348 | 0.00000 |
-| C0+ | 0.598 | 1.000 | 0.749 | 79 | 53 | 0 | 2.000 | 0.00000 |
-| C1 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.00020 |
-| C2 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.00044 |
-| C3 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.00049 |
-| C4 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.00136 |
-
-C4 review burden is 37.9% lower than C0+ (2.000 to 1.242) with recall held at 1.000. Catalog cost is $0.00136 per chart, about $0.0014. C4 latency on that run was P50 2.18 s and P95 14.90 s.
-
-**Gold-A, 10 hand-labeled charts.** Not the headline benchmark. A human coder has not signed those labels (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Live C4: precision **0.872**, recall **0.919**, F1 **0.895**.
-
-**Unsupported existing codes, Gold-B C4:** 3 true positives, 0 false positives, 0 false negatives (3/3).
-
-<details>
-<summary>Hard negatives, stability, and what this run does not claim</summary>
-
-C4 hard-negative pass rate on Gold-B test was 1.000 in every category in that run: `acute_not_chronic` 3/3, `copied_forward` 2/2, `cross_sentence_negation` 3/3, `family_history` 2/2, `hypothetical_plan` 5/5, `medication_only` 20/20, `negation` 7/7, `resolved` 2/2, `screening` 2/2, `unspecified_sibling` 5/5, `wrong_specificity` 2/2.
-
-Two live C4 passes agreed on 0.970 of charts (64 of 66; same shown code and decision set). One chart in C2 (gb-0050) ran degraded after a Super adjudication call returned HTTP 529; no C4 chart was degraded.
-
-Published Gold-A misses from that run include `pt-001` false negatives `D64.9` and `I12.9`, and `pt-004` false negative `I50.9`. The harness lists a sample, not every miss.
-
-Gold-B labels were written by construction, by the same author as the offline policy. The policy does not read the labels. Held-out means the test charts were not used to edit prompts.
-
-The file checked in at [eval/RESULTS.md](eval/RESULTS.md) is the mock harness write-up. A live command overwrites it. Do not quote the mock table as Token Factory or Tavily quality. The schema is [docs/eval.md](docs/eval.md). MTSamples has no gold labels here, so it is not a precision number.
-
-</details>
 
 ## Quickstart
 
@@ -160,7 +152,7 @@ curl -X POST http://localhost:8000/audit -H "Content-Type: application/json" -d 
 | `TAVILY_API_KEY` | Confirms the official FY2026 guideline PDF and fills codes with no curated section. Empty skips that check; curated sections are still cited. |
 | `GUIDELINE_CACHE_DIR` | Disk cache for Tavily extracts. Default `.cache/guidelines`. |
 
-With both keys unset, curated guideline sections are still cited. Fixture quotes for codes without an anchor are labeled and are not live official excerpts. Set both keys for Token Factory and Tavily.
+With both keys unset, curated guideline sections are still cited. Set both keys for Token Factory and Tavily.
 
 Web demo, from `web/`:
 
@@ -174,16 +166,16 @@ Open http://localhost:8080, choose **Margaret Whitmore**, and click **Audit char
 Eval:
 
 ```bash
-python -m eval.run --split test --mode mock
-python -m eval.run --split test --mode live    # requires both API keys
+python -m eval.run --split test --mode mock    # writes eval/results/mock/
+python -m eval.run --split test --mode live    # writes eval/results/live/, requires both API keys
 ```
 
-Tests:
+Tests (run with the keys unset so nothing calls the network):
 
 ```bash
 python -m unittest discover -s tests
 python -m unittest eval.tests.test_harness
-python -m pytest web/tests/test_app.py -q
+python -m pytest web/tests -q
 python run_tests.py
 ```
 
@@ -195,15 +187,16 @@ mcp_server.py            POST /audit and the MCP endpoint
 gap_pipeline.py          Rule tiers that propose candidates
 codesentinel/nemotron/   Lightning, Super, Ultra cascade
 codesentinel/tavily/     Guideline search, extract, and citation checks
+codesentinel/guidelines/ Curated ICD-10-CM guideline sections
 codesentinel/policy.py   Production checks. The server does not import eval/
 eval/                    Gold sets, harness, and mock or live runner
+eval/results/live/       Published live run: summary, RESULTS.md, recorded completions
+eval/results/mock/       Offline regression output
 web/                     Judge demo (Audit and Eval tabs)
 docs/api.md              Audit contract 1.0.0
 docs/eval.md             Metrics schema
 docs/assets/             Logo, banner, and demo GIFs
 ```
-
-`agents/` remains in the tree and is not imported by the server.
 
 </details>
 
@@ -213,6 +206,8 @@ docs/assets/             Logo, banner, and demo GIFs
 
 `POST /mcp` exposes `detect_coding_gaps`, `get_patient_summary`, `validate_gap`, `list_detected_gaps`, and `draft_physician_query`. `detect_coding_gaps` runs the same verified pipeline as `POST /audit`. Point an MCP client at `http://localhost:8000/mcp`. `python mock_fhir_server.py` serves patients `synth-001`, `synth-002`, and `synth-003` on port 9090.
 
+Dollar fields are RAF times a base rate: a relative-weight illustration, not a billing recommendation.
+
 ## Safety and limitations
 
 - Demo and evaluation charts are generated test records; CodeSentinel is a reviewer aid, not medical advice.
@@ -220,17 +215,15 @@ docs/assets/             Logo, banner, and demo GIFs
 - A person decides. Accept and dismiss stay on the coder. This does not submit a claim.
 - Combination and specificity rows without a guideline citation stay in review.
 - English, outpatient-style notes. The regex tiers miss paraphrases the recorded client will not invent.
-- No claim of HIPAA compliance. A production chart with PHI would need Zero Data Retention, a dedicated endpoint, and the right agreements.
+- No claim of HIPAA compliance. A production deployment would need Zero Data Retention, a dedicated endpoint, and the right agreements.
 - `MAX_DAILY_USD` is documented in [.env.example](.env.example) and is not enforced on the audit service yet.
-- Gold-A is 10 charts pending coder sign-off. Gold-B was built around the same phenomena as the offline policy.
+- Gold-A is 10 charts pending coder sign-off. Gold-B was built around the same phenomena as the rules, so it is a regression suite rather than an independent benchmark.
 
 <details>
 <summary>Roadmap</summary>
 
-- Re-run live eval after the round-3 citation filter and publish the shifted Gold-B and Gold-A rows beside this table.
-- Prefer official guideline rule text in the demo cache, so the evidence panel can show an official excerpt instead of a fixture pointer.
+- Certified-coder sign-off on Gold-A, then grow it past ten charts.
 - Enforce the daily dollar cap on the audit service.
-- Coder sign-off on Gold-A (`review_status`).
 - Keep MTSamples as a queue count until it has labels.
 
 </details>
@@ -241,8 +234,8 @@ MIT. See [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation. Tavily for guideline retrieval. CMS and CDC publish the ICD-10-CM pages the citations point at.
+NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation. Tavily for guideline retrieval. CMS and CDC publish the ICD-10-CM Official Guidelines the citations quote.
 
 ## Project history
 
-CodeSentinel evolved from an earlier prototype (snapshot 2026-05-07); see [docs/changes.md](docs/changes.md) for what was rebuilt during the Nebius hackathon window.
+CodeSentinel evolved from Ctrl+Alt+Heal, Kishan's earlier hackathon project (snapshot 2026-05-07); see [docs/changes.md](docs/changes.md) for what was rebuilt during the Nebius hackathon window.

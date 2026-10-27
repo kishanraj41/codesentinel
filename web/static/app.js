@@ -740,7 +740,7 @@ function renderEval(data) {
   const after = el("article", {});
   after.append(el("h2", { text: "After Nemotron" }));
   if (data.status === "loaded" && (data.configs || []).length) {
-    after.append(el("p", { text: "Measured rows from eval/results/summary.json. The MTSamples counts above stay queue counts, not precision." }));
+    after.append(el("p", { text: (data.mode === "live" ? "Measured rows from the live Token Factory run, eval/results/live/summary.json." : "Mock regression rows from eval/results/mock/summary.json, not live model quality.") + " The MTSamples counts above stay queue counts, not precision." }));
     if (data.mode_detail) after.append(el("p", { class: "meta", text: data.mode_detail }));
     after.append(configTable(data.configs));
   } else {

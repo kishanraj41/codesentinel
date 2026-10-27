@@ -3,7 +3,7 @@ FHIR REST Adapter — Replaces SQL-based data_extraction.py
 Reads patient data from any FHIR R4 server via REST API.
 Uses SHARP headers for context: X-FHIR-Server-URL, X-FHIR-Access-Token, X-Patient-ID
 
-Output format is IDENTICAL to v20's PatientDataExtractor so all 33 agents work unchanged.
+Output format matches test_dataset.get_patient_profile, so the rule pipeline and cascade read FHIR and test charts the same way.
 """
 import logging
 import re
