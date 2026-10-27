@@ -72,6 +72,8 @@ def cite(code: str, issue: str, sentence: str) -> dict:
         "cached_at": RECORDED_AT,
         "code_family": code[:3],
         "issue": issue,
+        "source_tier": "secondary",
+        "source_label": "Secondary source",
     }
 
 

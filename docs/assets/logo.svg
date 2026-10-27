@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CodeSentinel">
+  <path fill="#08382d" d="M32 3.5 54.5 12.2v18.4c0 14.2-10.2 24.6-22.5 29.9C19.7 55.2 9.5 44.8 9.5 30.6V12.2L32 3.5z"/>
+  <path fill="none" stroke="#f6f1e6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" d="M20 34.5h7.2l3.6-9.2 4.2 16.4 3.4-7.2H44"/>
+  <path fill="none" stroke="#dff25a" stroke-width="2.2" stroke-linecap="round" d="M32 14.5v8M28 18.5h8"/>
+</svg>

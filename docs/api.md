@@ -261,7 +261,7 @@ Candidates removed before the worklist.
 | `cached_at` | string or null | ISO-8601 timestamp when `retrieved` is `cache` or `fixture`. |
 | `code_family` | string | First three characters of the ICD-10-CM code (`E11`, `I12`, …). |
 | `issue` | string | Stable issue key, for example `combination-code-diabetes-ckd` or `specificity-hyperglycemia`. |
-| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (FY2026 first). `secondary` for another cms.gov or cdc.gov page. Empty on recorded fixtures. |
+| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (FY2026 first). `secondary` for another cms.gov or cdc.gov page. Recorded fixtures use the tier of their URL; the bundled fixture points at a CMS code page, so it is `secondary`, and `retrieved` stays `fixture`. |
 | `source_label` | string | `Official guidelines` or `Secondary source`. Empty when `source_tier` is empty. A secondary page is cited only when every code-and-description pair in the excerpt agrees with the official title. A mismatched label, including a code list that calls I50.20 acute combined systolic and diastolic failure, is dropped. No accepted passage means no citation. |
 
 Top-level `citations` is the de-duplicated union of worklist citations, in first-seen order.

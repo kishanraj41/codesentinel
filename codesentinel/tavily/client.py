@@ -699,6 +699,7 @@ class GuidelineClient:
         row = fixtures.get(key) or fixtures.get(f"*|{issue}")
         if not row:
             return []
+        tier = source_tier_for(row["url"], row.get("title") or "")
         return [
             Citation(
                 url=row["url"],
@@ -709,6 +710,8 @@ class GuidelineClient:
                 cached_at=FIXTURE_CACHED_AT,
                 code_family=code_family,
                 issue=issue,
+                source_tier=tier,
+                source_label=source_label_for(tier),
             )
         ]
 
