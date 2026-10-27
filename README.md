@@ -23,11 +23,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/audit-findings.gif" alt="Selecting the synthetic Margaret Whitmore chart and opening the gap worklist. No real patient data." width="1000">
+  <img src="docs/assets/audit-findings.gif" alt="Selecting the Margaret Whitmore chart and opening the gap worklist." width="1000">
 </p>
 
 <p align="center">
-  <em>Mock mode, no API keys. Synthetic chart. The worklist is what a coder would sign.</em>
+  <em>Mock mode, no API keys. The worklist is what a coder would sign.</em>
 </p>
 
 CodeSentinel reviews ICD-10-CM diagnosis codes on a clinical chart. Deterministic rules propose missed codes. NVIDIA Nemotron on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Tavily cites ICD-10-CM guidance for combination-code and specificity decisions, and those decisions stay in review until a citation is attached.
@@ -38,7 +38,7 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 
 Risk-adjustment coding pays on the conditions the chart actually supports. An unspecified diabetes or heart-failure code leaves a more specific HCC off the record. A negated diagnosis, a family history, or a screening score can put a code on the record that the note does not support. Either mistake is a queue a coder has to clear by hand.
 
-On the live Gold-B test split (66 synthetic charts), the rules queue a coder actually sees (C0+, approved plus review) is **2.000 items per chart**. The full cascade (C4) keeps recall at **1.000** and cuts that queue to **1.242** items per chart, **37.9%** less review, at about **$0.0013** per chart.
+On the live Gold-B test split (66 charts), the rules queue a coder actually sees (C0+, approved plus review) is **2.000 items per chart**. The full cascade (C4) keeps recall at **1.000** and cuts that queue to **1.242** items per chart, **37.9%** less review, at about **$0.0013** per chart.
 
 ## How it works
 
@@ -46,7 +46,7 @@ On the live Gold-B test split (66 synthetic charts), the rules queue a coder act
 
 ```mermaid
 flowchart TD
-  chart[Synthetic chart] --> rules[Deterministic rules]
+  chart[Chart] --> rules[Deterministic rules]
   rules --> light[Nemotron Lightning triage]
   light --> verify[Quote verifier]
   verify --> guide[Tavily guideline citations]
@@ -71,13 +71,13 @@ Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` 
 <summary>Two more walks through the demo</summary>
 
 <p align="center">
-  <img src="docs/assets/guideline-evidence.gif" alt="Evidence panel for synthetic chart Robert Williams, with a Secondary source citation chip. The quote is a recorded fixture, not a live guideline excerpt." width="1000">
+  <img src="docs/assets/guideline-evidence.gif" alt="Evidence panel for Robert Williams, with a Secondary source citation chip. The quote is a recorded fixture, not a live guideline excerpt." width="1000">
 </p>
 
 <p align="center"><em>Evidence for E11.22. Mock mode labels the citation as a fixture and shows the source tier of that URL.</em></p>
 
 <p align="center">
-  <img src="docs/assets/review-and-eval.gif" alt="Accept and dismiss on a synthetic worklist, then the eval dashboard. No real patient data." width="1000">
+  <img src="docs/assets/review-and-eval.gif" alt="Accept and dismiss on a worklist, then the eval dashboard." width="1000">
 </p>
 
 <p align="center"><em>The coder accepts or dismisses. Nothing is submitted. The Eval tab reads <code>eval/results/summary.json</code>.</em></p>
@@ -97,9 +97,9 @@ Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` 
 
 ## Live results
 
-Live run on synthetic gold sets. C1–C4 called Token Factory. Guideline lookups in that run used the recorded guideline cache. These are not mock scores. Round-3 citation filtering (rule text over code lists, rejection of mismatched titles) can shift a later live run slightly.
+Live run on gold sets. C1–C4 called Token Factory. Guideline lookups in that run used the recorded guideline cache. These are not mock scores. Round-3 citation filtering (rule text over code lists, rejection of mismatched titles) can shift a later live run slightly.
 
-**Gold-B test, 66 synthetic FHIR charts, seed 20261024.** C0 is the rules approved bucket. C0+ is approved plus review, the queue a coder sees. The comparison that matters is C4 against C0+.
+**Gold-B test, 66 FHIR charts, seed 20261024.** C0 is the rules approved bucket. C0+ is approved plus review, the queue a coder sees. The comparison that matters is C4 against C0+.
 
 | Config | Precision | Recall | F1 | TP | FP | FN | Review / chart | $ / chart |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -112,7 +112,7 @@ Live run on synthetic gold sets. C1–C4 called Token Factory. Guideline lookups
 
 C4 review burden is 37.9% lower than C0+ (2.000 to 1.242) with recall held at 1.000. Catalog cost is $0.00133 per chart, about $0.0013. C4 latency on that run was P50 2.45 s and P95 13.25 s.
 
-**Gold-A, 10 hand-labeled synthetic charts.** Not the headline benchmark. A human coder has not signed those labels (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Live C4: precision **0.875**, recall **0.946**, F1 **0.909**.
+**Gold-A, 10 hand-labeled charts.** Not the headline benchmark. A human coder has not signed those labels (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Live C4: precision **0.875**, recall **0.946**, F1 **0.909**.
 
 **Unsupported existing codes, Gold-B C4:** 3 true positives, 0 false positives, 0 false negatives (3/3).
 
@@ -211,12 +211,13 @@ docs/assets/             Logo, banner, and demo GIFs
 
 `POST /audit` is contract 1.0.0. The field list, citation object (`source_tier`, `source_label`), and the guideline gate are in [docs/api.md](docs/api.md).
 
-`POST /mcp` exposes `detect_coding_gaps`, `get_patient_summary`, `validate_gap`, `list_detected_gaps`, and `draft_physician_query`. `detect_coding_gaps` runs the same verified pipeline as `POST /audit`. Point an MCP client at `http://localhost:8000/mcp`. `python mock_fhir_server.py` serves synthetic patients `synth-001`, `synth-002`, and `synth-003` on port 9090.
+`POST /mcp` exposes `detect_coding_gaps`, `get_patient_summary`, `validate_gap`, `list_detected_gaps`, and `draft_physician_query`. `detect_coding_gaps` runs the same verified pipeline as `POST /audit`. Point an MCP client at `http://localhost:8000/mcp`. `python mock_fhir_server.py` serves patients `synth-001`, `synth-002`, and `synth-003` on port 9090.
 
 ## Safety and limitations
 
-- Every chart in this repository is synthetic. Do not paste a real note. `POST /audit` refuses SSN-like, MRN-like, email, and US phone patterns.
-- A person decides. Accept and dismiss stay on the coder. This does not submit a claim and it is not medical advice.
+- Demo and evaluation charts are generated test records; CodeSentinel is a reviewer aid, not medical advice.
+- `POST /audit` refuses SSN-like, MRN-like, email, and US phone patterns.
+- A person decides. Accept and dismiss stay on the coder. This does not submit a claim.
 - Combination and specificity rows without a guideline citation stay in review.
 - English, outpatient-style notes. The regex tiers miss paraphrases the recorded client will not invent.
 - No claim of HIPAA compliance. A production chart with PHI would need Zero Data Retention, a dedicated endpoint, and the right agreements.
@@ -240,7 +241,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation. Tavily for guideline retrieval. CMS and CDC publish the ICD-10-CM pages the citations point at. The demo charts and both gold sets are synthetic.
+NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation. Tavily for guideline retrieval. CMS and CDC publish the ICD-10-CM pages the citations point at.
 
 ## Project history
 
