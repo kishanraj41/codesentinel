@@ -44,16 +44,6 @@ pytest
 
 ## Hosting
 
-The public demo image is `Dockerfile.web` at the repo root (UI plus in-process audit cascade). See [docs/DEPLOY.md](../docs/DEPLOY.md) for Nebius Serverless AI and the free Render fallback. `web/Dockerfile` below only holds the UI, so use it with `AUDIT_API_BASE` pointing at a separate audit service.
+The public demo image is `Dockerfile.web` at the repo root (UI plus in-process audit cascade), hosted on Render's free tier with `render.yaml`. See [docs/DEPLOY.md](../docs/DEPLOY.md). `web/Dockerfile` only holds the UI, so use it with `AUDIT_API_BASE` pointing at a separate audit service.
 
-## Cloud Run
-
-From this directory:
-
-```bash
-gcloud run deploy codesentinel-web --source . --region us-central1 --allow-unauthenticated --port 8080
-```
-
-Set `AUDIT_API_BASE`, `MAX_DAILY_USD`, and `LIVE_RATE_PER_HOUR` on the service when the live audit is ready. The container listens on `PORT`.
-
-The Eval tab reads `EVAL_RESULTS_DIR` or `../eval/results` when that folder exists. Until the harness writes JSON, the tab shows the rules-only MTSamples queue counts (1,188 review, 279 approved, 2,227 notes) and labels them as queue counts, not precision or recall.
+The Eval tab reads `EVAL_RESULTS_DIR`, else `eval/results/live/summary.json`, else the mock regression summary in `eval/results/mock/`, and labels which one it shows.

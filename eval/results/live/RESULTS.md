@@ -1,8 +1,8 @@
 # CodeSentinel eval results: live run on Nebius Token Factory
 
-Published run: commit `cfaee89`, generated 2026-10-27 01:56 CDT (06:56 UTC). Raw files: [summary.json](summary.json), [gold_a_summary.json](gold_a_summary.json), Nemotron completions in [recordings/](recordings/).
+Published run: commit `9409d3b`, finished 2026-10-27 18:07 CDT (23:07 UTC). Raw files: [summary.json](summary.json), [gold_a_summary.json](gold_a_summary.json), Nemotron completions in [recordings/](recordings/).
 
-C0 and C0+ stay on the rules pipeline. C1–C4 ran through the real cascade on Token Factory. Nemotron responses were recorded under eval/fixtures/nemotron. Guideline citations come from curated sections of the official FY2026 guidelines. Tavily confirms that source and is the fallback for a code without a curated section. Replay those Nemotron completions with CODESENTINEL_REPLAY=1.
+C0 and C0+ stay on the rules pipeline. C1–C4 ran through the real cascade on Token Factory. Nemotron responses were recorded under eval/fixtures/nemotron. Guideline citations target the ICD-10-CM Official Guidelines in force on the run date. Tavily retrieves the passage live from cms.gov or cdc.gov, and it is cited only when it is verbatim in the official PDF fetched in the same run; curated sections are the fallback and cross-check. Citation provenance per config is in summary.json (citation_provenance). Replay those Nemotron completions with CODESENTINEL_REPLAY=1.
 
 ## Gold-A: 10 hand-labeled charts (headline)
 
@@ -10,12 +10,12 @@ Ten outpatient charts (`pt-001` to `pt-010`), labeled by hand. Labels are pendin
 
 | Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| C0 | 0.739 | 0.459 | 0.567 | 17 | 6 | 20 | 2.300 | 0.600 | 0.762 | 0.000 | 0.0008 | 0.0025 | 0.00000 | 0.00 |
+| C0 | 0.739 | 0.459 | 0.567 | 17 | 6 | 20 | 2.300 | 0.600 | 0.762 | 0.000 | 0.0008 | 0.0024 | 0.00000 | 0.00 |
 | C0+ | 0.755 | 1.000 | 0.860 | 37 | 12 | 0 | 4.900 | 1.200 | 0.571 | 0.000 | 0.0000 | 0.0000 | 0.00000 | 0.00 |
-| C1 | 0.854 | 0.946 | 0.897 | 35 | 6 | 2 | 4.400 | 0.600 | 0.857 | 0.000 | 2.3361 | 4.3990 | 0.00058 | 0.00 |
-| C2 | 0.857 | 0.973 | 0.911 | 36 | 6 | 1 | 4.500 | 0.600 | 0.857 | 0.135 | 6.4003 | 11.6892 | 0.00157 | 0.00 |
-| C3 | 0.892 | 0.892 | 0.892 | 33 | 4 | 4 | 4.000 | 0.400 | 0.857 | 0.154 | 6.6166 | 12.1017 | 0.00177 | 0.00 |
-| C4 | 0.872 | 0.919 | 0.895 | 34 | 5 | 3 | 4.200 | 0.500 | 0.857 | 0.135 | 12.2269 | 29.1637 | 0.00624 | 0.00 |
+| C1 | 0.854 | 0.946 | 0.897 | 35 | 6 | 2 | 4.400 | 0.600 | 0.857 | 0.000 | 2.4275 | 3.8000 | 0.00058 | 0.00 |
+| C2 | 0.854 | 0.946 | 0.897 | 35 | 6 | 2 | 4.400 | 0.600 | 0.857 | 0.192 | 6.9391 | 12.9920 | 0.00158 | 0.00 |
+| C3 | 0.897 | 0.946 | 0.921 | 35 | 4 | 2 | 4.200 | 0.400 | 0.857 | 0.135 | 6.7154 | 13.4550 | 0.00172 | 0.00 |
+| C4 | 0.872 | 0.919 | 0.895 | 34 | 5 | 3 | 4.200 | 0.500 | 0.857 | 0.135 | 12.5888 | 94.8920 | 0.00602 | 0.00 |
 
 ## Gold-B: hard-negative and regression suite
 
@@ -27,10 +27,10 @@ Dataset **gold-b** split `test`: 66 generated FHIR test charts, seed 20261024. T
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | C0 | 0.697 | 0.785 | 0.738 | 62 | 27 | 17 | 1.348 | 0.409 | 0.491 | 0.000 | 0.0006 | 0.0008 | 0.00000 | 0.00 |
 | C0+ | 0.598 | 1.000 | 0.749 | 79 | 53 | 0 | 2.000 | 0.803 | 0.000 | 0.000 | 0.0000 | 0.0000 | 0.00000 | 0.00 |
-| C1 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.030 | 0.962 | 0.000 | 1.9427 | 2.2998 | 0.00020 | 0.00 |
-| C2 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.030 | 0.962 | 0.030 | 1.9641 | 10.9473 | 0.00044 | 0.00 |
-| C3 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.000 | 1.000 | 0.030 | 2.1309 | 8.5454 | 0.00049 | 0.02 |
-| C4 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.000 | 1.000 | 0.015 | 2.1822 | 14.8981 | 0.00136 | 0.00 |
+| C1 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.030 | 0.962 | 0.000 | 1.9104 | 2.2894 | 0.00020 | 0.00 |
+| C2 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.030 | 0.962 | 0.015 | 1.9771 | 7.8143 | 0.00045 | 0.00 |
+| C3 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.000 | 1.000 | 0.022 | 1.9518 | 7.6876 | 0.00049 | 0.12 |
+| C4 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.000 | 1.000 | 0.022 | 2.0460 | 14.5075 | 0.00143 | 0.00 |
 
 C0 is the approved bucket only. C0+ is approved plus review, which is the queue a coder actually sees. The headline comparison is C4 against C0+.
 
@@ -43,9 +43,9 @@ Latency is wall time per chart against Token Factory. Cost is reported token usa
 | C0 | 0.78481 | 1.348 | 0.00000 |
 | C0+ | 1.0 | 2.000 | 0.00000 |
 | C1 | 1.0 | 1.273 | 0.00020 |
-| C2 | 1.0 | 1.273 | 0.00044 |
+| C2 | 1.0 | 1.273 | 0.00045 |
 | C3 | 1.0 | 1.242 | 0.00049 |
-| C4 | 1.0 | 1.242 | 0.00136 |
+| C4 | 1.0 | 1.242 | 0.00143 |
 
 C4 review burden is 37.9% lower than C0+ on this split (2.000 → 1.242 items per chart). Recall 1.0 → 1.0.
 
@@ -89,20 +89,21 @@ This task is separate from gap precision and recall. C0 and C0+ do not run the t
 
 ## Degraded runs
 
-Charts that fell back to the recorded client: 1.
-Reasons:
-- stage=adjudication model=nvidia/nemotron-3-super-120b-a12b status=529 error=HTTPError
+Charts that fell back to the recorded client: 0.
+No degraded reasons recorded.
 
 ## Guideline decisions
 
-| Config | Decisions changed by the guideline step | Unsupported-claim drops |
-|---|---:|---:|
-| C0 | 0 | 0 |
-| C0+ | 0 | 0 |
-| C1 | 0 | 0 |
-| C2 | 0 | 0 |
-| C3 | 0 | 0 |
-| C4 | 0 | 0 |
+| Config | Decisions changed by the guideline step | Unsupported-claim drops | Citations by provenance |
+|---|---:|---:|---|
+| C0 | 0 | 0 | — |
+| C0+ | 0 | 0 | — |
+| C1 | 0 | 0 | — |
+| C2 | 0 | 0 | — |
+| C3 | 0 | 0 | tavily_live 24 |
+| C4 | 0 | 0 | tavily_live 24 |
+
+Provenance counts distinct citations per chart. `tavily_live` passages were retrieved by Tavily and matched verbatim against the official PDF for the run's fiscal year; `curated_fallback` is a curated section re-verified against that PDF; `superseded_anchor` counts citations where the curated passage was no longer in the current edition and the gate decided on the live text.
 
 Quote-verifier probe (`hallucinated_quote_dropped`): passed. A candidate whose only quote is absent from the chart is dropped. Rules candidates in this corpus quote the chart, so unsupported-claim drops on the split can be zero while the probe still passes.
 

@@ -71,15 +71,18 @@
     "abstain_count": 7,
     "abstain_rate": 0.134615,
     "candidates_considered": 52,
-    "latency_p50_s": 12.226854,
-    "latency_p95_s": 29.163744,
-    "cost_per_chart_usd": 0.006239,
+    "latency_p50_s": 12.588849,
+    "latency_p95_s": 94.89205,
+    "cost_per_chart_usd": 0.006018,
     "tavily_credits_per_chart": 0.0,
-    "tavily_cache_hits_per_chart": 0.0,
+    "tavily_cache_hits_per_chart": 1.1,
     "tavily_credits_if_uncached_per_chart": 0.0,
     "guideline_decision_changes": 0,
     "id": "C4",
     "label": "C3 + Ultra escalation (full cascade)",
+    "citation_provenance": {
+      "tavily_live": 11
+    },
     "latency_scope": "live_wall_clock",
     "cost_basis": "token_factory_usage_x_catalog_price"
   },
@@ -119,8 +122,8 @@
         "N18.3"
       ],
       "review_items": 6,
-      "latency_s": 13.28610767700593,
-      "cost_usd": 0.008443,
+      "latency_s": 12.590947231015889,
+      "cost_usd": 0.00814,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -142,8 +145,8 @@
         "J44.1"
       ],
       "review_items": 2,
-      "latency_s": 11.16760125698056,
-      "cost_usd": 0.006693,
+      "latency_s": 150.4728736859979,
+      "cost_usd": 0.005489,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -165,8 +168,8 @@
         "F32.9"
       ],
       "review_items": 2,
-      "latency_s": 2.3481631409958936,
-      "cost_usd": 0.000209,
+      "latency_s": 2.022181840002304,
+      "cost_usd": 0.000212,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -208,8 +211,8 @@
         "I50.9"
       ],
       "review_items": 8,
-      "latency_s": 35.0202864180028,
-      "cost_usd": 0.021531,
+      "latency_s": 26.959932719997596,
+      "cost_usd": 0.018081,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -222,7 +225,7 @@
       "shown_codes": [],
       "gold_codes": [],
       "review_items": 3,
-      "latency_s": 0.6953378909965977,
+      "latency_s": 0.5593345770030282,
       "cost_usd": 0.0,
       "mode": "live",
       "degraded_reasons": []
@@ -248,8 +251,8 @@
         "I10"
       ],
       "review_items": 3,
-      "latency_s": 14.15601032198174,
-      "cost_usd": 0.003692,
+      "latency_s": 12.586750235990621,
+      "cost_usd": 0.00421,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -280,8 +283,8 @@
         "E79.0"
       ],
       "review_items": 5,
-      "latency_s": 22.005748189985752,
-      "cost_usd": 0.007666,
+      "latency_s": 17.90629109099973,
+      "cost_usd": 0.007231,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -303,8 +306,8 @@
         "E78.5"
       ],
       "review_items": 2,
-      "latency_s": 6.820966094994219,
-      "cost_usd": 0.002231,
+      "latency_s": 4.605262524011778,
+      "cost_usd": 0.000914,
       "mode": "live",
       "degraded_reasons": []
     },
@@ -317,7 +320,7 @@
       "shown_codes": [],
       "gold_codes": [],
       "review_items": 0,
-      "latency_s": 0.7025835909880698,
+      "latency_s": 0.8029887249867897,
       "cost_usd": 0.0,
       "mode": "live",
       "degraded_reasons": []
@@ -366,8 +369,8 @@
         "N18.3"
       ],
       "review_items": 11,
-      "latency_s": 20.004828581993934,
-      "cost_usd": 0.011923,
+      "latency_s": 24.04227281099884,
+      "cost_usd": 0.015904,
       "mode": "live",
       "degraded_reasons": []
     }

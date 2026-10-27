@@ -1,4 +1,4 @@
-# Free fallback host: Render Blueprint (New > Blueprint, pick this repo).
+# Demo host: Render Blueprint on the free tier (New > Blueprint, pick this repo).
 # Free web services sleep after 15 min idle and take ~1 min to wake.
 services:
   - type: web

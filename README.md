@@ -33,24 +33,26 @@
   <em>Mock mode, no API keys. The worklist is what a coder would sign.</em>
 </p>
 
-CodeSentinel audits outpatient clinical charts for ICD-10-CM and HCC coding gaps. Deterministic rules propose missed or under-specified codes. A three-model NVIDIA Nemotron cascade on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Combination-code and specificity decisions cite the ICD-10-CM Official Guidelines, and those decisions stay in review until a guideline citation is attached.
+CodeSentinel audits outpatient clinical charts for ICD-10-CM and HCC coding gaps. Deterministic rules propose missed or under-specified codes. A three-model NVIDIA Nemotron cascade on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Tavily retrieves the passage of the current ICD-10-CM Official Guidelines (FY 2027, in force since 2026-10-01) for each combination-code and specificity decision, and the passage is cited only if it matches the official CMS PDF verbatim. Those decisions stay in review until a guideline citation is attached.
 
 This is clinical coding integrity, not software security: the "code" is a diagnosis code.
 
+**Live demo:** `<DEMO_URL>` (Render free tier; the first request after idle takes about a minute to wake). Inference runs on Nebius Token Factory.
+
 ## Results
 
-Live run on Nebius Token Factory, commit `cfaee89`, 2026-10-27. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md). C0+ is the rules queue a coder sees today (approved plus review). C4 is the full cascade.
+Live run on Nebius Token Factory, commit `9409d3b`, 2026-10-27, with FY 2027 guideline citations retrieved live through Tavily. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md). C0+ is the rules queue a coder sees today (approved plus review). C4 is the full cascade.
 
 | Set | Charts | Config | Precision | Recall | F1 | Review items / chart | $ / chart | P50 / P95 s |
 |---|---:|---|---:|---:|---:|---:|---:|---:|
 | **Gold-A** (headline, hand-labeled) | 10 | C0+ rules | 0.755 | 1.000 | 0.860 | 4.90 | 0 | — |
-| | | **C4 cascade** | **0.872** | **0.919** | **0.895** | **4.20** | 0.0062 | 12.2 / 29.2 |
+| | | **C4 cascade** | **0.872** | **0.919** | **0.895** | **4.20** | 0.0060 | 12.6 / 94.9 |
 | Gold-B (hard-negative and regression suite) | 66 | C0+ rules | 0.598 | 1.000 | 0.749 | 2.00 | 0 | — |
-| | | **C4 cascade** | **1.000** | **1.000** | **1.000** | **1.24** | 0.0014 | 2.18 / 14.90 |
+| | | **C4 cascade** | **1.000** | **1.000** | **1.000** | **1.24** | 0.0014 | 2.05 / 14.51 |
 
-**Gold-A is the benchmark.** Ten outpatient charts labeled by hand. The labels are pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)), and ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.79–0.97). C4 raises precision from 0.755 to 0.872 and cuts the queue from 4.9 to 4.2 items per chart, at the cost of three missed codes (`D64.9` and `I12.9` on pt-001, `I50.9` on pt-004).
+**Gold-A is the benchmark.** Ten outpatient charts labeled by hand. The labels are pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)), and ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.79–0.97). C4 raises precision from 0.755 to 0.872 and cuts the queue from 4.9 to 4.2 items per chart, at the cost of three missed codes (`D64.9` and `I12.9` on pt-001, `I50.9` on pt-004). The Gold-A P95 comes from one slow chart (pt-002, 150 s end to end); the other nine finished in 27 s or less.
 
-**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 37.9% against C0+ (2.00 to 1.24) at $0.00136 per chart. Two live C4 passes agreed on 64 of 66 charts (0.970). One Super call returned HTTP 529 on a C2 chart, and that chart fell back to review.
+**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 37.9% against C0+ (2.00 to 1.24) at $0.00143 per chart. Two live C4 passes agreed on 64 of 66 charts (0.970). No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF (24 on Gold-B C4, 11 on Gold-A C4).
 
 Cost is reported Token Factory usage times the public catalog price. `eval/results/mock/` holds offline regression output from the recorded client; those numbers are not model quality. The schema is in [docs/eval.md](docs/eval.md).
 
@@ -67,7 +69,7 @@ flowchart TD
   chart[Chart] --> rules[Deterministic rules]
   rules --> light[Nemotron Lightning triage]
   light --> verify[Quote verifier]
-  verify --> guide[ICD-10-CM guideline citation]
+  verify --> guide[Tavily: FY 2027 guideline passage, verified in the official PDF]
   guide --> super[Nemotron Super adjudication]
   super --> ultra[Nemotron Ultra escalation]
   ultra --> list[Coder worklist]
@@ -81,7 +83,21 @@ flowchart TD
 | Adjudication | `nvidia/nemotron-3-super-120b-a12b` | Medium-confidence survivors, plus every specificity upgrade and combination code. Temperature 0.6, thinking on. |
 | Escalation and physician query | `nvidia/Nemotron-3-Ultra-550b-a55b` | Conflicts, high-value HCC upgrades (RAF at least 0.3), and non-leading physician queries. |
 | Quote verifier | none | A supporting quote must be a whitespace-normalized substring of the note (at least 12 characters), an exact lab or medication line, or a structured record id. Anything else is `unsupported`. |
-| Guidelines | Tavily | Official ICD-10-CM guideline text outranks other CMS pages. A code printed next to the wrong title is rejected. A secondary page is kept only when the titles match, and the API labels it `Secondary source`. No accepted passage means no citation. |
+| Guidelines | Tavily | One search per code family, restricted to cms.gov and cdc.gov, for the current edition of the ICD-10-CM Official Guidelines. A passage is cited only if it is verbatim in the official PDF fetched that run; page and section come from the PDF. Curated sections are the fallback and the cross-check. No verified passage means no citation. |
+
+### Guideline citations
+
+Every citation records where it came from:
+
+| Field | Example |
+|---|---|
+| `provenance` | `tavily_live` (Tavily found it, verified in the PDF) or `curated_fallback` |
+| `fiscal_year`, `url` | `FY 2027`, `https://www.cms.gov/files/document/fy-2027-icd-10-cm-coding-guidelines.pdf` |
+| `section`, `page` | `I.C.9.a.2`, `50` |
+| `verified_verbatim`, `pdf_sha256` | `true`, the SHA-256 of the PDF it was matched in |
+| `anchor_status` | `verified`, or `superseded` when the curated section is no longer in the current edition |
+
+The edition is picked from the run date, and FY 2027 (in force from 2026-10-01) is registered with its CMS URL and SHA-256. The six curated passages (sections I.A.15, I.C.4.a, I.C.9.a.2, I.C.9.a.3 twice, I.C.14.a.1) were re-extracted from the FY 2027 PDF and are word-for-word unchanged from FY 2026, on the same pages. If a future edition rewrites one, the curated passage is marked `superseded` and never cited; the gate decides on the live passage, or holds the row in review if none verifies. Tavily results are cached per run, so each code family costs one search.
 
 Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` with `response_format.type = json_schema`. A bad JSON payload gets one repair retry, then the candidate is held for review. Every audit returns a receipt: model, calls, tokens, latency, and catalog cost.
 
@@ -149,8 +165,9 @@ curl -X POST http://localhost:8000/audit -H "Content-Type: application/json" -d 
 |---|---|
 | `NEBIUS_API_KEY` | Token Factory. Empty runs the recorded Nemotron client (`mode: mock`). |
 | `NEBIUS_BASE_URL` | Default `https://api.tokenfactory.nebius.com/v1/`. |
-| `TAVILY_API_KEY` | Confirms the official FY2026 guideline PDF and fills codes with no curated section. Empty skips that check; curated sections are still cited. |
-| `GUIDELINE_CACHE_DIR` | Disk cache for Tavily extracts. Default `.cache/guidelines`. |
+| `TAVILY_API_KEY` | Live guideline retrieval for the current fiscal year, verified against the official PDF. Empty cites the curated sections only. |
+| `GUIDELINE_FISCAL_YEAR` | Optional. Pin the guideline edition, for example `2026`. Default: the fiscal year of the run date. |
+| `GUIDELINE_CACHE_DIR` | Per-run cache for Tavily results and the extracted guideline PDF text. Default `.cache/guidelines`. |
 
 With both keys unset, curated guideline sections are still cited. Set both keys for Token Factory and Tavily.
 
@@ -161,7 +178,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --port 8080
 ```
 
-Open http://localhost:8080, choose **Margaret Whitmore**, and click **Audit chart**. With `AUDIT_API_BASE` unset, that call stays in-process and the cascade runs in mock mode. See [web/README.md](web/README.md).
+Open http://localhost:8080, choose **Margaret Whitmore**, and click **Audit chart**. With `AUDIT_API_BASE` unset, that call stays in-process and the cascade runs in mock mode. See [web/README.md](web/README.md). The hosted demo is the `Dockerfile.web` image on Render's free tier; see [docs/DEPLOY.md](docs/DEPLOY.md).
 
 Eval:
 
@@ -187,7 +204,7 @@ mcp_server.py            POST /audit and the MCP endpoint
 gap_pipeline.py          Rule tiers that propose candidates
 codesentinel/nemotron/   Lightning, Super, Ultra cascade
 codesentinel/tavily/     Guideline search, extract, and citation checks
-codesentinel/guidelines/ Curated ICD-10-CM guideline sections
+codesentinel/guidelines/ Guideline editions, PDF verifier, curated sections
 codesentinel/policy.py   Production checks. The server does not import eval/
 eval/                    Gold sets, harness, and mock or live runner
 eval/results/live/       Published live run: summary, RESULTS.md, recorded completions
