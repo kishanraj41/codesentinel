@@ -35,6 +35,7 @@ class CitationModel(BaseModel):
     code_family: str
     issue: str
     source_tier: Literal["official", "secondary", ""] = ""
+    source_label: str = ""
 
 
 class WorklistItem(BaseModel):

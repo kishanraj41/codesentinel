@@ -24,7 +24,7 @@ SEARCH_URL = "https://api.tavily.com/search"
 EXTRACT_URL = "https://api.tavily.com/extract"
 OFFICIAL_SUFFIXES = ("cms.gov", "cdc.gov")
 # Bump when passage matching changes so a previous empty lookup is not reused.
-FILTER_VERSION = "2"
+FILTER_VERSION = "3"
 OFFICIAL_GUIDELINE_TITLE = "ICD-10-CM Official Guidelines for Coding and Reporting"
 OFFICIAL_QUERY_SUFFIX = f'"{OFFICIAL_GUIDELINE_TITLE}" FY2026'
 
@@ -54,6 +54,7 @@ class Citation:
     code_family: str
     issue: str
     source_tier: str = ""
+    source_label: str = ""
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -123,6 +124,228 @@ _HF_TYPE = re.compile(
     r"acute\s+on\s+chronic|\bchronic\b|\bsystolic\b|\bdiastolic\b|\bhfref\b|\bhfpef\b|\bi50\.[234]",
     re.IGNORECASE,
 )
+# Official long titles for the codes this auditor cites. A passage that prints a
+# different title next to the code is a mislabeled list and is not evidence.
+OFFICIAL_CODE_TITLES: dict[str, str] = {
+    "I50.20": "Unspecified systolic (congestive) heart failure",
+    "I50.21": "Acute systolic (congestive) heart failure",
+    "I50.22": "Chronic systolic (congestive) heart failure",
+    "I50.23": "Acute on chronic systolic (congestive) heart failure",
+    "I50.30": "Unspecified diastolic (congestive) heart failure",
+    "I50.31": "Acute diastolic (congestive) heart failure",
+    "I50.32": "Chronic diastolic (congestive) heart failure",
+    "I50.33": "Acute on chronic diastolic (congestive) heart failure",
+    "I50.40": "Unspecified combined systolic (congestive) and diastolic (congestive) heart failure",
+    "I50.41": "Acute combined systolic (congestive) and diastolic (congestive) heart failure",
+    "I50.42": "Chronic combined systolic (congestive) and diastolic (congestive) heart failure",
+    "I50.43": "Acute on chronic combined systolic (congestive) and diastolic (congestive) heart failure",
+    "I50.9": "Heart failure, unspecified",
+    "E11.9": "Type 2 diabetes mellitus without complications",
+    "E11.21": "Type 2 diabetes mellitus with diabetic nephropathy",
+    "E11.22": "Type 2 diabetes mellitus with diabetic chronic kidney disease",
+    "E11.29": "Type 2 diabetes mellitus with other diabetic kidney complication",
+    "E11.65": "Type 2 diabetes mellitus with hyperglycemia",
+    "I12.0": "Hypertensive chronic kidney disease with stage 5 chronic kidney disease or end stage renal disease",
+    "I12.9": "Hypertensive chronic kidney disease with stage 1 through stage 4 chronic kidney disease, or unspecified chronic kidney disease",
+    "N18.1": "Chronic kidney disease, stage 1",
+    "N18.2": "Chronic kidney disease, stage 2 (mild)",
+    "N18.3": "Chronic kidney disease, stage 3 (moderate)",
+    "N18.30": "Chronic kidney disease, stage 3 unspecified",
+    "N18.31": "Chronic kidney disease, stage 3a",
+    "N18.32": "Chronic kidney disease, stage 3b",
+    "N18.4": "Chronic kidney disease, stage 4 (severe)",
+    "N18.5": "Chronic kidney disease, stage 5",
+    "N18.6": "End stage renal disease",
+    "N18.9": "Chronic kidney disease, unspecified",
+}
+# (acuity, kind). I50.9 has no systolic/diastolic/combined kind.
+_HF_EXPECT: dict[str, tuple[str, str]] = {
+    "I50.20": ("unspecified", "systolic"),
+    "I50.21": ("acute", "systolic"),
+    "I50.22": ("chronic", "systolic"),
+    "I50.23": ("acute on chronic", "systolic"),
+    "I50.30": ("unspecified", "diastolic"),
+    "I50.31": ("acute", "diastolic"),
+    "I50.32": ("chronic", "diastolic"),
+    "I50.33": ("acute on chronic", "diastolic"),
+    "I50.40": ("unspecified", "combined"),
+    "I50.41": ("acute", "combined"),
+    "I50.42": ("chronic", "combined"),
+    "I50.43": ("acute on chronic", "combined"),
+    "I50.9": ("unspecified", ""),
+}
+_DM_COMPLICATION: dict[str, frozenset[str]] = {
+    "E11.9": frozenset(),
+    "E11.21": frozenset({"kidney"}),
+    "E11.22": frozenset({"kidney"}),
+    "E11.29": frozenset({"kidney"}),
+    "E11.65": frozenset({"hyperglycemia"}),
+}
+# "1-4" accepts stage 1 through 4 or unspecified, and rejects stage 5 / ESRD.
+_STAGE_EXPECT: dict[str, str] = {
+    "I12.9": "1-4",
+    "I12.0": "5",
+    "N18.1": "1",
+    "N18.2": "2",
+    "N18.3": "3",
+    "N18.30": "3",
+    "N18.31": "3",
+    "N18.32": "3",
+    "N18.4": "4",
+    "N18.5": "5",
+    "N18.6": "5",
+    "N18.9": "unspecified",
+}
+_ICD_TOKEN = re.compile(r"\b[A-TV-Z]\d{2}(?:\.\d{1,4})?\b", re.IGNORECASE)
+_LABEL_SKIP = re.compile(
+    r"^(rather|when|if|for|is|are|was|were|than|instead|which|that|to|and|or|the|a|an|of|in|on|as|by|from|with|versus|vs|not|only)\b",
+    re.IGNORECASE,
+)
+
+
+def source_label_for(tier: str) -> str:
+    """Human-readable source label. Secondary is shown as such in the UI and API."""
+    if tier == "secondary":
+        return "Secondary source"
+    if tier == "official":
+        return "Official guidelines"
+    return ""
+
+
+def _hf_observed(text: str) -> tuple[str, str]:
+    lowered = text.lower()
+    if "acute on chronic" in lowered:
+        acuity = "acute on chronic"
+    elif re.search(r"\bunspecified\b", lowered):
+        acuity = "unspecified"
+    elif re.search(r"\bacute\b", lowered):
+        acuity = "acute"
+    elif re.search(r"\bchronic\b", lowered):
+        acuity = "chronic"
+    else:
+        acuity = ""
+    if "combined" in lowered or ("systolic" in lowered and "diastolic" in lowered):
+        kind = "combined"
+    elif "systolic" in lowered:
+        kind = "systolic"
+    elif "diastolic" in lowered:
+        kind = "diastolic"
+    else:
+        kind = ""
+    return acuity, kind
+
+
+def _code_labels(text: str) -> list[tuple[str, str]]:
+    """Code plus the title glued to it, stopping at the next code or a sentence break."""
+    pairs: list[tuple[str, str]] = []
+    for match in _ICD_TOKEN.finditer(text or ""):
+        code = match.group(0).upper()
+        if code not in OFFICIAL_CODE_TITLES:
+            continue
+        rest = text[match.end(): match.end() + 140]
+        nxt = _ICD_TOKEN.search(rest)
+        if nxt:
+            rest = rest[: nxt.start()]
+        rest = re.split(r"[.;]", rest, maxsplit=1)[0]
+        rest = rest.strip(" \t,:–—-")
+        if not rest or _LABEL_SKIP.match(rest):
+            continue
+        pairs.append((code, rest))
+    return pairs
+
+
+def _hf_conflict(code: str, desc: str) -> bool:
+    expected_acuity, expected_kind = _HF_EXPECT[code]
+    observed_acuity, observed_kind = _hf_observed(desc)
+    if not observed_acuity and not observed_kind:
+        return False
+    if observed_acuity and expected_acuity and observed_acuity != expected_acuity:
+        return True
+    if observed_kind and expected_kind and observed_kind != expected_kind:
+        return True
+    if observed_kind and not expected_kind:
+        return True
+    return False
+
+
+def _dm_conflict(code: str, desc: str) -> bool:
+    expected = _DM_COMPLICATION[code]
+    lowered = desc.lower()
+    observed: set[str] = set()
+    if "hyperglycemia" in lowered or "out of control" in lowered:
+        observed.add("hyperglycemia")
+    if re.search(r"kidney|ckd|nephrop", lowered):
+        observed.add("kidney")
+    if not observed:
+        return False
+    if not expected:
+        return True
+    return not observed.issubset(expected)
+
+
+def _stage_conflict(code: str, desc: str) -> bool:
+    expected = _STAGE_EXPECT[code]
+    lowered = desc.lower()
+    end_stage = "end stage" in lowered or "end-stage" in lowered or re.search(r"\besrd\b", lowered) is not None
+    if expected == "1-4":
+        return "stage 5" in lowered or end_stage
+    if expected == "5":
+        if "stage 5" in lowered or end_stage:
+            return False
+        return re.search(r"stage\s*[1-4]\b", lowered) is not None
+    if expected == "unspecified":
+        return re.search(r"stage\s*[1-5]\b", lowered) is not None or end_stage
+    found = re.search(r"stage\s*([1-5])", lowered)
+    if not found:
+        return False
+    return found.group(1) != expected
+
+
+def description_conflict(text: str) -> bool:
+    """True when a code is printed next to a title that is not the official one.
+
+    I50.20 is unspecified systolic failure. A list that calls it acute combined
+    systolic and diastolic failure is rejected, even if neighboring codes are right.
+    """
+    for code, desc in _code_labels(text):
+        if code in _HF_EXPECT and _hf_conflict(code, desc):
+            return True
+        if code in _DM_COMPLICATION and _dm_conflict(code, desc):
+            return True
+        if code in _STAGE_EXPECT and _stage_conflict(code, desc):
+            return True
+    return False
+
+
+def _rule_bonus(text: str) -> int:
+    """Rule sentences outrank a bare code list. The words have to state the rule."""
+    lowered = (text or "").lower()
+    bonus = 0
+    if "should be coded" in lowered or "should be assigned" in lowered:
+        bonus += 6
+    if re.search(r"\bassign(?:ed|ing)?\b", lowered):
+        bonus += 5
+    if "presum" in lowered:
+        bonus += 5
+    if "use additional code" in lowered:
+        bonus += 5
+    if re.search(r"\bwith\b", lowered) and any(
+        token in lowered for token in ("convention", "presum", "causal", "associated condition", "interpreted")
+    ):
+        bonus += 5
+    return bonus
+
+
+def _is_pure_code_list(text: str) -> bool:
+    """Three or more codes and no instruction is a list, not a guideline rule."""
+    if len(_ICD_TOKEN.findall(text or "")) < 3:
+        return False
+    return _rule_bonus(text) < 5
+
+
+def passage_is_strong(quote: str, tier: str) -> bool:
+    """Official rule text. A secondary page, or a list, is not strong enough to stop."""
+    return bool(quote) and tier == "official" and _rule_bonus(quote) >= 5
 
 
 def guideline_query(code_family: str, issue: str) -> str:
@@ -137,6 +360,40 @@ def guideline_query(code_family: str, issue: str) -> str:
     else:
         base = ISSUE_QUERIES.get(issue_key) or (
             f"ICD-10-CM official guidelines {code_family} {issue_key.replace('-', ' ')}"
+        )
+    if OFFICIAL_QUERY_SUFFIX in base:
+        return base
+    return f"{base} {OFFICIAL_QUERY_SUFFIX}"
+
+
+def rule_query(code_family: str, issue: str) -> str:
+    """Second search, aimed at the guideline section, when the first passage is weak."""
+    family = (code_family or "").upper()
+    issue_key = (issue or "").lower()
+    if issue_key == "combination-code-diabetes-ckd":
+        base = (
+            'ICD-10-CM Official Guidelines section I.A.15 "With" convention '
+            '"Diabetes mellitus and the associated conditions" presumed causal relationship'
+        )
+    elif issue_key == "specificity-hyperglycemia":
+        base = (
+            'ICD-10-CM Official Guidelines section I.C.4.a diabetes '
+            '"out of control" hyperglycemia assign E11.65'
+        )
+    elif issue_key == "combination-code-hypertensive-ckd":
+        base = (
+            "ICD-10-CM Official Guidelines hypertensive chronic kidney disease "
+            "assign I12 presumed relationship use additional code"
+        )
+    elif family == "I50" and issue_key == "specificity-upgrade":
+        base = (
+            "ICD-10-CM Official Guidelines heart failure code to type and acuity "
+            "systolic diastolic combined acute chronic hypertensive heart disease assign"
+        )
+    else:
+        base = (
+            f"ICD-10-CM Official Guidelines assign {family} {issue_key.replace('-', ' ')} "
+            "should be coded"
         )
     if OFFICIAL_QUERY_SUFFIX in base:
         return base
@@ -277,7 +534,8 @@ def passage_score(passage: str, code_family: str, issue: str) -> int:
     """How well a passage matches the code family and guideline issue.
 
     Zero means the passage does not mention the target code, category, or issue
-    terms. Generic code-length text and an off-topic code list score zero.
+    terms. Generic code-length text, a pure code list, and a passage that
+    mislabels a code score zero. Rule language raises a matching passage.
     """
     text = (passage or "").lower()
     if len(text) < 24:
@@ -309,11 +567,21 @@ def passage_score(passage: str, code_family: str, issue: str) -> int:
         family_terms = [needle for needle, _weight in _FAMILY_NEEDLES.get(family, ())]
         if family_terms and not any(term in text for term in family_terms):
             return 0
-    return score
+    if description_conflict(passage):
+        return 0
+    if _is_pure_code_list(passage):
+        return 0
+    return score + _rule_bonus(passage)
 
 
 def relevant_quote(text: str, code_family: str, issue: str) -> Optional[str]:
-    """Pick the passage that mentions the target. None when every passage is off-topic."""
+    """Pick the passage that mentions the target. None when every passage is off-topic.
+
+    A code glued to the wrong title rejects the whole extract. Official rule text
+    is preferred over quoting a neighboring line from that list.
+    """
+    if description_conflict(text):
+        return None
     best = ""
     best_score = 0
     for passage in iter_passages(text):
@@ -494,6 +762,7 @@ class GuidelineClient:
                     code_family=code_family,
                     issue=issue,
                     source_tier=tier,
+                    source_label=source_label_for(tier),
                 )
             )
         kept = [item for item in citations if item.url and item.quote]
@@ -515,6 +784,7 @@ class GuidelineClient:
                         "source": item.source,
                         "title": item.title,
                         "source_tier": item.source_tier,
+                        "source_label": item.source_label,
                     }
                     for item in citations
                 ],
@@ -524,23 +794,6 @@ class GuidelineClient:
             self.degraded_reasons.append(f"guideline cache write failed: {exc}")
 
     def _live(self, code_family: str, issue: str, query: str) -> list[Citation]:
-        search = self._post_json(
-            SEARCH_URL,
-            {
-                "api_key": self.api_key,
-                "query": query,
-                "search_depth": "advanced",
-                "include_domains": ["cms.gov", "cdc.gov"],
-                "chunks_per_source": 3,
-                "max_results": 5,
-                "include_usage": True,
-            },
-        )
-        self.live_requests += 1
-        self.credits += _credits(search, 2)
-        results = [row for row in (search.get("results") or []) if _official(row.get("url") or "")]
-        if not results:
-            return []
         best = {"url": "", "title": "", "quote": "", "score": 0, "rank": -10**9, "tier": "", "fy2026": False}
 
         def consider(url: str, title: str, text: str) -> None:
@@ -563,6 +816,57 @@ class GuidelineClient:
             if _prefers(candidate, best):
                 best.update(candidate)
 
+        self._search_pass(query, code_family, issue, consider, best)
+        # A code list or a secondary page is weak. Ask once more for the rule section.
+        if not passage_is_strong(best.get("quote") or "", best.get("tier") or ""):
+            follow = rule_query(code_family, issue)
+            if follow != query:
+                try:
+                    self._search_pass(follow, code_family, issue, consider, best)
+                except Exception as exc:
+                    self.degraded_reasons.append(
+                        f"Tavily rule-section lookup failed for {code_family}|{issue}: {exc}"
+                    )
+        if not best["quote"]:
+            self.degraded_reasons.append(
+                f"No relevant guideline passage for {code_family}|{issue}; dropped low-confidence citation"
+            )
+            return []
+        tier = best["tier"] or source_tier_for(best["url"], best["title"])
+        return [
+            Citation(
+                url=best["url"],
+                quote=best["quote"],
+                source=_hostname(best["url"]),
+                title=best["title"],
+                retrieved="live",
+                cached_at=None,
+                code_family=code_family,
+                issue=issue,
+                source_tier=tier,
+                source_label=source_label_for(tier),
+            )
+        ]
+
+    def _search_pass(self, query: str, code_family: str, issue: str, consider, best: dict) -> None:
+        """One Tavily search, then extract. Official rule text stops the pass early."""
+        search = self._post_json(
+            SEARCH_URL,
+            {
+                "api_key": self.api_key,
+                "query": query,
+                "search_depth": "advanced",
+                "include_domains": ["cms.gov", "cdc.gov"],
+                "chunks_per_source": 3,
+                "max_results": 5,
+                "include_usage": True,
+            },
+        )
+        self.live_requests += 1
+        self.credits += _credits(search, 2)
+        results = [row for row in (search.get("results") or []) if _official(row.get("url") or "")]
+        if not results:
+            return
         ordered = sorted(
             results,
             key=lambda row: (
@@ -581,7 +885,6 @@ class GuidelineClient:
             row for row in ordered
             if source_tier_for(row.get("url") or "", row.get("title") or "") != "official"
         ]
-        # Extract official guideline pages, FY2026 first, before accepting a secondary page.
         extracts = 0
         for row in official_rows[:3]:
             if extracts >= 3:
@@ -592,36 +895,16 @@ class GuidelineClient:
                 continue
             if self._extract_into(row, query, code_family, issue, consider):
                 extracts += 1
-            if best.get("fy2026"):
+            if best.get("fy2026") and passage_is_strong(best.get("quote") or "", best.get("tier") or ""):
                 break
-        if best["tier"] != "official":
-            # A matching secondary snippet is enough. Extract only when no snippet matched.
-            if not best["quote"]:
-                for row in secondary_rows:
-                    if extracts >= 3:
-                        break
-                    if self._extract_into(row, query, code_family, issue, consider):
-                        extracts += 1
-                    if best["quote"]:
-                        break
-        if not best["quote"]:
-            self.degraded_reasons.append(
-                f"No relevant guideline passage for {code_family}|{issue}; dropped low-confidence citation"
-            )
-            return []
-        return [
-            Citation(
-                url=best["url"],
-                quote=best["quote"],
-                source=_hostname(best["url"]),
-                title=best["title"],
-                retrieved="live",
-                cached_at=None,
-                code_family=code_family,
-                issue=issue,
-                source_tier=best["tier"] or source_tier_for(best["url"], best["title"]),
-            )
-        ]
+        if best["tier"] != "official" and not best["quote"]:
+            for row in secondary_rows:
+                if extracts >= 3:
+                    break
+                if self._extract_into(row, query, code_family, issue, consider):
+                    extracts += 1
+                if best["quote"]:
+                    break
 
     def _extract_into(self, row: dict, query: str, code_family: str, issue: str, consider) -> bool:
         """Extract one URL. Returns True when the request was counted."""

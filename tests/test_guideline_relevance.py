@@ -9,10 +9,12 @@ from pathlib import Path
 from codesentinel.tavily.client import (
     FILTER_VERSION,
     GuidelineClient,
+    description_conflict,
     disk_cache_path,
     guideline_query,
     passage_score,
     relevant_quote,
+    rule_query,
 )
 
 
@@ -258,6 +260,7 @@ class RelevanceTests(unittest.TestCase):
             found = client.lookup("E11", "combination-code-diabetes-ckd")
         self.assertEqual(found[0].url, CMS_PAGE)
         self.assertEqual(found[0].source_tier, "secondary")
+        self.assertEqual(found[0].source_label, "Secondary source")
         self.assertNotIn("mmrr", found[0].url)
 
     def test_negative_lookup_is_cached_on_query_and_filter_version(self):
@@ -301,6 +304,128 @@ class RelevanceTests(unittest.TestCase):
             stale = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
             self.assertEqual(stale.lookup("I50", "specificity-upgrade"), [])
             self.assertGreater(len(calls), first)
+
+    def test_mislabeled_code_passage_is_rejected(self):
+        mislabeled = (
+            "I50.20 Acute combined systolic and diastolic heart failure. "
+            "I50.21 Acute systolic heart failure. "
+            "I50.22 Chronic systolic heart failure."
+        )
+        self.assertTrue(description_conflict(mislabeled))
+        self.assertEqual(passage_score(mislabeled, "I50", "specificity-upgrade"), 0)
+        self.assertIsNone(relevant_quote(mislabeled, "I50", "specificity-upgrade"))
+        # A correct title for the same code is not a conflict.
+        matching = "I50.20 Unspecified systolic (congestive) heart failure is the code when acuity is not stated."
+        self.assertFalse(description_conflict(matching))
+
+    def test_rule_text_beats_a_code_list(self):
+        code_list = (
+            "I50.20 Unspecified systolic (congestive) heart failure. "
+            "I50.21 Acute systolic (congestive) heart failure. "
+            "I50.22 Chronic systolic (congestive) heart failure."
+        )
+        rule = (
+            "Heart failure should be coded to the type and acuity documented. "
+            "Assign chronic systolic failure when the record says chronic systolic, "
+            "including HFrEF, rather than an unspecified code."
+        )
+        self.assertEqual(passage_score(code_list, "I50", "specificity-upgrade"), 0)
+        self.assertGreater(passage_score(rule, "I50", "specificity-upgrade"), 0)
+        quote = relevant_quote(code_list + "\n" + rule, "I50", "specificity-upgrade")
+        self.assertIn("should be coded", quote)
+        self.assertNotIn("I50.20", quote)
+
+    def test_secondary_passage_accepted_only_when_descriptions_match(self):
+        manual = "https://www.cms.gov/files/document/clm104c32.pdf"
+        matching = (
+            "Assign I50.22, Chronic systolic (congestive) heart failure, "
+            "when the record documents chronic systolic heart failure."
+        )
+        mislabeled = (
+            "I50.20 Acute combined systolic and diastolic heart failure "
+            "I50.22 Chronic systolic heart failure"
+        )
+
+        def junk(url, json=None, timeout=None):
+            if url.endswith("/extract"):
+                return _Response({"results": [{"raw_content": mislabeled}], "usage": {"credits": 1}})
+            return _Response({
+                "results": [{"url": manual, "title": "Medicare Claims Processing Manual chapter 32", "content": mislabeled}],
+                "usage": {"credits": 2},
+            })
+
+        with tempfile.TemporaryDirectory() as tmp:
+            client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=junk)
+            self.assertEqual(client.lookup("I50", "specificity-upgrade"), [])
+            self.assertTrue(any("low-confidence" in reason for reason in client.degraded_reasons))
+
+        def accepted(url, json=None, timeout=None):
+            if url.endswith("/extract"):
+                target = (json or {}).get("urls", [""])[0]
+                if "fy-2026" in target:
+                    return _Response({"results": [{"raw_content": CODE_LENGTH}], "usage": {"credits": 1}})
+                return _Response({"results": [{"raw_content": matching}], "usage": {"credits": 1}})
+            query = (json or {}).get("query") or ""
+            if "code to type and acuity" in query:
+                return _Response({
+                    "results": [{"url": OFFICIAL_PDF, "title": OFFICIAL_TITLE, "content": CODE_LENGTH}],
+                    "usage": {"credits": 2},
+                })
+            return _Response({
+                "results": [{"url": manual, "title": "Medicare Claims Processing Manual chapter 32", "content": matching}],
+                "usage": {"credits": 2},
+            })
+
+        with tempfile.TemporaryDirectory() as tmp:
+            client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=accepted)
+            found = client.lookup("I50", "specificity-upgrade")
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0].url, manual)
+        self.assertEqual(found[0].source_tier, "secondary")
+        self.assertEqual(found[0].source_label, "Secondary source")
+        self.assertIn("Chronic systolic", found[0].quote)
+        self.assertNotIn("Acute combined", found[0].quote)
+
+    def test_weak_list_triggers_a_rule_section_query(self):
+        manual = "https://www.cms.gov/files/document/clm104c32.pdf"
+        rule = (
+            "Heart failure should be coded to the type and acuity documented. "
+            "Assign chronic systolic heart failure, including HFrEF, when the record documents that type."
+        )
+        code_list = (
+            "I50.20 Unspecified systolic (congestive) heart failure "
+            "I50.21 Acute systolic (congestive) heart failure "
+            "I50.22 Chronic systolic (congestive) heart failure"
+        )
+        queries = []
+
+        def transport(url, json=None, timeout=None):
+            body = json or {}
+            if url.endswith("/extract"):
+                target = body.get("urls", [""])[0]
+                text = rule if "fy-2026" in target else code_list
+                return _Response({"results": [{"raw_content": text}], "usage": {"credits": 1}})
+            query = body.get("query") or ""
+            queries.append(query)
+            if "code to type and acuity" in query:
+                return _Response({
+                    "results": [{"url": OFFICIAL_PDF, "title": OFFICIAL_TITLE, "content": "See the guidelines."}],
+                    "usage": {"credits": 2},
+                })
+            return _Response({
+                "results": [{"url": manual, "title": "Medicare Claims Processing Manual chapter 32", "content": code_list}],
+                "usage": {"credits": 2},
+            })
+
+        with tempfile.TemporaryDirectory() as tmp:
+            client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
+            found = client.lookup("I50", "specificity-upgrade")
+        self.assertIn(rule_query("I50", "specificity-upgrade"), queries)
+        self.assertEqual(found[0].url, OFFICIAL_PDF)
+        self.assertEqual(found[0].source_tier, "official")
+        self.assertEqual(found[0].source_label, "Official guidelines")
+        self.assertIn("should be coded", found[0].quote)
+        self.assertNotIn("I50.20", found[0].quote)
 
 
 if __name__ == "__main__":

@@ -477,6 +477,8 @@ function renderCitation(citation) {
   else label = "Fixture · not a live excerpt";
   const block = el("div", { class: "query" });
   const line = el("p", {}, chip(label, "cite"));
+  const tierLabel = citation.source_label || (citation.source_tier === "secondary" ? "Secondary source" : citation.source_tier === "official" ? "Official guidelines" : "");
+  if (tierLabel) line.append(chip(tierLabel, citation.source_tier === "secondary" ? "review" : "cite"));
   const href = safeUrl(citation.url);
   if (href) {
     line.append(el("a", { href: href, target: "_blank", rel: "noopener noreferrer", text: citation.title || citation.source || "Official source" }));
