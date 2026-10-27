@@ -38,7 +38,7 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 
 Risk-adjustment coding pays on the conditions the chart actually supports. An unspecified diabetes or heart-failure code leaves a more specific HCC off the record. A negated diagnosis, a family history, or a screening score can put a code on the record that the note does not support. Either mistake is a queue a coder has to clear by hand.
 
-On the live Gold-B test split (66 charts), the rules queue a coder actually sees (C0+, approved plus review) is **2.000 items per chart**. The full cascade (C4) keeps recall at **1.000** and cuts that queue to **1.242** items per chart, **37.9%** less review, at about **$0.0013** per chart.
+On the live Gold-B test split (66 charts), the rules queue a coder actually sees (C0+, approved plus review) is **2.000 items per chart**. The full cascade (C4) keeps recall at **1.000** and cuts that queue to **1.242** items per chart, **37.9%** less review, at about **$0.0014** per chart.
 
 ## How it works
 
@@ -97,7 +97,7 @@ Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` 
 
 ## Live results
 
-Live run on gold sets. C1–C4 called Token Factory. These are not mock scores. The numbers below are from the prior live run and will be updated after the next live run. Guideline citations come from curated sections of the official FY2026 guidelines; Tavily confirms the source live.
+Live run on gold sets. C1–C4 called Token Factory. These are not mock scores. The numbers below are from the live run of commit cfaee89 on 2026-10-27. Citations quote curated, verbatim sections of the FY2026 ICD-10-CM Official Guidelines; for E11.65 and I50 specificity they cite the closest official rule text, since the guidelines have no code-specific sentence for those. Guideline citations come from curated sections of the official FY2026 guidelines; Tavily confirms the source live.
 
 **Gold-B test, 66 FHIR charts, seed 20261024.** C0 is the rules approved bucket. C0+ is approved plus review, the queue a coder sees. The comparison that matters is C4 against C0+.
 
@@ -107,12 +107,12 @@ Live run on gold sets. C1–C4 called Token Factory. These are not mock scores. 
 | C0+ | 0.598 | 1.000 | 0.749 | 79 | 53 | 0 | 2.000 | 0.00000 |
 | C1 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.00020 |
 | C2 | 0.975 | 1.000 | 0.988 | 79 | 2 | 0 | 1.273 | 0.00044 |
-| C3 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.00048 |
-| C4 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.00133 |
+| C3 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.00049 |
+| C4 | 1.000 | 1.000 | 1.000 | 79 | 0 | 0 | 1.242 | 0.00136 |
 
-C4 review burden is 37.9% lower than C0+ (2.000 to 1.242) with recall held at 1.000. Catalog cost is $0.00133 per chart, about $0.0013. C4 latency on that run was P50 2.45 s and P95 13.25 s.
+C4 review burden is 37.9% lower than C0+ (2.000 to 1.242) with recall held at 1.000. Catalog cost is $0.00136 per chart, about $0.0014. C4 latency on that run was P50 2.18 s and P95 14.90 s.
 
-**Gold-A, 10 hand-labeled charts.** Not the headline benchmark. A human coder has not signed those labels (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Live C4: precision **0.875**, recall **0.946**, F1 **0.909**.
+**Gold-A, 10 hand-labeled charts.** Not the headline benchmark. A human coder has not signed those labels (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Live C4: precision **0.872**, recall **0.919**, F1 **0.895**.
 
 **Unsupported existing codes, Gold-B C4:** 3 true positives, 0 false positives, 0 false negatives (3/3).
 
@@ -121,9 +121,9 @@ C4 review burden is 37.9% lower than C0+ (2.000 to 1.242) with recall held at 1.
 
 C4 hard-negative pass rate on Gold-B test was 1.000 in every category in that run: `acute_not_chronic` 3/3, `copied_forward` 2/2, `cross_sentence_negation` 3/3, `family_history` 2/2, `hypothetical_plan` 5/5, `medication_only` 20/20, `negation` 7/7, `resolved` 2/2, `screening` 2/2, `unspecified_sibling` 5/5, `wrong_specificity` 2/2.
 
-Two live C4 passes agreed on 0.924 of charts (same shown code and decision set).
+Two live C4 passes agreed on 0.970 of charts (64 of 66; same shown code and decision set). One chart in C2 (gb-0050) ran degraded after a Super adjudication call returned HTTP 529; no C4 chart was degraded.
 
-Published Gold-A misses from that run include `pt-001` false negatives `D64.9` and `I12.9`. The harness lists a sample, not every miss.
+Published Gold-A misses from that run include `pt-001` false negatives `D64.9` and `I12.9`, and `pt-004` false negative `I50.9`. The harness lists a sample, not every miss.
 
 Gold-B labels were written by construction, by the same author as the offline policy. The policy does not read the labels. Held-out means the test charts were not used to edit prompts.
 
