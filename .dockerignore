@@ -13,3 +13,16 @@ web/tests
 tests
 eval/fixtures/nemotron
 **/.DS_Store
+# Eval artifacts are not needed at runtime. The web Eval tab reads only
+# eval/results/live/summary.json (falling back to eval/results/mock/summary.json).
+eval/fixtures
+eval/gold
+eval/tests
+eval/synthea
+eval/results/**/recordings
+eval/results/**/*.json
+eval/results/**/*.md
+eval/results/**/*.png
+eval/results/**/*.svg
+!eval/results/live/summary.json
+!eval/results/mock/summary.json
