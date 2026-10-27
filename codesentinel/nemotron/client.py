@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import random
 import threading
 import time
 from dataclasses import dataclass
@@ -23,6 +24,20 @@ from codesentinel.nemotron.schemas import (
     PhysicianQueryResult,
     TriageResult,
 )
+
+RETRY_ATTEMPTS = 3
+_RETRYABLE_NETWORK = (requests.Timeout, requests.ConnectionError, TimeoutError)
+
+
+def failure_reason(*, stage: str, model: str, exc: BaseException) -> str:
+    """Status, exception class, model, and stage. No prompt, key, or response body."""
+    status = ""
+    response = getattr(exc, "response", None)
+    code = getattr(response, "status_code", None) if response is not None else None
+    if isinstance(code, int):
+        status = str(code)
+    return f"stage={stage} model={model} status={status} error={type(exc).__name__}"
+
 
 SCHEMA_BY_NAME = {
     "triage": (TRIAGE_SCHEMA, TriageResult),
@@ -78,6 +93,7 @@ class NemotronClient:
         sleep: Optional[Callable[[float], None]] = None,
         record_dir: Optional[str] = None,
         replay: bool = False,
+        rng: Optional[Callable[[], float]] = None,
     ):
         if api_key is None:
             api_key = os.environ.get("NEBIUS_API_KEY", "")
@@ -88,6 +104,7 @@ class NemotronClient:
         self._transport = transport or requests.post
         self._get = get_transport or requests.get
         self._sleep = sleep or time.sleep
+        self._rng = rng or random.random
         self._lock = threading.Lock()
         self.degraded_reasons: list[str] = []
         self.used_fallback = False
@@ -178,7 +195,9 @@ class NemotronClient:
         temperature: float,
         reasoning: bool,
         mock_context: Optional[dict] = None,
+        stage: Optional[str] = None,
     ) -> Completion:
+        stage_name = stage or schema_name
         if self.mock:
             return self._mock_complete(model, messages, schema_name, mock_context or {})
         try:
@@ -190,12 +209,14 @@ class NemotronClient:
                 pydantic_model=pydantic_model,
                 temperature=temperature,
                 reasoning=reasoning,
+                stage=stage_name,
             )
         except Exception as exc:
-            self._record_degraded(f"{model} call failed, used recorded client: {exc}")
+            reason = failure_reason(stage=stage_name, model=model, exc=exc)
+            self._record_degraded(reason)
             fallback = self._mock_complete(model, messages, schema_name, mock_context or {})
             fallback.fallback = True
-            fallback.error = str(exc)
+            fallback.error = reason
             return fallback
 
     def _mock_complete(self, model: str, messages: list[dict], schema_name: str, mock_context: dict) -> Completion:
@@ -226,8 +247,9 @@ class NemotronClient:
         pydantic_model: type[BaseModel],
         temperature: float,
         reasoning: bool,
+        stage: str,
     ) -> Completion:
-        first = self._post_completion(model, messages, schema_name, schema, temperature, reasoning)
+        first = self._post_completion(model, messages, schema_name, schema, temperature, reasoning, stage)
         parsed = _validate(pydantic_model, first.raw)
         if parsed is not None:
             first.data = parsed
@@ -242,7 +264,7 @@ class NemotronClient:
                 ),
             },
         ]
-        second = self._post_completion(model, repair_messages, schema_name, schema, temperature, reasoning)
+        second = self._post_completion(model, repair_messages, schema_name, schema, temperature, reasoning, stage)
         second.input_tokens += first.input_tokens
         second.output_tokens += first.output_tokens
         second.latency_ms += first.latency_ms
@@ -261,6 +283,7 @@ class NemotronClient:
         schema: dict,
         temperature: float,
         reasoning: bool,
+        stage: str,
     ) -> Completion:
         response_format = {
             "type": "json_schema",
@@ -285,29 +308,36 @@ class NemotronClient:
                 return recorded
 
         last_error: Optional[Exception] = None
-        for attempt in range(4):
+        for attempt in range(RETRY_ATTEMPTS):
             started = time.perf_counter()
-            response = self._transport(
-                self.base_url + "chat/completions",
-                headers=self._headers(),
-                json=body,
-                timeout=90,
-            )
+            try:
+                response = self._transport(
+                    self.base_url + "chat/completions",
+                    headers=self._headers(),
+                    json=body,
+                    timeout=90,
+                )
+            except _RETRYABLE_NETWORK as exc:
+                last_error = exc
+                if attempt < RETRY_ATTEMPTS - 1:
+                    self._sleep(self._retry_delay(attempt, None))
+                    continue
+                raise
             latency_ms = int((time.perf_counter() - started) * 1000)
             self._note_headers(getattr(response, "headers", {}))
-            if getattr(response, "status_code", 200) == 429 and attempt < 3:
-                retry_after = 0.0
-                headers = getattr(response, "headers", {}) or {}
-                raw_after = headers.get("Retry-After")
-                try:
-                    retry_after = float(raw_after) if raw_after is not None else 0.0
-                except (TypeError, ValueError):
-                    retry_after = 0.0
-                self._sleep(retry_after if retry_after > 0 else min(2**attempt, 8))
+            status = getattr(response, "status_code", 200)
+            retryable = status == 429 or (isinstance(status, int) and 500 <= status <= 599)
+            if retryable and attempt < RETRY_ATTEMPTS - 1:
+                self._sleep(self._retry_delay(attempt, response))
                 continue
             try:
                 response.raise_for_status()
             except Exception as exc:
+                if getattr(exc, "response", None) is None:
+                    try:
+                        exc.response = response  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                 last_error = exc
                 raise
             payload = response.json()
@@ -331,7 +361,19 @@ class NemotronClient:
             )
             self._write_recording(digest, content, usage if isinstance(usage, dict) else {}, model)
             return completion
-        raise last_error or RuntimeError("Token Factory request failed")
+        raise last_error or RuntimeError(f"Token Factory request failed at stage {stage}")
+
+    def _retry_delay(self, attempt: int, response) -> float:
+        """Retry-After when the server sets one, otherwise exponential backoff plus jitter."""
+        headers = getattr(response, "headers", {}) or {}
+        raw_after = headers.get("Retry-After") if response is not None else None
+        try:
+            retry_after = float(raw_after) if raw_after is not None else 0.0
+        except (TypeError, ValueError):
+            retry_after = 0.0
+        if retry_after > 0:
+            return retry_after
+        return min(2**attempt, 8) + (float(self._rng()) * 0.25)
 
     def _read_recording(self, digest: str, messages: list) -> Optional[Completion]:
         path = self.record_dir / f"{digest}.json"

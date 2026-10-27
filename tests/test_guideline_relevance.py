@@ -14,6 +14,7 @@ from codesentinel.tavily.client import (
     guideline_query,
     passage_score,
     relevant_quote,
+    reset_pdf_confirmation,
     rule_query,
 )
 
@@ -43,6 +44,10 @@ HEART_FAILURE = (
     "Heart failure codes in category I50 are selected to the type documented, "
     "including systolic heart failure I50.22."
 )
+COPD_RULE = (
+    "Chronic obstructive pulmonary disease in category J44 should be coded "
+    "to the documented type, including COPD with an acute lower respiratory infection."
+)
 HEART_FAILURE_LOOSE = (
     "Chronic systolic heart failure, including HFrEF and acute on chronic diastolic failure, "
     "is reported from the type and acuity documented in the record."
@@ -66,6 +71,9 @@ class _Response:
 
 
 class RelevanceTests(unittest.TestCase):
+    def setUp(self):
+        reset_pdf_confirmation()
+
     def test_off_topic_passages_score_zero(self):
         self.assertEqual(passage_score(CHEST_PAIN, "E11", "specificity-hyperglycemia"), 0)
         self.assertIsNone(relevant_quote(CHEST_PAIN, "E11", "specificity-hyperglycemia"))
@@ -109,34 +117,33 @@ class RelevanceTests(unittest.TestCase):
         self.assertIn("HFrEF", window)
         self.assertIn("heart failure", window.lower())
 
-    def test_live_lookup_drops_junk_and_keeps_the_matching_passage(self):
+    def test_anchor_beats_a_mislabeled_tavily_passage(self):
         calls = []
 
         def transport(url, json=None, timeout=None):
             calls.append(url)
-            if url.endswith("/extract"):
-                return _Response({
-                    "results": [{
-                        "raw_content": CHEST_PAIN + "\n" + HYPERGLYCEMIA,
-                    }],
-                    "usage": {"credits": 1},
-                })
             return _Response({
                 "results": [{
-                    "url": "https://www.cms.gov/medicare/coding-billing/icd-10-codes",
-                    "title": "ICD-10-CM",
-                    "content": CHEST_PAIN,
+                    "url": OFFICIAL_PDF,
+                    "title": OFFICIAL_TITLE,
+                    "content": "I50.20 Acute combined systolic and diastolic heart failure.",
                 }],
-                "usage": {"credits": 2},
+                "usage": {"credits": 1},
             })
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
             found = client.lookup("E11", "specificity-hyperglycemia")
         self.assertEqual(len(found), 1)
-        self.assertIn("E11.65", found[0].quote)
-        self.assertNotIn("Chest pain", found[0].quote)
-        self.assertTrue(any(url.endswith("/extract") for url in calls))
+        self.assertEqual(found[0].retrieved, "anchor")
+        self.assertEqual(found[0].source_tier, "official")
+        self.assertEqual(found[0].section, "I.C.4.a")
+        self.assertEqual(found[0].page, 39)
+        self.assertIn("combination codes", found[0].quote)
+        self.assertNotIn("Acute combined", found[0].quote)
+        self.assertNotIn("[...]", found[0].quote)
+        self.assertFalse(any(str(url).endswith("/extract") for url in calls))
+        self.assertTrue(calls)
 
     def test_live_lookup_marks_low_confidence_when_nothing_matches(self):
         def transport(url, json=None, timeout=None):
@@ -153,14 +160,14 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            found = client.lookup("I50", "specificity-upgrade")
+            found = client.lookup("J44", "specificity-upgrade")
         self.assertEqual(found, [])
         self.assertTrue(any("low-confidence" in reason for reason in client.degraded_reasons))
 
     def test_cached_junk_is_not_served(self):
         def transport(url, json=None, timeout=None):
             if url.endswith("/extract"):
-                return _Response({"results": [{"raw_content": HEART_FAILURE}], "usage": {"credits": 1}})
+                return _Response({"results": [{"raw_content": COPD_RULE}], "usage": {"credits": 1}})
             return _Response({
                 "results": [{
                     "url": "https://www.cdc.gov/nchs/icd/icd-10-cm.htm",
@@ -171,9 +178,9 @@ class RelevanceTests(unittest.TestCase):
             })
 
         with tempfile.TemporaryDirectory() as tmp:
-            cache = disk_cache_path(tmp, "I50", "specificity-upgrade")
+            cache = disk_cache_path(tmp, "J44", "specificity-upgrade")
             cache.write_text(json.dumps({
-                "query": guideline_query("I50", "specificity-upgrade"),
+                "query": guideline_query("J44", "specificity-upgrade"),
                 "filter_version": FILTER_VERSION,
                 "cached_at": datetime.now(timezone.utc).isoformat(),
                 "citations": [{
@@ -184,15 +191,16 @@ class RelevanceTests(unittest.TestCase):
                 }],
             }), encoding="utf-8")
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            found = client.lookup("I50", "specificity-upgrade")
+            found = client.lookup("J44", "specificity-upgrade")
         self.assertEqual(len(found), 1)
-        self.assertIn("heart failure", found[0].quote.lower())
+        self.assertIn("chronic obstructive", found[0].quote.lower())
         self.assertTrue(any("cached citation" in reason for reason in client.degraded_reasons))
 
     def test_fixtures_are_not_run_through_the_relevance_filter(self):
         client = GuidelineClient(api_key="", use_fixtures=True)
-        found = client.lookup("I50", "specificity-upgrade")
+        found = client.lookup("J44", "specificity-upgrade")
         self.assertTrue(found)
+        self.assertEqual(found[0].retrieved, "fixture")
         self.assertIn("Not a live official excerpt", found[0].quote)
 
     def test_i50_query_names_the_type_and_the_official_guidelines(self):
@@ -230,7 +238,7 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            found = client.lookup("E11", "combination-code-diabetes-ckd")
+            found = client.lookup("J44", "combination-code")
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].url, OFFICIAL_PDF)
         self.assertEqual(found[0].source_tier, "official")
@@ -257,7 +265,7 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            found = client.lookup("E11", "combination-code-diabetes-ckd")
+            found = client.lookup("J44", "combination-code")
         self.assertEqual(found[0].url, CMS_PAGE)
         self.assertEqual(found[0].source_tier, "secondary")
         self.assertEqual(found[0].source_label, "Secondary source")
@@ -281,28 +289,28 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            self.assertEqual(client.lookup("I50", "specificity-upgrade"), [])
+            self.assertEqual(client.lookup("J44", "specificity-upgrade"), [])
             first = len(calls)
             self.assertGreater(first, 0)
-            self.assertEqual(client.lookup("I50", "specificity-upgrade"), [])
+            self.assertEqual(client.lookup("J44", "specificity-upgrade"), [])
             self.assertEqual(len(calls), first)
             self.assertGreater(client.cache_hits, 0)
 
             later = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            self.assertEqual(later.lookup("I50", "specificity-upgrade"), [])
+            self.assertEqual(later.lookup("J44", "specificity-upgrade"), [])
             self.assertEqual(len(calls), first)
             self.assertEqual(later.live_requests, 0)
             self.assertGreater(later.cache_hits, 0)
 
-            path = disk_cache_path(tmp, "I50", "specificity-upgrade")
+            path = disk_cache_path(tmp, "J44", "specificity-upgrade")
             payload = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(payload["citations"], [])
             self.assertEqual(payload["filter_version"], FILTER_VERSION)
-            self.assertEqual(payload["query"], guideline_query("I50", "specificity-upgrade"))
+            self.assertEqual(payload["query"], guideline_query("J44", "specificity-upgrade"))
             payload["filter_version"] = "0"
             path.write_text(json.dumps(payload), encoding="utf-8")
             stale = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            self.assertEqual(stale.lookup("I50", "specificity-upgrade"), [])
+            self.assertEqual(stale.lookup("J44", "specificity-upgrade"), [])
             self.assertGreater(len(calls), first)
 
     def test_mislabeled_code_passage_is_rejected(self):
@@ -356,7 +364,10 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=junk)
-            self.assertEqual(client.lookup("I50", "specificity-upgrade"), [])
+            self.assertEqual(
+                client._live("I50", "specificity-upgrade", guideline_query("I50", "specificity-upgrade")),
+                [],
+            )
             self.assertTrue(any("low-confidence" in reason for reason in client.degraded_reasons))
 
         def accepted(url, json=None, timeout=None):
@@ -378,7 +389,7 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=accepted)
-            found = client.lookup("I50", "specificity-upgrade")
+            found = client._live("I50", "specificity-upgrade", guideline_query("I50", "specificity-upgrade"))
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].url, manual)
         self.assertEqual(found[0].source_tier, "secondary")
@@ -419,7 +430,7 @@ class RelevanceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
-            found = client.lookup("I50", "specificity-upgrade")
+            found = client._live("I50", "specificity-upgrade", guideline_query("I50", "specificity-upgrade"))
         self.assertIn(rule_query("I50", "specificity-upgrade"), queries)
         self.assertEqual(found[0].url, OFFICIAL_PDF)
         self.assertEqual(found[0].source_tier, "official")

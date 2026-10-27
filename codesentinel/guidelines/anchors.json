@@ -1,0 +1,56 @@
+{
+  "pdf_url": "https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf",
+  "pdf_sha256": "2e87b3b088d6032edf6cda8c946cf342619df0c07237055a0e3be68410a0c267",
+  "title": "ICD-10-CM Official Guidelines for Coding and Reporting",
+  "fiscal_year": "FY 2026",
+  "anchors": [
+    {
+      "key": "E11|combination-code-diabetes-ckd",
+      "code": "E11.22",
+      "issue": "combination-code-diabetes-ckd",
+      "section": "I.A.15",
+      "page": 11,
+      "quote": "The word “with” or “in” should be interpreted to mean “associated with” or “due to” when it appears in a code title, the Alphabetic Index (either under a main term or subterm), or an instructional note in the Tabular List. The classification presumes a causal relationship between the two conditions linked by these terms in the Alphabetic Index or Tabular List. These conditions should be coded as related even in the absence of provider documentation explicitly linking them, unless the documentation clearly states the conditions are unrelated or when another guideline exists that specifically requires a documented linkage between two conditions (e.g., sepsis guideline for “acute organ dysfunction that is not clearly associated with the sepsis”)."
+    },
+    {
+      "key": "E11|specificity-hyperglycemia",
+      "code": "E11.65",
+      "issue": "specificity-hyperglycemia",
+      "section": "I.C.4.a",
+      "page": 39,
+      "quote": "The diabetes mellitus codes are combination codes that include the type of diabetes mellitus, the body system affected, and the complications affecting that body system. As many codes within a particular category as are necessary to describe all of the complications of the disease may be used. They should be sequenced based on the reason for a particular encounter. Assign as many codes from categories E08 – E13 as needed to identify all of the associated conditions that the patient has."
+    },
+    {
+      "key": "I12|combination-code-hypertensive-ckd",
+      "code": "I12",
+      "issue": "combination-code-hypertensive-ckd",
+      "section": "I.C.9.a.2",
+      "page": 50,
+      "quote": "Assign codes from category I12, Hypertensive chronic kidney disease, when both hypertension and a condition classifiable to category N18, Chronic kidney disease (CKD), are present. CKD should not be coded as hypertensive if the provider indicates the CKD is not related to the hypertension. The appropriate code from category N18 should be used as a secondary code with a code from category I12 to identify the stage of chronic kidney disease."
+    },
+    {
+      "key": "I13|combination-code-hypertensive-ckd",
+      "code": "I13",
+      "issue": "combination-code-hypertensive-ckd",
+      "section": "I.C.9.a.3",
+      "page": 51,
+      "quote": "The codes in category I13, Hypertensive heart and chronic kidney disease, are combination codes that include hypertension, heart disease and chronic kidney disease. Assign codes from combination category I13, Hypertensive heart and chronic kidney disease, when there is hypertension with both heart and chronic kidney disease. If heart failure is present, assign an additional code from category I50 to identify the type of heart failure."
+    },
+    {
+      "key": "I50|specificity-upgrade",
+      "code": "I50",
+      "issue": "specificity-upgrade",
+      "section": "I.C.9.a.3",
+      "page": 51,
+      "quote": "If heart failure is present, assign an additional code from category I50 to identify the type of heart failure."
+    },
+    {
+      "key": "N18|specificity-upgrade",
+      "code": "N18",
+      "issue": "specificity-upgrade",
+      "section": "I.C.14.a.1",
+      "page": 62,
+      "quote": "The ICD-10-CM classifies CKD based on severity. The severity of CKD is designated by stages 1-5. Stage 2, code N18.2, equates to mild CKD; stage 3, codes N18.30-N18.32, equate to moderate CKD; and stage 4, code N18.4, equates to severe CKD."
+    }
+  ]
+}

@@ -97,7 +97,7 @@ Calls use `POST /chat/completions` on `https://api.tokenfactory.nebius.com/v1/` 
 
 ## Live results
 
-Live run on gold sets. C1–C4 called Token Factory. Guideline lookups in that run used the recorded guideline cache. These are not mock scores. Round-3 citation filtering (rule text over code lists, rejection of mismatched titles) can shift a later live run slightly.
+Live run on gold sets. C1–C4 called Token Factory. These are not mock scores. The numbers below are from the prior live run and will be updated after the next live run. Guideline citations come from curated sections of the official FY2026 guidelines; Tavily confirms the source live.
 
 **Gold-B test, 66 FHIR charts, seed 20261024.** C0 is the rules approved bucket. C0+ is approved plus review, the queue a coder sees. The comparison that matters is C4 against C0+.
 
@@ -157,10 +157,10 @@ curl -X POST http://localhost:8000/audit -H "Content-Type: application/json" -d 
 |---|---|
 | `NEBIUS_API_KEY` | Token Factory. Empty runs the recorded Nemotron client (`mode: mock`). |
 | `NEBIUS_BASE_URL` | Default `https://api.tokenfactory.nebius.com/v1/`. |
-| `TAVILY_API_KEY` | Guideline search. Empty uses recorded fixtures (`guideline_mode: fixture`). |
+| `TAVILY_API_KEY` | Confirms the official FY2026 guideline PDF and fills codes with no curated section. Empty skips that check; curated sections are still cited. |
 | `GUIDELINE_CACHE_DIR` | Disk cache for Tavily extracts. Default `.cache/guidelines`. |
 
-With both keys unset, fixture quotes are labeled and are not live official excerpts. Set both keys for Token Factory and Tavily.
+With both keys unset, curated guideline sections are still cited. Fixture quotes for codes without an anchor are labeled and are not live official excerpts. Set both keys for Token Factory and Tavily.
 
 Web demo, from `web/`:
 

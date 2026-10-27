@@ -472,7 +472,9 @@ function renderRow(payload, item) {
 function renderCitation(citation) {
   const retrieved = citation.retrieved || "fixture";
   let label = "Fixture";
-  if (retrieved === "live") label = "Tavily · live";
+  if (retrieved === "anchor") {
+    label = citation.section ? citation.section + (citation.page ? " · p. " + citation.page : "") : "Curated section";
+  } else if (retrieved === "live") label = "Tavily · live";
   else if (retrieved === "cache") label = "Tavily · cached" + (citation.cached_at ? " " + citation.cached_at : "");
   else label = "Fixture · not a live excerpt";
   const block = el("div", { class: "query" });

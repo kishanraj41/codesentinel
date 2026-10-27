@@ -30,12 +30,14 @@ class CitationModel(BaseModel):
     quote: str
     source: str = ""
     title: str = ""
-    retrieved: Literal["live", "cache", "fixture"]
+    retrieved: Literal["live", "cache", "fixture", "anchor"]
     cached_at: Optional[str] = None
     code_family: str
     issue: str
     source_tier: Literal["official", "secondary", ""] = ""
     source_label: str = ""
+    section: str = ""
+    page: Optional[int] = None
 
 
 class WorklistItem(BaseModel):
@@ -172,7 +174,7 @@ class AuditResponse(BaseModel):
     patient_id: str
     patient_name: str = ""
     mode: Literal["mock", "live", "degraded"]
-    guideline_mode: Literal["live", "cache", "fixture", "mixed", "none"]
+    guideline_mode: Literal["live", "cache", "fixture", "anchor", "mixed", "none"]
     degraded_reasons: list[str] = Field(default_factory=list)
     summary: AuditSummary
     worklist: list[WorklistItem]

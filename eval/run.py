@@ -103,6 +103,7 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
                 "latency_s": scored["latency_s"],
                 "cost_usd": scored["cost_usd"],
                 "mode": scored["mode"],
+                "degraded_reasons": list(audit.get("degraded_reasons") or []),
             })
         summary = aggregate(
             chart_scores,
@@ -327,6 +328,10 @@ def _markdown(summary: dict) -> str:
     lines.append("")
     lines.append("This task is separate from gap precision and recall. C0 and C0+ do not run the two-way pass.")
     lines.append("")
+    lines.append("## Degraded runs")
+    lines.append("")
+    lines.extend(format_degraded_section(summary.get("degraded_reasons") or {}))
+    lines.append("")
     lines.append("## Guideline decisions")
     lines.append("")
     lines.append("| Config | Decisions changed by the guideline step | Unsupported-claim drops |")
@@ -380,6 +385,40 @@ def _markdown(summary: dict) -> str:
     lines.append("- Gold-B labels were written by construction, by the same author as the offline policy. The policy does not read the labels, but it was designed around the same phenomena. Held-out means the test charts were not used to edit prompts; it does not mean an independent model.")
     lines.append("")
     return "\n".join(lines) + "\n"
+
+
+def degraded_report(per_config: dict) -> dict[str, Any]:
+    """Charts that fell back, and the unique reason strings. No prompts or keys."""
+    charts = 0
+    reasons: list[str] = []
+    seen: set[str] = set()
+    by_config: dict[str, int] = {}
+    for cid, payload in per_config.items():
+        count = 0
+        for chart in payload.get("charts") or []:
+            chart_reasons = [str(item) for item in (chart.get("degraded_reasons") or []) if str(item).strip()]
+            if chart.get("mode") == "degraded" or chart_reasons:
+                charts += 1
+                count += 1
+                for reason in chart_reasons:
+                    if reason not in seen:
+                        seen.add(reason)
+                        reasons.append(reason)
+        by_config[str(cid)] = count
+    return {"charts": charts, "reasons": reasons, "by_config": by_config}
+
+
+def format_degraded_section(report: dict) -> list[str]:
+    charts = int(report.get("charts") or 0)
+    reasons = [str(item) for item in (report.get("reasons") or []) if str(item).strip()]
+    lines = [f"Charts that fell back to the recorded client: {charts}."]
+    if not reasons:
+        lines.append("No degraded reasons recorded.")
+        return lines
+    lines.append("Reasons:")
+    for reason in reasons:
+        lines.append(f"- {reason}")
+    return lines
 
 
 def _dataset_block(name: str, split: str, n: int) -> dict[str, Any]:
@@ -457,7 +496,8 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
         detail = (
             "C0 and C0+ stay on the rules pipeline. C1–C4 ran through the real cascade on Token Factory. "
             "Nemotron responses were recorded under eval/fixtures/nemotron. "
-            "Guideline lookups use eval/fixtures/guideline_cache. "
+            "Guideline citations come from curated sections of the official FY2026 guidelines. "
+            "Tavily confirms that source and is the fallback for a code without a curated section. "
             "Replay those Nemotron completions with CODESENTINEL_REPLAY=1."
         )
     else:
@@ -466,7 +506,8 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
             "C0 and C0+ are the rules pipeline. C1–C3 decisions come from the deterministic policy in "
             "eval/policy.py. C4 decisions come from the CodeSentinel cascade in mock mode: the recorded "
             "client applies the same chart-text instructions as the live prompts (negation, family history, "
-            "screening, and medication-only) and guideline fixtures. Do not cite the mock C4 row as live model quality."
+            "screening, and medication-only). Curated FY2026 sections are cited for the codes they cover; "
+            "other guideline quotes are labeled fixtures. Do not cite the mock C4 row as live model quality."
         )
     summary = {
         "schema": "codesentinel.eval.summary.v1",
@@ -492,6 +533,7 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
             for c in configs
         ],
         "comparisons": _round(_comparisons(configs)),
+        "degraded_reasons": degraded_report(per_config),
         "known_failures": failures,
         "known_failure_counts": counts,
         "stability": _round(_stability(adapter, rows, mode="mock" if run_mode == "mock" else mode)),
@@ -541,6 +583,7 @@ def _write_dataset_results(stem: str, per_config: dict, *, dataset_name: str, sp
             }
             for c in configs
         ],
+        "degraded_reasons": degraded_report(per_config),
     }
     (RESULTS_DIR / f"{stem}_summary.json").write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
     _write_config_files(per_config, prefix=f"{stem}_")

@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
 from codesentinel.nemotron.catalog import CATALOG_PRICE_TABLE, SUPER, ULTRA, cost_usd
-from codesentinel.nemotron.client import Completion, NemotronClient
+from codesentinel.nemotron.client import Completion, NemotronClient, failure_reason
 from codesentinel.nemotron.mock_reasoner import (
     TRIAGE_INSTRUCTIONS,
     apply_guideline_gate,
@@ -514,9 +514,10 @@ def _triage_one(client, model, gap, profile, notes, corpus) -> Completion:
             temperature=0,
             reasoning=False,
             mock_context=context,
+            stage="triage",
         )
     except Exception as exc:
-        client._record_degraded(f"triage failed: {exc}")
+        client._record_degraded(failure_reason(stage="triage", model=model, exc=exc))
         return Completion(
             data=None,
             raw="",
@@ -580,6 +581,7 @@ def _adjudicate(client, gap, triage: TriageResult, quotes, citations, windows=No
             "assertion_status": triage.assertion_status,
             "mention_windows": windows,
         },
+        stage="adjudication",
     )
 
 
@@ -629,6 +631,7 @@ def _escalate(client, gap, triage, quotes, citations, decision, rationale, windo
             "assertion_status": triage.assertion_status,
             "mention_windows": windows,
         },
+        stage="escalation",
     )
 
 
@@ -659,6 +662,7 @@ def _draft_query(client, gap, quotes) -> Completion:
         temperature=0.6,
         reasoning=True,
         mock_context={"icd10_code": code, "code_display": display, "quotes": quotes},
+        stage="physician_query",
     )
 
 
@@ -906,12 +910,10 @@ def _guideline_mode(citations: list[dict]) -> str:
     found = {item.get("retrieved") for item in citations if item.get("retrieved")}
     if not found:
         return "none"
-    if found == {"live"}:
-        return "live"
-    if found == {"cache"}:
-        return "cache"
-    if found == {"fixture"}:
-        return "fixture"
+    if len(found) == 1:
+        only = next(iter(found))
+        if only in {"live", "cache", "fixture", "anchor"}:
+            return only
     return "mixed"
 
 

@@ -1,0 +1,242 @@
+FY2026 ICD-10-CM Official Guidelines for Coding and Reporting
+Source: https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf
+sha256: 2e87b3b088d6032edf6cda8c946cf342619df0c07237055a0e3be68410a0c267
+Extracted with pypdf. Line breaks are the extractor's. Quotes in anchors.json
+are contiguous spans of this text with whitespace collapsed, and nothing else changed.
+
+===== PAGE 11 =====
+ICD-10-CM Official Guidelines for Coding and Reporting 
+FY 2026 
+Page 11 of 121 
+ 
+underlying etiology, Parkinson’s disease, and must be sequenced first, whereas codes 
+F02.80 and F02.81- represent the manifestation of dementia in diseases classified 
+elsewhere, with or without behavioral disturbance. 
+ 
+“Code first” and “Use additional code” notes are also used as sequencing rules in the 
+classification for certain codes that are not part of an etiology/ manifestation 
+combination. 
+ 
+See Section I.B.7. Multiple coding for a single condition. 
+14. “And” 
+The word “and” should be interpreted to mean either “and” or “or” when it appears in a 
+title. 
+ 
+For example, cases of “tuberculosis of bones”, “tuberculosis of joints” and “tuberculosis 
+of bones and joints” are classified to subcategory A18.0, Tuberculosis of bones and 
+joints. 
+15. “With” 
+The word “with” or “in” should be interpreted to mean “associated with” or “due to” 
+when it appears in a code title, the Alphabetic Index (either under a main term or 
+subterm), or an instructional note in the Tabular List. The classification presumes a 
+causal relationship between the two conditions linked by these terms in the Alphabetic 
+Index or Tabular List. These conditions should be coded as related even in the absence 
+of provider documentation explicitly linking them, unless the documentation clearly 
+states the conditions are unrelated or when another guideline exists that specifically 
+requires a documented linkage between two conditions (e.g., sepsis guideline for “acute 
+organ dysfunction that is not clearly associated with the sepsis”). 
+For conditions not specifically linked by these relational terms in the classification or 
+when a guideline requires that a linkage between two conditions be explicitly 
+documented, provider documentation must link the conditions in order to code them as 
+related. 
+ 
+The word “with” in the Alphabetic Index is sequenced immediately following the main 
+term or subterm, not in alphabetical order. 
+16. “See” and “See Also” 
+The “see” instruction following a main term in the Alphabetic Index indicates that 
+another term should be referenced. It is necessary to go to the main term referenced 
+with the “see” note to locate the correct code. 
+ 
+A “see also” instruction following a main term in the Alphabetic Index instructs that 
+there is another main term that may also be referenced that may provide additional 
+Alphabetic Index entries that may be useful. It is not necessary to follow the “see also” 
+note when the original main term provides the necessary code.
+
+===== PAGE 39 =====
+ICD-10-CM Official Guidelines for Coding and Reporting 
+FY 2026 
+Page 39 of 121 
+ 
+Complications of transplanted organs and tissue, followed by code C80.2, 
+Malignant neoplasm associated with transplanted organ. Use an additional code 
+for the specific malignancy. 
+s. Breast Implant Associated Anaplastic Large Cell Lymphoma 
+Breast implant associated anaplastic large cell lymphoma (BIA-ALCL) is a type 
+of lymphoma that can develop around breast implants. Assign code C84.7A, 
+Anaplastic large cell lymphoma, ALK-negative, breast, for BIA-ALCL or 
+C84.7B, Anaplastic large cell lymphoma, ALK-negative, in remission, for BIA-
+ALCL in remission. Do not assign a complication code from chapter 19. 
+t. Secondary malignant neoplasm of lymphoid tissue 
+When a malignant neoplasm of lymphoid tissue metastasizes beyond the lymph 
+nodes, a code from categories C81-C85 with a final character identifying 
+“extranodal and solid organ sites” should be assigned rather than a code for the 
+secondary neoplasm of the affected solid organ. For example, for metastasis of 
+diffuse large B-cell lymphoma to the lung, brain and left adrenal gland, assign 
+code C83.398, Diffuse large B-cell lymphoma of other extranodal and solid 
+organ sites. 
+ 
+3. Chapter 3: Disease of the blood and blood-forming organs and 
+certain disorders involving the immune mechanism (D50-D89) 
+Reserved for future guideline expansion 
+4. Chapter 4: Endocrine, Nutritional, and Metabolic Diseases (E00 -E89) 
+a. Diabetes mellitus 
+The diabetes mellitus codes are combination codes that include the type of 
+diabetes mellitus, the body system affected, and the complications affecting that 
+body system. As many codes within a particular category as are necessary to 
+describe all of the complications of the disease may be used. They should be 
+sequenced based on the reason for a particular encounter. Assign as many codes 
+from categories E08 – E13 as needed to identify all of the associated conditions 
+that the patient has. 
+1) Type of diabetes 
+The age of a patient is not the sole determining factor, though most type 
+1 diabetics develop the condition before reaching puberty. For this 
+reason, type 1 diabetes mellitus is also referred to as juvenile diabetes. 
+ 
+(a) Presymptomatic Type 1 Diabetes Mellitus 
+Codes E10.A-, Type 1 diabetes mellitus, presymptomatic, are 
+assigned for early-stage type 1 diabetes that predates the onset of 
+symptoms.
+
+===== PAGE 50 =====
+ICD-10-CM Official Guidelines for Coding and Reporting 
+FY 2026 
+Page 50 of 121 
+ 
+9. Chapter 9: Diseases of the Circulatory System (I00 -I99) 
+a. Hypertension 
+The classification presumes a causal relationship between hypertension and heart 
+involvement and between hypertension and kidney involvement, as the two 
+conditions are linked by the term “with” in the Alphabetic Index. These 
+conditions should be coded as related even in the absence of provider 
+documentation explicitly linking them, unless the documentation clearly states 
+the conditions are unrelated. 
+ 
+For hypertension and conditions not specifically linked by relational terms such 
+as “with,” “associated with” or “due to” in the classification, provider 
+documentation must link the conditions in order to code them as related. 
+1) Hypertension with Heart Disease 
+Hypertension with heart conditions classified to I50.-, Heart failure, 
+I51.4, Myocarditis, unspecified, I51.89, Other ill-defined heart 
+diseases, and I51.9, Heart disease, unspecified, is assigned to a code 
+from category I11, Hypertensive heart disease. Use additional 
+code(s) from category I50, Heart failure, or I51, Complications and 
+ill-defined descriptions of heart disease, to identify the heart 
+condition.  
+ 
+Hypertension with heart conditions classified to I51.5, Myocardial 
+degeneration, or I51.7, Cardiomegaly, is assigned to a code from 
+category I11, Hypertensive heart disease. No additional code is 
+assigned to identify the specific heart condition.  
+ 
+The same heart conditions (I50.-, I51.4-I51.7, I51.89, I51.9) with 
+hypertension are coded separately if the provider has documented they 
+are unrelated to the hypertension. The applicable hypertension code 
+I10, Essential (primary) hypertension, or a code from category I15, 
+Secondary hypertension, should be assigned. Sequence according to 
+the circumstances of the admission/encounter. 
+2) Hypertensive Chronic Kidney Disease 
+Assign codes from category I12, Hypertensive chronic kidney disease, 
+when both hypertension and a condition classifiable to category N18, 
+Chronic kidney disease (CKD), are present. CKD should not be coded as 
+hypertensive if the provider indicates the CKD is not related to the 
+hypertension. 
+ 
+The appropriate code from category N18 should be used as a secondary 
+code with a code from category I12 to identify the stage of chronic 
+kidney disease.
+
+===== PAGE 51 =====
+ICD-10-CM Official Guidelines for Coding and Reporting 
+FY 2026 
+Page 51 of 121 
+ 
+See Section I.C.14. Chronic kidney disease. 
+ 
+If a patient has hypertensive chronic kidney disease and acute renal 
+failure, the acute renal failure should also be coded. Sequence according 
+to the circumstances of the admission/encounter. 
+3) Hypertensive Heart and Chronic Kidney Disease 
+The codes in category I13, Hypertensive heart and chronic kidney 
+disease, are combination codes that include hypertension, heart disease 
+and chronic kidney disease.  Assign codes from combination category 
+I13, Hypertensive heart and chronic kidney disease, when there is 
+hypertension with both heart and chronic kidney disease. If heart failure 
+is present, assign an additional code from category I50 to identify the 
+type of heart failure. 
+ 
+The ap
+propriate code from category N18, Chronic kidney disease, should 
+be used as a secondary code with a code from category I13 to identify 
+the stage of chronic kidney disease. 
+ 
+See Section I.C.14. Chronic kidney disease. 
+ 
+The Includes note at I13 specifies that the conditions included at I11 and 
+I12 are included together in I13. If a patient has hypertension, heart 
+disease and chronic kidney disease, then a code from I13 should be used, 
+not codes from I11 or I12,  
+ 
+For patients with both acute renal failure and chronic kidney disease, the 
+acute renal failure should also be coded. Sequence according to the 
+circumstances of the admission/encounter. 
+4) Hypertensive Cerebrovascular Disease 
+For hypertensive cerebrovascular disease, first assign the appropriate 
+code from categories I60-I69, followed by the appropriate hypertension 
+code. 
+5) Hypertensive Retinopathy 
+Subcategory H35.0, Background retinopathy and retinal vascular 
+changes, should be used along with a code from categories I10 – I15, in 
+the Hypertensive diseases section, to include the systemic hypertension. 
+The sequencing is based on the reason for the encounter. 
+6) Hypertension, Secondary 
+Secondary hypertension is due to an underlying condition. Two codes are 
+required: one to identify the underlying etiology and one from category 
+I15 to identify the hypertension. Sequencing of codes is determined by 
+the reason for admission/encounter.
+
+===== PAGE 62 =====
+ICD-10-CM Official Guidelines for Coding and Reporting 
+FY 2026 
+Page 62 of 121 
+ 
+1) Osteoporosis without pathological fracture 
+Category M81, Osteoporosis without current pathological fracture, is for 
+use for patients with osteoporosis who do not currently have a pathologic 
+fracture due to the osteoporosis, even if they have had a fracture in the 
+past. For patients with a history of osteoporosis fractures, status code 
+Z87.310, Personal history of (healed) osteoporosis fracture, should 
+follow the code from M81. 
+2) Osteoporosis with current pathological fracture 
+Category M80, Osteoporosis with current pathological fracture, is for 
+patients who have a current pathologic fracture at the time of an 
+encounter. The codes under M80 identify the site of the fracture. A code 
+from category M80, not a traumatic fracture code, should be used for any 
+patient with known osteoporosis who suffers a fracture, even if the 
+patient had a minor fall or trauma, if that fall or trauma would not usually 
+break a normal, healthy bone. 
+e. Multisystem Inflammatory Syndrome 
+ 
+See Section I.C.1.g.1.l. for Multisystem Inflammatory Syndrome 
+14. Chapter 14: Diseases of Genitourinary System (N00-N99) 
+a. Chronic kidney disease 
+1) Stages of chronic kidney disease (CKD) 
+The ICD-10-CM classifies CKD based on severity. The severity of CKD 
+is designated by stages 1-5. Stage 2, code N18.2, equates to mild CKD; 
+stage 3, codes N18.30-N18.32, equate to moderate CKD; and stage 4, 
+code N18.4, equates to severe CKD. Code N18.6, End stage renal 
+disease (ESRD), is assigned when the provider has documented end-
+stage renal disease (ESRD). 
+ 
+If both a stage of CKD and ESRD are documented, assign code N18.6 
+only. 
+2) Chronic kidney disease and kidney transplant status 
+Patients who have undergone kidney transplant may still have some form 
+of chronic kidney disease (CKD) because the kidney transplant may not 
+fully restore kidney function. Therefore, the presence of CKD alone does 
+not constitute a transplant complication. Assign the appropriate N18 
+code for the patient’s stage of CKD and code Z94.0, Kidney transplant 
+status. If a transplant complication such as failure or rejection or other 
+transplant complication is documented, see section I.C.19.g for 
+information on coding complications of a kidney transplant. If the 
+documentation is unclear as to whether the patient has a complication of 
+the transplant, query the provider.

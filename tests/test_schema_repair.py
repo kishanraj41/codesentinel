@@ -171,6 +171,84 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(second.usage_source, "provider")
 
 
+class RetryBackoffTests(unittest.TestCase):
+    def test_server_errors_use_exponential_backoff(self):
+        calls = {"n": 0}
+        sleeps = []
+
+        def transport(url, headers=None, json=None, timeout=None):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                return _Response(500, {"error": "busy"})
+            return _Response(
+                200,
+                {
+                    "choices": [{"message": {"content": json_dumps()}}],
+                    "usage": {"prompt_tokens": 4, "completion_tokens": 4},
+                },
+            )
+
+        client = NemotronClient(
+            api_key="test-key",
+            transport=transport,
+            sleep=sleeps.append,
+            rng=lambda: 0.0,
+        )
+        result = client.complete_json(
+            model="nvidia/Nemotron-3_5-Lightning",
+            messages=[{"role": "user", "content": "chart"}],
+            schema_name="triage",
+            schema=TRIAGE_SCHEMA,
+            pydantic_model=TriageResult,
+            temperature=0,
+            reasoning=False,
+            stage="adjudication",
+        )
+        self.assertEqual(calls["n"], 3)
+        self.assertEqual(sleeps, [1.0, 2.0])
+        self.assertEqual(result.data.assertion_status, "present")
+        self.assertEqual(client.degraded_reasons, [])
+
+    def test_timeouts_record_the_stage_and_not_the_prompt(self):
+        import requests
+
+        sleeps = []
+        prompt = "SECRET-PROMPT-DO-NOT-LOG"
+
+        def transport(url, headers=None, json=None, timeout=None):
+            raise requests.Timeout("timed out talking to the provider")
+
+        client = NemotronClient(
+            api_key="sk-test-key-do-not-log",
+            transport=transport,
+            sleep=sleeps.append,
+            rng=lambda: 0.0,
+        )
+        result = client.complete_json(
+            model="nvidia/Nemotron-3_5-Lightning",
+            messages=[{"role": "user", "content": prompt}],
+            schema_name="triage",
+            schema=TRIAGE_SCHEMA,
+            pydantic_model=TriageResult,
+            temperature=0,
+            reasoning=False,
+            stage="triage",
+        )
+        self.assertTrue(result.fallback)
+        self.assertEqual(len(sleeps), 2)
+        self.assertEqual(sleeps, [1.0, 2.0])
+        self.assertEqual(len(client.degraded_reasons), 1)
+        reason = client.degraded_reasons[0]
+        self.assertIn("stage=triage", reason)
+        self.assertIn("model=nvidia/Nemotron-3_5-Lightning", reason)
+        self.assertIn("status=", reason)
+        self.assertIn("error=Timeout", reason)
+        self.assertNotIn(prompt, reason)
+        self.assertNotIn("sk-test-key-do-not-log", reason)
+        self.assertNotIn("timed out", reason)
+        self.assertEqual(result.error, reason)
+
+
 def json_dumps():
     return json.dumps(_triage_body())
 

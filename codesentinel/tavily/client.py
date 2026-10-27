@@ -1,7 +1,10 @@
-"""Tavily search + extract for official ICD-10-CM / CMS pages, with a disk cache.
+"""Guideline citations: a curated FY2026 section first, then Tavily.
 
-Recorded fixtures are used when TAVILY_API_KEY is unset. Fixture quotes are
-labeled as fixtures. They are not presented as live guideline text.
+Anchors are official passages from the FY2026 ICD-10-CM guidelines. They are
+used in mock mode and in live mode. When a Tavily key is set, one search
+confirms the official PDF URL is reachable. Codes without an anchor still go
+through search, extract, and the description check. Fixture quotes are labeled
+as fixtures. They are not presented as live guideline text.
 """
 
 from __future__ import annotations
@@ -17,6 +20,8 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import requests
+
+from codesentinel.guidelines import OFFICIAL_PDF_URL, OFFICIAL_TITLE, anchor_for
 
 FIXTURE_PATH = Path(__file__).with_name("fixtures.json")
 FIXTURE_CACHED_AT = "2026-10-24T00:00:00+00:00"
@@ -55,6 +60,8 @@ class Citation:
     issue: str
     source_tier: str = ""
     source_label: str = ""
+    section: str = ""
+    page: Optional[int] = None
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -625,6 +632,16 @@ def _window_around_match(text: str, code_family: str, issue: str) -> Optional[st
     return window[:600].strip()
 
 
+# One confirmation per process. Later clients reuse it instead of searching again.
+_pdf_confirmation = {"done": False, "reason": ""}
+
+
+def reset_pdf_confirmation() -> None:
+    """Clear the process-wide PDF confirmation. Tests call this."""
+    _pdf_confirmation["done"] = False
+    _pdf_confirmation["reason"] = ""
+
+
 def _credits(payload: dict, default: float) -> float:
     usage = payload.get("usage") if isinstance(payload, dict) else None
     if isinstance(usage, dict):
@@ -660,9 +677,19 @@ class GuidelineClient:
         self.live_requests = 0
         self.fixture_hits = 0
         self.degraded_reasons: list[str] = []
+        self._pdf_noted = False
         self._memory: dict[str, list[Citation]] = {}
 
     def lookup(self, code_family: str, issue: str) -> list[Citation]:
+        anchored = self._from_anchor(code_family, issue)
+        if anchored is not None:
+            mem_key = f"anchor:{(code_family or '').upper()}|{(issue or '').strip().lower()}"
+            if mem_key in self._memory:
+                self.cache_hits += 1
+                return self._memory[mem_key]
+            self._confirm_official_pdf()
+            self._memory[mem_key] = anchored
+            return anchored
         fixture_key = f"{code_family}|{issue}"
         query = guideline_query(code_family, issue)
         key = lookup_key(code_family, issue, query)
@@ -693,6 +720,79 @@ class GuidelineClient:
         self._write_disk(code_family, issue, query, found)
         self._memory[key] = found
         return found
+
+    def _from_anchor(self, code_family: str, issue: str) -> Optional[list[Citation]]:
+        row = anchor_for(code_family, issue)
+        if not row:
+            return None
+        quote = str(row.get("quote") or "").strip()
+        if not quote or "[...]" in quote:
+            return None
+        page = row.get("page")
+        try:
+            page_number = int(page) if page is not None else None
+        except (TypeError, ValueError):
+            page_number = None
+        return [
+            Citation(
+                url=OFFICIAL_PDF_URL,
+                quote=quote,
+                source="cms.gov",
+                title=OFFICIAL_TITLE + " FY 2026",
+                retrieved="anchor",
+                cached_at=None,
+                code_family=(code_family or "").upper(),
+                issue=(issue or "").strip().lower(),
+                source_tier="official",
+                source_label=source_label_for("official"),
+                section=str(row.get("section") or ""),
+                page=page_number,
+            )
+        ]
+
+    def _confirm_official_pdf(self) -> None:
+        """One Tavily search for the official PDF. The anchor is kept either way."""
+        if self.use_fixtures or not self.api_key or self._pdf_noted:
+            return
+        self._pdf_noted = True
+        if not _pdf_confirmation["done"]:
+            _pdf_confirmation["done"] = True
+            _pdf_confirmation["reason"] = self._probe_official_pdf()
+        reason = _pdf_confirmation["reason"]
+        if reason:
+            self.degraded_reasons.append(reason)
+
+    def _probe_official_pdf(self) -> str:
+        try:
+            search = self._post_json(
+                SEARCH_URL,
+                {
+                    "api_key": self.api_key,
+                    "query": f'"{OFFICIAL_TITLE}" FY2026',
+                    "search_depth": "basic",
+                    "include_domains": ["cms.gov"],
+                    "max_results": 5,
+                    "include_usage": True,
+                },
+            )
+        except Exception as exc:
+            return (
+                "Tavily confirmation of the official FY2026 guideline PDF failed: "
+                f"{type(exc).__name__}"
+            )
+        self.live_requests += 1
+        self.credits += _credits(search, 1)
+        urls = [
+            str(row.get("url") or "")
+            for row in (search.get("results") or [])
+            if isinstance(row, dict)
+        ]
+        if any("fy-2026-icd-10-cm-coding-guidelines" in url for url in urls):
+            return ""
+        return (
+            "Tavily confirmation did not return the official FY2026 guideline PDF URL; "
+            "curated anchor still used"
+        )
 
     def _from_fixture(self, key: str, code_family: str, issue: str) -> list[Citation]:
         fixtures = _load_fixtures()
