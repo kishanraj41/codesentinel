@@ -71,8 +71,8 @@
     "abstain_count": 11,
     "abstain_rate": 0.211538,
     "candidates_considered": 52,
-    "latency_p50_s": 0.00015,
-    "latency_p95_s": 0.001269,
+    "latency_p50_s": 0.000149,
+    "latency_p95_s": 0.001292,
     "cost_per_chart_usd": 0.000104,
     "tavily_credits_per_chart": 0.0,
     "tavily_cache_hits_per_chart": 0.0,
@@ -80,6 +80,7 @@
     "guideline_decision_changes": 0,
     "id": "C2",
     "label": "C1 + Super adjudication, no Tavily",
+    "citation_provenance": {},
     "latency_scope": "local_offline",
     "cost_basis": "estimated_from_prompt_chars_x_catalog_price"
   },
@@ -117,7 +118,7 @@
         "N18.3"
       ],
       "review_items": 7,
-      "latency_s": 0.0010299169807694852,
+      "latency_s": 0.0010822949989233166,
       "cost_usd": 0.00024738,
       "mode": "mock",
       "degraded_reasons": []
@@ -140,7 +141,7 @@
         "J44.1"
       ],
       "review_items": 2,
-      "latency_s": 0.00023167900508269668,
+      "latency_s": 0.00022911198902875185,
       "cost_usd": 5.94e-05,
       "mode": "mock",
       "degraded_reasons": []
@@ -163,7 +164,7 @@
         "F32.9"
       ],
       "review_items": 2,
-      "latency_s": 0.00010332799865864217,
+      "latency_s": 0.0001090159930754453,
       "cost_usd": 2.484e-05,
       "mode": "mock",
       "degraded_reasons": []
@@ -204,7 +205,7 @@
         "I50.9"
       ],
       "review_items": 7,
-      "latency_s": 0.0008597029955126345,
+      "latency_s": 0.0009299639787059277,
       "cost_usd": 0.00023952,
       "mode": "mock",
       "degraded_reasons": []
@@ -218,7 +219,7 @@
       "shown_codes": [],
       "gold_codes": [],
       "review_items": 3,
-      "latency_s": 6.881900480948389e-05,
+      "latency_s": 8.038998930715024e-05,
       "cost_usd": 0.0,
       "mode": "mock",
       "degraded_reasons": []
@@ -244,7 +245,7 @@
         "I10"
       ],
       "review_items": 3,
-      "latency_s": 8.252399857155979e-05,
+      "latency_s": 8.457701187580824e-05,
       "cost_usd": 4.17e-05,
       "mode": "mock",
       "degraded_reasons": []
@@ -276,7 +277,7 @@
         "E79.0"
       ],
       "review_items": 5,
-      "latency_s": 6.091801333241165e-05,
+      "latency_s": 6.0466991271823645e-05,
       "cost_usd": 3.306e-05,
       "mode": "mock",
       "degraded_reasons": []
@@ -299,7 +300,7 @@
         "E78.5"
       ],
       "review_items": 2,
-      "latency_s": 0.0001966319978237152,
+      "latency_s": 0.00018962001195177436,
       "cost_usd": 4.386e-05,
       "mode": "mock",
       "degraded_reasons": []
@@ -313,7 +314,7 @@
       "shown_codes": [],
       "gold_codes": [],
       "review_items": 0,
-      "latency_s": 3.1489995308220387e-05,
+      "latency_s": 3.1289004255086184e-05,
       "cost_usd": 0.0,
       "mode": "mock",
       "degraded_reasons": []
@@ -360,7 +361,7 @@
         "N18.3"
       ],
       "review_items": 10,
-      "latency_s": 0.0014645609771832824,
+      "latency_s": 0.0014633450191468,
       "cost_usd": 0.0003534,
       "mode": "mock",
       "degraded_reasons": []

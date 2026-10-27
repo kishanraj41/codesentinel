@@ -88,6 +88,7 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
         changes = 0
         modes = []
         details = []
+        provenance: dict[str, int] = {}
         for label, profile in rows:
             audit = adapter.audit(profile, config, mode=mode)
             scored = score_chart(label, audit["items"])
@@ -102,6 +103,8 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
             # Advanced Tavily search is 2 credits. Mock runs count cache hits instead.
             uncached.append(float(audit.get("tavily_would_search") or 0) * 2.0)
             changes += int(audit.get("guideline_decision_changes") or 0)
+            for name, count in (audit.get("citation_provenance") or {}).items():
+                provenance[name] = provenance.get(name, 0) + int(count)
             modes.append(audit.get("mode"))
             details.append({
                 "patient_id": scored["patient_id"],
@@ -128,6 +131,7 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
         )
         summary["id"] = config
         summary["label"] = CONFIG_LABELS[config]
+        summary["citation_provenance"] = dict(sorted(provenance.items()))
         summary["latency_scope"] = "local_offline" if set(modes) <= {"mock", "rules"} else "mixed"
         summary["cost_basis"] = (
             "none"
@@ -385,10 +389,19 @@ def _markdown(summary: dict) -> str:
     lines.append("")
     lines.append("## Guideline decisions")
     lines.append("")
-    lines.append("| Config | Decisions changed by the guideline step | Unsupported-claim drops |")
-    lines.append("|---|---:|---:|")
+    lines.append("| Config | Decisions changed by the guideline step | Unsupported-claim drops | Citations by provenance |")
+    lines.append("|---|---:|---:|---|")
     for cfg in summary["configs"]:
-        lines.append(f"| {cfg['id']} | {cfg['guideline_decision_changes']} | {cfg['unsupported_claim_drops']} |")
+        prov = cfg.get("citation_provenance") or {}
+        prov_text = ", ".join(f"{name} {count}" for name, count in prov.items()) or "—"
+        lines.append(f"| {cfg['id']} | {cfg['guideline_decision_changes']} | {cfg['unsupported_claim_drops']} | {prov_text} |")
+    lines.append("")
+    lines.append(
+        "Provenance counts distinct citations per chart. `tavily_live` passages were retrieved by Tavily "
+        "and matched verbatim against the official PDF for the run's fiscal year; `curated_fallback` is a "
+        "curated section re-verified against that PDF; `superseded_anchor` counts citations where the curated "
+        "passage was no longer in the current edition and the gate decided on the live text."
+    )
     lines.append("")
     probe = summary["guardrail_probe"]
     lines.append(
@@ -554,8 +567,10 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
         detail = (
             "C0 and C0+ stay on the rules pipeline. C1–C4 ran through the real cascade on Token Factory. "
             "Nemotron responses were recorded under eval/fixtures/nemotron. "
-            "Guideline citations come from curated sections of the official FY2026 guidelines. "
-            "Tavily confirms that source and is the fallback for a code without a curated section. "
+            "Guideline citations target the ICD-10-CM Official Guidelines in force on the run date. "
+            "Tavily retrieves the passage live from cms.gov or cdc.gov, and it is cited only when it is "
+            "verbatim in the official PDF fetched in the same run; curated sections are the fallback "
+            "and cross-check. Citation provenance per config is in summary.json (citation_provenance). "
             "Replay those Nemotron completions with CODESENTINEL_REPLAY=1."
         )
     else:
@@ -564,7 +579,7 @@ def run_eval(split: str = "test", *, mtsamples: str | None = None, mode: str = "
             "C0 and C0+ are the rules pipeline. C1–C3 decisions come from the deterministic policy in "
             "eval/policy.py. C4 decisions come from the CodeSentinel cascade in mock mode: the recorded "
             "client applies the same chart-text instructions as the live prompts (negation, family history, "
-            "screening, and medication-only). Curated FY2026 sections are cited for the codes they cover; "
+            "screening, and medication-only). Curated sections of the current guidelines are cited for the codes they cover; "
             "other guideline quotes are labeled fixtures. Do not cite the mock C4 row as live model quality."
         )
     summary = {

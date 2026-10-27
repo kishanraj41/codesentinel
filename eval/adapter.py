@@ -348,11 +348,31 @@ def _audit_to_eval(audit: dict, mode: str, config: str = "C4") -> dict[str, Any]
         "tavily_cache_hits": int(totals.get("tavily_cache_hits") or 0),
         "tavily_would_search": 0,
         "guideline_decision_changes": changes,
+        "citation_provenance": _citation_provenance(audit),
         "tokens_in": int(totals.get("input_tokens") or 0),
         "tokens_out": int(totals.get("output_tokens") or 0),
         "mode": mode,
         "degraded_reasons": [str(item) for item in (audit.get("degraded_reasons") or []) if str(item).strip()],
     }
+
+
+def _citation_provenance(audit: dict) -> dict[str, int]:
+    """Shown citations by provenance (tavily_live, curated_fallback, fixture), plus superseded anchors."""
+    counts: dict[str, int] = {}
+    seen = set()
+    for row in audit.get("worklist") or []:
+        for citation in row.get("guideline_citations") or []:
+            if not isinstance(citation, dict):
+                continue
+            key = (citation.get("url"), citation.get("quote"), citation.get("issue"))
+            if key in seen:
+                continue
+            seen.add(key)
+            name = citation.get("provenance") or citation.get("retrieved") or "unknown"
+            counts[name] = counts.get(name, 0) + 1
+            if citation.get("anchor_status") == "superseded":
+                counts["superseded_anchor"] = counts.get("superseded_anchor", 0) + 1
+    return counts
 
 
 def _eval_item(row: dict, *, shown: bool) -> dict[str, Any]:

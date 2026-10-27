@@ -52,8 +52,8 @@ HEART_FAILURE_LOOSE = (
     "Chronic systolic heart failure, including HFrEF and acute on chronic diastolic failure, "
     "is reported from the type and acuity documented in the record."
 )
-OFFICIAL_PDF = "https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf"
-OFFICIAL_TITLE = "ICD-10-CM Official Guidelines for Coding and Reporting FY 2026"
+OFFICIAL_PDF = "https://www.cms.gov/files/document/fy-2027-icd-10-cm-coding-guidelines.pdf"
+OFFICIAL_TITLE = "ICD-10-CM Official Guidelines for Coding and Reporting FY 2027"
 MMRR_URL = "https://www.cms.gov/mmrr/Downloads/mmrr201100102a02pdf"
 MEARIS_URL = "https://mearis.cms.gov/public/new-technology-add-on-payment"
 CMS_PAGE = "https://www.cms.gov/medicare/coding-billing/icd-10-codes"
@@ -118,6 +118,8 @@ class RelevanceTests(unittest.TestCase):
         self.assertIn("heart failure", window.lower())
 
     def test_anchor_beats_a_mislabeled_tavily_passage(self):
+        from codesentinel.guidelines import excerpt_official_text
+
         calls = []
 
         def transport(url, json=None, timeout=None):
@@ -132,10 +134,18 @@ class RelevanceTests(unittest.TestCase):
             })
 
         with tempfile.TemporaryDirectory() as tmp:
-            client = GuidelineClient(api_key="test-key", use_fixtures=False, cache_dir=tmp, transport=transport)
+            client = GuidelineClient(
+                api_key="test-key",
+                use_fixtures=False,
+                cache_dir=tmp,
+                transport=transport,
+                official_text=excerpt_official_text(),
+            )
             found = client.lookup("E11", "specificity-hyperglycemia")
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].retrieved, "anchor")
+        self.assertEqual(found[0].provenance, "curated_fallback")
+        self.assertEqual(found[0].anchor_status, "verified")
         self.assertEqual(found[0].source_tier, "official")
         self.assertEqual(found[0].section, "I.C.4.a")
         self.assertEqual(found[0].page, 39)
@@ -209,10 +219,10 @@ class RelevanceTests(unittest.TestCase):
         self.assertIn("HFrEF", query)
         self.assertIn("acute on chronic", query)
         self.assertIn("ICD-10-CM Official Guidelines for Coding and Reporting", query)
-        self.assertIn("FY2026", query)
+        self.assertIn("FY2027", query)
         diabetes = guideline_query("E11", "combination-code-diabetes-ckd")
         self.assertIn("E11.22", diabetes)
-        self.assertIn("FY2026", diabetes)
+        self.assertIn("FY2027", diabetes)
 
     def test_official_guidelines_pdf_outranks_secondary_cms_pages(self):
         calls = []
@@ -221,12 +231,12 @@ class RelevanceTests(unittest.TestCase):
             calls.append((url, json or {}))
             if url.endswith("/extract"):
                 target = (json or {}).get("urls", [""])[0]
-                text = COMBINATION if "fy-2026" in target else CHEST_PAIN
+                text = COMBINATION if "fy-2027" in target else CHEST_PAIN
                 return _Response({"results": [{"raw_content": text}], "usage": {"credits": 1}})
             body = json or {}
             self.assertEqual(body.get("include_domains"), ["cms.gov", "cdc.gov"])
             self.assertIn("ICD-10-CM Official Guidelines for Coding and Reporting", body.get("query") or "")
-            self.assertIn("FY2026", body.get("query") or "")
+            self.assertIn("FY2027", body.get("query") or "")
             return _Response({
                 "results": [
                     {"url": MMRR_URL, "title": "ICD-9 to ICD-10 translation", "content": COMBINATION},
@@ -251,7 +261,7 @@ class RelevanceTests(unittest.TestCase):
         def transport(url, json=None, timeout=None):
             if url.endswith("/extract"):
                 target = (json or {}).get("urls", [""])[0]
-                if "fy-2026" in target:
+                if "fy-2027" in target:
                     return _Response({"results": [{"raw_content": CHEST_PAIN}], "usage": {"credits": 1}})
                 return _Response({"results": [{"raw_content": COMBINATION}], "usage": {"credits": 1}})
             return _Response({
@@ -373,7 +383,7 @@ class RelevanceTests(unittest.TestCase):
         def accepted(url, json=None, timeout=None):
             if url.endswith("/extract"):
                 target = (json or {}).get("urls", [""])[0]
-                if "fy-2026" in target:
+                if "fy-2027" in target:
                     return _Response({"results": [{"raw_content": CODE_LENGTH}], "usage": {"credits": 1}})
                 return _Response({"results": [{"raw_content": matching}], "usage": {"credits": 1}})
             query = (json or {}).get("query") or ""
@@ -414,7 +424,7 @@ class RelevanceTests(unittest.TestCase):
             body = json or {}
             if url.endswith("/extract"):
                 target = body.get("urls", [""])[0]
-                text = rule if "fy-2026" in target else code_list
+                text = rule if "fy-2027" in target else code_list
                 return _Response({"results": [{"raw_content": text}], "usage": {"credits": 1}})
             query = body.get("query") or ""
             queries.append(query)

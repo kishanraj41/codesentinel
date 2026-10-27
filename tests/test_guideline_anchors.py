@@ -1,4 +1,4 @@
-"""Curated FY2026 quotes are verbatim spans, and lookup prefers them."""
+"""Curated quotes are verbatim spans of the current edition, and lookup falls back to them."""
 
 import tempfile
 import unittest
@@ -72,8 +72,11 @@ class AnchorLookupTests(unittest.TestCase):
         self.assertEqual(found[0].page, 51)
         self.assertIn("type of heart failure", found[0].quote)
 
-    def test_confirmation_failure_keeps_the_anchor_and_logs_the_class(self):
+    def test_pdf_failure_keeps_the_anchor_and_logs_the_class(self):
         def transport(url, json=None, timeout=None):
+            raise AssertionError("no verified text, so Tavily is not searched")
+
+        def pdf_fetch(url, **kwargs):
             raise requests.ConnectionError("bearer sk-should-not-appear")
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -82,19 +85,24 @@ class AnchorLookupTests(unittest.TestCase):
                 use_fixtures=False,
                 cache_dir=tmp,
                 transport=transport,
+                pdf_fetch=pdf_fetch,
             )
             found = client.lookup("I12", "combination-code-hypertensive-ckd")
             self.assertEqual(found[0].section, "I.C.9.a.2")
+            self.assertEqual(found[0].provenance, "curated_fallback")
+            self.assertEqual(found[0].anchor_status, "unverified")
+            self.assertFalse(found[0].verified_verbatim)
             self.assertIn("N18", found[0].quote)
             self.assertEqual(len(client.degraded_reasons), 1)
             reason = client.degraded_reasons[0]
             self.assertIn("ConnectionError", reason)
+            self.assertIn("FY 2027", reason)
             self.assertNotIn("sk-should-not-appear", reason)
             self.assertNotIn("bearer", reason)
 
             later_calls = {"n": 0}
 
-            def later_transport(url, json=None, timeout=None):
+            def later_fetch(url, **kwargs):
                 later_calls["n"] += 1
                 raise requests.ConnectionError("again")
 
@@ -102,7 +110,8 @@ class AnchorLookupTests(unittest.TestCase):
                 api_key="sk-should-not-appear",
                 use_fixtures=False,
                 cache_dir=tmp,
-                transport=later_transport,
+                transport=transport,
+                pdf_fetch=later_fetch,
             )
             again = later.lookup("E11", "combination-code-diabetes-ckd")
         self.assertEqual(later_calls["n"], 0)

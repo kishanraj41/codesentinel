@@ -8,12 +8,13 @@ CodeSentinel is a clinical-coding integrity service. It is not a code-security s
 Rules propose candidate ICD-10-CM gaps. NVIDIA Nemotron on Nebius Token Factory
 cross-examines them. A deterministic verifier drops any supporting quote that is not
 literally in the chart (or an exact structured lab/medication line). Combination-code
-and specificity decisions cite a curated section of the FY2026 ICD-10-CM Official
-Guidelines first. Tavily confirms that PDF is reachable and is the fallback for a
-code without a curated section. If that evidence is missing, those decisions cannot
-be `accept`.
+and specificity decisions cite the ICD-10-CM Official Guidelines in force on the
+request date (FY 2027 from 2026-10-01). Tavily retrieves the passage live from cms.gov
+or cdc.gov, and it is cited only when it appears verbatim in the official PDF fetched
+for that fiscal year. Curated sections are the fallback and the cross-check. If that
+evidence is missing, those decisions cannot be `accept`.
 
-Synthetic charts only. Do not send real PHI.
+The endpoint is for generated test charts. Do not send PHI.
 
 ## Run
 
@@ -33,7 +34,8 @@ and codes without one use a recorded fixture. The response says so in `mode` and
 |---|---|
 | `NEBIUS_API_KEY` | Token Factory bearer token. Unset → mock Nemotron. |
 | `NEBIUS_BASE_URL` | Default `https://api.tokenfactory.nebius.com/v1/`. |
-| `TAVILY_API_KEY` | Tavily key. Confirms the official FY2026 PDF and fills codes with no curated section. Unset skips that check. |
+| `TAVILY_API_KEY` | Tavily key. Retrieves current-year guideline passages live; each is verified against the official PDF. Unset cites curated sections only. |
+| `GUIDELINE_FISCAL_YEAR` | Optional. Pin the guideline edition (for example `2026`). Default: the fiscal year of the request date. |
 | `FHIR_ALLOWED_HOSTS` | Comma-separated extra FHIR hosts. |
 | `FHIR_ALLOW_ANY` | `1` allows any public host. Loopback, link-local, and private addresses stay blocked. |
 | `CODESENTINEL_VERIFY` | `0` skips Nemotron and returns the rules-only pipeline. Default `1`. |
@@ -183,10 +185,10 @@ Redirects and FHIR bundle `next` links must stay on the same host.
 
 | Value | Meaning |
 |---|---|
-| `anchor` | Every citation is a curated section of the FY2026 official guidelines. Mock mode uses these too. |
+| `anchor` | Every citation is a curated section (`provenance: curated_fallback`). Mock mode uses these too. |
 | `fixture` | Every citation is a recorded fixture for a code with no curated section. Fixture quotes are labeled and are not live official excerpts. |
-| `live` | Every citation in this response was retrieved from Tavily on this request. |
-| `cache` | Every citation was served from the on-disk cache. |
+| `live` | Every citation was retrieved by Tavily on this request and verified in the official PDF. |
+| `cache` | Every citation was served from the per-run Tavily cache and re-verified in the official PDF. |
 | `mixed` | More than one retrieved value (anchor, live, cache, fixture). |
 | `none` | No guideline lookup returned a citation. |
 
@@ -258,17 +260,26 @@ Candidates removed before the worklist.
 | Field | Type | Meaning |
 |---|---|---|
 | `url` | string | Page the excerpt came from. |
-| `quote` | string | Excerpt. Curated quotes are contiguous text from the FY2026 guidelines. Fixture quotes say they are recorded offline fixtures, not live guideline text. |
+| `quote` | string | Excerpt. Live and curated quotes are contiguous text of the official PDF (whitespace collapsed). Fixture quotes say they are recorded offline fixtures, not live guideline text. |
 | `source` | string | Hostname (`cms.gov`, `cdc.gov`, …). |
 | `title` | string | |
 | `retrieved` | enum | `anchor`, `live`, `cache`, `fixture`. |
 | `cached_at` | string or null | ISO-8601 timestamp when `retrieved` is `cache` or `fixture`. |
 | `code_family` | string | First three characters of the ICD-10-CM code (`E11`, `I12`, …). |
 | `issue` | string | Stable issue key, for example `combination-code-diabetes-ckd` or `specificity-hyperglycemia`. |
-| `section` | string | Guideline section id when `retrieved` is `anchor`, for example `I.A.15`. Empty otherwise. |
-| `page` | number or null | Printed page in the FY2026 guidelines PDF when `retrieved` is `anchor`. |
-| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (FY2026 first). `secondary` for another cms.gov or cdc.gov page. Recorded fixtures use the tier of their URL; the bundled fixture points at a CMS code page, so it is `secondary`, and `retrieved` stays `fixture`. |
+| `section` | string | Guideline section id, for example `I.A.15`. Live passages get it from the section heading that precedes them in the PDF. |
+| `page` | number or null | PDF page of the passage. |
+| `provenance` | enum | `tavily_live` (Tavily found it and it is verbatim in the official PDF), `curated_fallback` (a curated section, re-verified against the PDF when it could be fetched), or `fixture`. |
+| `fiscal_year` | string | Guideline edition the quote was verified in, for example `FY 2027`. |
+| `verified_verbatim` | bool | True when the quote was matched against the official PDF text (live) or the committed excerpt of that edition (offline). |
+| `verified_against` | string | URL of the PDF the quote was matched in. |
+| `pdf_sha256` | string | SHA-256 of that PDF. |
+| `anchor_status` | enum | `verified` (the curated section is still in the current edition), `superseded` (it is not; the gate decided on the live passage), `unverified` (the PDF could not be fetched), `none` (no curated section for this code). |
+| `supersedes` | object or null | When `anchor_status` is `superseded`: the curated section, page, fiscal year, and quote it replaced. |
+| `source_tier` | enum | `official` when the excerpt is from the ICD-10-CM Official Guidelines for Coding and Reporting (current year first). `secondary` for another cms.gov or cdc.gov page. Recorded fixtures use the tier of their URL; the bundled fixture points at a CMS code page, so it is `secondary`, and `retrieved` stays `fixture`. |
 | `source_label` | string | `Official guidelines` or `Secondary source`. Empty when `source_tier` is empty. A secondary page is cited only when every code-and-description pair in the excerpt agrees with the official title. A mismatched label, including a code list that calls I50.20 acute combined systolic and diastolic failure, is dropped. No accepted passage means no citation. |
+
+The audit also carries `guideline_provenance`: the target fiscal year, citation counts by provenance, any superseded curated sections, and informational notes (for example, a Tavily passage that did not match the PDF, so the curated section was used).
 
 Top-level `citations` is the de-duplicated union of worklist citations, in first-seen order.
 
@@ -377,7 +388,7 @@ Advanced search is counted as 2 credits when the provider does not return a usag
 1. **Rules.** Existing tiers 1–4 in `gap_pipeline.py`. Approved and review candidates are both sent on. Rules-rejected candidates are not sent to a model.
 2. **Triage.** One structured JSON call per candidate, in parallel (cap 8). Reasoning off. Temperature 0. Output schema: `assertion_status`, `supporting_quotes`, `section`, `meat`, `confidence`.
 3. **Verifier.** Outside the model. A quote counts only if its whitespace-normalized form (length ≥ 12) is a substring of the note text, or it equals a full structured lab or medication line, or it equals a structured record id. No surviving quote → drop `unsupported`. `assertion_status` other than `present`, `medication_supported`, or `lab_only` → drop with that status as `reason`. A deterministic pass rewrites a `copied_forward_unclear` or `negated` tag to `medication_supported` when an active, condition-specific medication list was refilled and the note does not negate the condition, and to `lab_only` when the note is empty and a lab threshold supports the code. Those rows stay for a human. After the model steps, the same cascade runs the unsupported-existing check from `codesentinel/policy.py` and adds contradicted or meat-less coded conditions as `gap_type: unsupported_existing` review rows.
-4. **Guidelines.** Tavily search (`search_depth=advanced`, `include_domains=["cms.gov","cdc.gov"]`, `chunks_per_source=3`, `max_results=5`) plus extract, per code family and issue. The query ends with `"ICD-10-CM Official Guidelines for Coding and Reporting" FY2026`. Heart-failure specificity (I50) also names chronic, acute on chronic, systolic, diastolic, and HFrEF/HFpEF, so a passage can match without the literal code `I50.22`. The citation quote is the passage that mentions the target code, category, or issue terms. A passage that does not match (a chest-pain code list, generic code-length text, a kidney-transplant paragraph for a diabetes combination) is dropped instead of cited. The FY2026 official guidelines PDF is chosen over other cms.gov or cdc.gov pages; a secondary page is used only when no official passage matches, and the citation is marked `source_tier` `official` or `secondary`. Matches and no-match lookups are cached on disk by the query and the filter version. Combination and specificity candidates always request a lookup on C3 and C4. C1 and C2 skip this step, so a "guideline evidence was missing" rationale there is not counted as a guideline decision change.
+4. **Guidelines.** The edition in force is chosen from the date (FY 2027 from 2026-10-01). Its PDF is fetched once per process from cms.gov (cdc.gov mirror as backup), its SHA-256 recorded, and its text indexed. One Tavily search per code family and issue (`search_depth=advanced`, `include_domains=["cms.gov","cdc.gov"]`, `chunks_per_source=3`, `max_results=5`; query `"ICD-10-CM Official Guidelines for Coding and Reporting" FY 2027` plus the rule text being sought). Only results from that edition's PDF are considered. A run of whole sentences from a result is cited only if it is verbatim in the fetched PDF (whitespace, running page headers, and quote or dash variants ignored); the PDF supplies the exact text, page, and section. The curated section for that code is re-checked against the same PDF: if it is still there, a live passage overlapping it is preferred and the curated section is the fallback (`curated_fallback`); if it is gone, it is `superseded` and never cited, and the gate decides on the live passage or holds the row in review. Tavily results are cached per run on disk, so a code family costs one search per run. Codes with no curated section use the earlier search-and-extract path, which can return a `secondary` page. C1 and C2 skip this step, so a "guideline evidence was missing" rationale there is not counted as a guideline decision change.
 5. **Adjudication.** Super, reasoning on, for medium-confidence survivors (confidence < 0.8) and for every specificity upgrade and combination code. High-confidence simple `missing` rows can be accepted from triage + verifier without Super. JSON schema: `decision`, `icd10_code`, `code_display`, `guideline_citations`, `rationale`, `physician_query_needed`. Parse failure → one repair retry → else `review`.
 6. **Guideline gate.** Combination or specificity with `decision: accept` and zero citations is rewritten to `review`.
 7. **Escalation.** Ultra when triage and Super disagree, or the row is a high-value HCC upgrade (`raf_value` ≥ 0.3 and gap type is `specificity_upgrade` or `combination`). Thin or conflicting evidence becomes `abstain`, which stays on the worklist for a human.

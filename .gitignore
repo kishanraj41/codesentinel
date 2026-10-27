@@ -10,4 +10,4 @@ venv/
 .mypy_cache/
 .DS_Store
 eval/fixtures/nemotron/*.json
-eval/fixtures/guideline_cache/*.json
+eval/fixtures/guideline_cache/

@@ -71,7 +71,7 @@
     "abstain_count": 0,
     "abstain_rate": 0.0,
     "candidates_considered": 49,
-    "latency_p50_s": 4e-06,
+    "latency_p50_s": 3e-06,
     "latency_p95_s": 9e-06,
     "cost_per_chart_usd": 0.0,
     "tavily_credits_per_chart": 0.0,
@@ -80,6 +80,7 @@
     "guideline_decision_changes": 0,
     "id": "C0+",
     "label": "Rules only, approved + review",
+    "citation_provenance": {},
     "latency_scope": "local_offline",
     "cost_basis": "none"
   },
@@ -122,7 +123,7 @@
         "N18.3"
       ],
       "review_items": 9,
-      "latency_s": 9.395997039973736e-06,
+      "latency_s": 9.445007890462875e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -148,7 +149,7 @@
         "J44.1"
       ],
       "review_items": 3,
-      "latency_s": 3.529014065861702e-06,
+      "latency_s": 3.3800024539232254e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -171,7 +172,7 @@
         "F32.9"
       ],
       "review_items": 2,
-      "latency_s": 2.474000211805105e-06,
+      "latency_s": 2.414017217233777e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -214,7 +215,7 @@
         "I50.9"
       ],
       "review_items": 9,
-      "latency_s": 6.325019057840109e-06,
+      "latency_s": 5.666021024808288e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -228,7 +229,7 @@
       "shown_codes": [],
       "gold_codes": [],
       "review_items": 0,
-      "latency_s": 1.0049843695014715e-06,
+      "latency_s": 1.0739895515143871e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -261,7 +262,7 @@
         "I10"
       ],
       "review_items": 6,
-      "latency_s": 4.992994945496321e-06,
+      "latency_s": 4.453002475202084e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -293,7 +294,7 @@
         "E79.0"
       ],
       "review_items": 5,
-      "latency_s": 3.6059936974197626e-06,
+      "latency_s": 3.4780241549015045e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -316,7 +317,7 @@
         "E78.5"
       ],
       "review_items": 2,
-      "latency_s": 2.1099986042827368e-06,
+      "latency_s": 1.969980075955391e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -330,7 +331,7 @@
       "shown_codes": [],
       "gold_codes": [],
       "review_items": 0,
-      "latency_s": 8.450006134808064e-07,
+      "latency_s": 7.909839041531086e-07,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []
@@ -383,7 +384,7 @@
         "N18.3"
       ],
       "review_items": 13,
-      "latency_s": 7.869006367400289e-06,
+      "latency_s": 7.621012628078461e-06,
       "cost_usd": 0.0,
       "mode": "rules",
       "degraded_reasons": []

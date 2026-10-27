@@ -988,6 +988,19 @@ def apply_guideline_gate(decision: str, gap_type: str, citations: list, rational
     so the coder can see that the missing guideline is why it was not accepted.
     """
     needs_citation = gap_type in {"specificity_upgrade", "combination"}
+    superseded = [
+        item for item in citations or []
+        if isinstance(item, dict) and item.get("anchor_status") == "superseded" and item.get("provenance") == "tavily_live"
+    ]
+    if needs_citation and superseded:
+        old = superseded[0].get("supersedes") or {}
+        note = (
+            f"Decided on the {superseded[0].get('fiscal_year') or 'current'} guideline text "
+            f"({superseded[0].get('section') or 'section'} p. {superseded[0].get('page') or '?'}); "
+            f"the curated {old.get('fiscal_year') or 'prior-year'} passage was superseded."
+        )
+        if note not in rationale:
+            rationale = f"{note} {rationale}".strip()
     if needs_citation and not citations and decision == "accept":
         decision = "review"
     if needs_citation and not citations and decision == "review":

@@ -1,12 +1,12 @@
-FY2026 ICD-10-CM Official Guidelines for Coding and Reporting
-Source: https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf
-sha256: 2e87b3b088d6032edf6cda8c946cf342619df0c07237055a0e3be68410a0c267
+FY2027 ICD-10-CM Official Guidelines for Coding and Reporting
+Source: https://www.cms.gov/files/document/fy-2027-icd-10-cm-coding-guidelines.pdf
+sha256: 1f0065b609b678e98f85bf047b3b012c6a88ba3222e42be2f2435889e05738ab
 Extracted with pypdf. Line breaks are the extractor's. Quotes in anchors.json
 are contiguous spans of this text with whitespace collapsed, and nothing else changed.
 
 ===== PAGE 11 =====
 ICD-10-CM Official Guidelines for Coding and Reporting 
-FY 2026 
+FY 2027 
 Page 11 of 121 
  
 underlying etiology, Parkinson’s disease, and must be sequenced first, whereas codes 
@@ -54,7 +54,7 @@ note when the original main term provides the necessary code.
 
 ===== PAGE 39 =====
 ICD-10-CM Official Guidelines for Coding and Reporting 
-FY 2026 
+FY 2027 
 Page 39 of 121 
  
 Complications of transplanted organs and tissue, followed by code C80.2, 
@@ -75,7 +75,7 @@ diffuse large B-cell lymphoma to the lung, brain and left adrenal gland, assign
 code C83.398, Diffuse large B-cell lymphoma of other extranodal and solid 
 organ sites. 
  
-3. Chapter 3: Disease of the blood and blood-forming organs and 
+3. Chapter 3: Diseases of the blood and blood-forming organs and 
 certain disorders involving the immune mechanism (D50-D89) 
 Reserved for future guideline expansion 
 4. Chapter 4: Endocrine, Nutritional, and Metabolic Diseases (E00 -E89) 
@@ -99,7 +99,7 @@ symptoms.
 
 ===== PAGE 50 =====
 ICD-10-CM Official Guidelines for Coding and Reporting 
-FY 2026 
+FY 2027 
 Page 50 of 121 
  
 9. Chapter 9: Diseases of the Circulatory System (I00 -I99) 
@@ -115,25 +115,24 @@ For hypertension and conditions not specifically linked by relational terms such
 as “with,” “associated with” or “due to” in the classification, provider 
 documentation must link the conditions in order to code them as related. 
 1) Hypertension with Heart Disease 
-Hypertension with heart conditions classified to I50.-, Heart failure, 
-I51.4, Myocarditis, unspecified, I51.89, Other ill-defined heart 
-diseases, and I51.9, Heart disease, unspecified, is assigned to a code 
-from category I11, Hypertensive heart disease. Use additional 
-code(s) from category I50, Heart failure, or I51, Complications and 
-ill-defined descriptions of heart disease, to identify the heart 
-condition.  
+Hypertension with one or more heart conditions classified to I50.-, 
+Heart failure, I51.4, Myocarditis, unspecified, I51.89, Other ill-defined 
+heart diseases, or I51.9, Heart disease, unspecified, is assigned to a code 
+from category I11, Hypertensive heart disease. Use additional code(s) 
+from category I50, Heart failure, or I51, Complications and ill-defined 
+descriptions of heart disease, to identify the heart condition.  
  
-Hypertension with heart conditions classified to I51.5, Myocardial 
-degeneration, or I51.7, Cardiomegaly, is assigned to a code from 
-category I11, Hypertensive heart disease. No additional code is 
+Hypertension with one or more heart conditions classified to I51.5, 
+Myocardial degeneration, or I51.7, Cardiomegaly, is assigned to a code 
+from category I11, Hypertensive heart disease. No additional code is 
 assigned to identify the specific heart condition.  
  
 The same heart conditions (I50.-, I51.4-I51.7, I51.89, I51.9) with 
 hypertension are coded separately if the provider has documented they 
-are unrelated to the hypertension. The applicable hypertension code 
-I10, Essential (primary) hypertension, or a code from category I15, 
-Secondary hypertension, should be assigned. Sequence according to 
-the circumstances of the admission/encounter. 
+are unrelated to the hypertension. The applicable hypertension code I10, 
+Essential (primary) hypertension, or a code from category I15, 
+Secondary hypertension, should be assigned. Sequence according to the 
+circumstances of the admission/encounter. 
 2) Hypertensive Chronic Kidney Disease 
 Assign codes from category I12, Hypertensive chronic kidney disease, 
 when both hypertension and a condition classifiable to category N18, 
@@ -143,14 +142,17 @@ hypertension.
  
 The appropriate code from category N18 should be used as a secondary 
 code with a code from category I12 to identify the stage of chronic 
-kidney disease.
+kidney disease. 
+ 
+ 
+ 
+See Section I.C.14. Chronic kidney disease.
 
 ===== PAGE 51 =====
 ICD-10-CM Official Guidelines for Coding and Reporting 
-FY 2026 
+FY 2027 
 Page 51 of 121 
  
-See Section I.C.14. Chronic kidney disease. 
  
 If a patient has hypertensive chronic kidney disease and acute renal 
 failure, the acute renal failure should also be coded. Sequence according 
@@ -164,8 +166,7 @@ hypertension with both heart and chronic kidney disease. If heart failure
 is present, assign an additional code from category I50 to identify the 
 type of heart failure. 
  
-The ap
-propriate code from category N18, Chronic kidney disease, should 
+The appropriate code from category N18, Chronic kidney disease, should 
 be used as a secondary code with a code from category I13 to identify 
 the stage of chronic kidney disease. 
  
@@ -174,7 +175,7 @@ See Section I.C.14. Chronic kidney disease.
 The Includes note at I13 specifies that the conditions included at I11 and 
 I12 are included together in I13. If a patient has hypertension, heart 
 disease and chronic kidney disease, then a code from I13 should be used, 
-not codes from I11 or I12,  
+not codes from I11 or I12. 
  
 For patients with both acute renal failure and chronic kidney disease, the 
 acute renal failure should also be coded. Sequence according to the 
@@ -196,7 +197,7 @@ the reason for admission/encounter.
 
 ===== PAGE 62 =====
 ICD-10-CM Official Guidelines for Coding and Reporting 
-FY 2026 
+FY 2027 
 Page 62 of 121 
  
 1) Osteoporosis without pathological fracture 

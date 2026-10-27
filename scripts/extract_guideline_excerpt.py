@@ -1,12 +1,16 @@
-"""Rebuild the committed FY2026 guideline excerpt and check anchor quotes.
+"""Rebuild the committed guideline excerpt (current edition) and check anchor quotes.
 
 The official PDF is not stored in the repo. Pass its path. The script checks
 the SHA-256, extracts the pages the anchors cite, and checks that every quote
 is a contiguous span of that extract after whitespace is collapsed. It does
 not rewrite words, and it does not join spans with "[...]".
 
-    python scripts/extract_guideline_excerpt.py path/to/fy-2026-icd-10-cm-coding-guidelines.pdf
-    python scripts/extract_guideline_excerpt.py path/to/file.pdf --write
+    python scripts/extract_guideline_excerpt.py path/to/fy-2027-icd-10-cm-coding-guidelines.pdf \
+        --prior path/to/fy-2026-icd-10-cm-coding-guidelines.pdf
+    python scripts/extract_guideline_excerpt.py path/to/file.pdf --prior path/to/prior.pdf --write
+
+--prior checks each quote against the previous edition too and records the page
+in ``verified_in``, so a reader can see the passage did not change.
 
 Requires pypdf. The unit tests do not: they compare anchors to the committed
 excerpt.
@@ -24,8 +28,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ANCHORS_PATH = ROOT / "codesentinel" / "guidelines" / "anchors.json"
 EXCERPT_PATH = ROOT / "codesentinel" / "guidelines" / "excerpt.txt"
-PDF_URL = "https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf"
-PDF_SHA256 = "2e87b3b088d6032edf6cda8c946cf342619df0c07237055a0e3be68410a0c267"
+FISCAL_YEAR = "FY 2027"
+PDF_URL = "https://www.cms.gov/files/document/fy-2027-icd-10-cm-coding-guidelines.pdf"
+PDF_SHA256 = "1f0065b609b678e98f85bf047b3b012c6a88ba3222e42be2f2435889e05738ab"
+PRIOR_FISCAL_YEAR = "FY 2026"
+PRIOR_PDF_URL = "https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf"
+PRIOR_PDF_SHA256 = "2e87b3b088d6032edf6cda8c946cf342619df0c07237055a0e3be68410a0c267"
 PAGES = (11, 39, 50, 51, 62)
 
 # Contiguous spans. start/end are matched against whitespace-collapsed page text.
@@ -129,10 +137,16 @@ def span_quote(page_text: str, start: str, end: str) -> str:
     return quote
 
 
-def build_anchors(pages: dict[int, str]) -> dict:
+def build_anchors(pages: dict[int, str], prior_pages: dict[int, str] | None = None) -> dict:
     rows = []
     for spec in SPANS:
         quote = span_quote(pages[spec["page"]], spec["start"], spec["end"])
+        verified_in = {FISCAL_YEAR: spec["page"]}
+        if prior_pages is not None:
+            prior = span_quote(prior_pages[spec["page"]], spec["start"], spec["end"])
+            if prior != quote:
+                raise SystemExit(f"{spec['key']}: quote changed between {PRIOR_FISCAL_YEAR} and {FISCAL_YEAR}")
+            verified_in[PRIOR_FISCAL_YEAR] = spec["page"]
         rows.append(
             {
                 "key": spec["key"],
@@ -141,20 +155,25 @@ def build_anchors(pages: dict[int, str]) -> dict:
                 "section": spec["section"],
                 "page": spec["page"],
                 "quote": quote,
+                "verified_in": verified_in,
             }
         )
+    editions = [{"fiscal_year": FISCAL_YEAR, "pdf_url": PDF_URL, "pdf_sha256": PDF_SHA256}]
+    if prior_pages is not None:
+        editions.append({"fiscal_year": PRIOR_FISCAL_YEAR, "pdf_url": PRIOR_PDF_URL, "pdf_sha256": PRIOR_PDF_SHA256})
     return {
         "pdf_url": PDF_URL,
         "pdf_sha256": PDF_SHA256,
         "title": "ICD-10-CM Official Guidelines for Coding and Reporting",
-        "fiscal_year": "FY 2026",
+        "fiscal_year": FISCAL_YEAR,
+        "verified_editions": editions,
         "anchors": rows,
     }
 
 
 def render_excerpt(pages: dict[int, str]) -> str:
     parts = [
-        "FY2026 ICD-10-CM Official Guidelines for Coding and Reporting",
+        f"{FISCAL_YEAR.replace(' ', '')} ICD-10-CM Official Guidelines for Coding and Reporting",
         f"Source: {PDF_URL}",
         f"sha256: {PDF_SHA256}",
         "Extracted with pypdf. Line breaks are the extractor's. Quotes in anchors.json",
@@ -171,6 +190,7 @@ def render_excerpt(pages: dict[int, str]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pdf", type=Path)
+    parser.add_argument("--prior", type=Path, default=None, help=f"{PRIOR_FISCAL_YEAR} PDF, to record that quotes are unchanged")
     parser.add_argument("--write", action="store_true", help="overwrite the committed excerpt and anchors")
     args = parser.parse_args()
     pdf_path = args.pdf
@@ -180,7 +200,12 @@ def main() -> None:
     if digest != PDF_SHA256:
         raise SystemExit(f"sha256 mismatch: {digest}")
     pages = extract_pages(pdf_path)
-    payload = build_anchors(pages)
+    prior_pages = None
+    if args.prior is not None:
+        if sha256_file(args.prior) != PRIOR_PDF_SHA256:
+            raise SystemExit("prior PDF sha256 mismatch")
+        prior_pages = extract_pages(args.prior)
+    payload = build_anchors(pages, prior_pages)
     excerpt = render_excerpt(pages)
     if args.write:
         ANCHORS_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
