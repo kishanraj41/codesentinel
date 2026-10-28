@@ -40,15 +40,22 @@ def main(summary_path: str, out_stem: str) -> None:
     ax.scatter(xs, total, s=90, color=INK, zorder=3, label="All review rows (gaps + unsupported-code flags)")
     ax.plot(xs, gaps, color=INK, linewidth=1.2, linestyle="--", zorder=2)
     ax.scatter(xs, gaps, s=90, color=LIME, edgecolor=INK, linewidth=1.4, zorder=3, label="Gap rows only")
-    for c, x, y, g in zip(cascade, xs, total, gaps):
-        recall = c.get("recall")
-        text = f"{c['id']}  recall {recall:.2f}" if recall is not None else c["id"]
-        ax.annotate(text, (x, y), textcoords="offset points", xytext=(8, 8), color=INK, fontsize=10, fontweight="bold")
+    offsets = [(-34, 10), (8, 10), (-34, -18), (8, -18)]
+    for i, (c, x, y) in enumerate(zip(cascade, xs, total)):
+        ax.annotate(c["id"], (x, y), textcoords="offset points", xytext=offsets[i % 4], color=INK, fontsize=10, fontweight="bold")
+    table = "\n".join(
+        f"{c['id']}  recall {c['recall']:.2f}   ${c['cost_per_chart_usd']:.5f}/chart" for c in cascade
+    )
+    if rules:
+        table += f"\nC0+ recall {rules['recall']:.2f}   $0 (rules queue)"
+    ax.text(0.02, 0.97, table, transform=ax.transAxes, va="top", ha="left", fontsize=9, color=INK,
+            family="DejaVu Sans Mono", bbox={"facecolor": PAPER, "edgecolor": INK, "linewidth": 0.6, "boxstyle": "round,pad=0.4"})
+    ax.set_xlim(0, max(xs) * 1.25)
     if rules:
         ax.axhline(rules["gap_rows_per_chart"], color=MUTED, linewidth=1, linestyle=":")
         ax.annotate(
-            f"C0+ rules queue, $0  (recall {rules['recall']:.2f})",
-            (0, rules["gap_rows_per_chart"]), textcoords="offset points", xytext=(4, 5), color=MUTED, fontsize=9,
+            "C0+ rules queue (gap rows)", (ax.get_xlim()[1], rules["gap_rows_per_chart"]), textcoords="offset points",
+            xytext=(-4, 5), ha="right", color=MUTED, fontsize=9,
         )
     ax.set_xlabel("Token Factory cost per chart (USD x 1,000)", color=INK)
     ax.set_ylabel("Rows a coder reviews per chart", color=INK)
@@ -59,9 +66,8 @@ def main(summary_path: str, out_stem: str) -> None:
     for spine in ("left", "bottom"):
         ax.spines[spine].set_color(INK)
     ax.tick_params(colors=INK)
-    ax.set_xlim(left=0)
-    ax.set_ylim(bottom=0)
-    ax.legend(frameon=False, fontsize=9, loc="lower right", labelcolor=INK)
+    ax.set_ylim(0, max(total + [rules["gap_rows_per_chart"] if rules else 0]) * 1.25)
+    ax.legend(frameon=False, fontsize=9, loc="center right", labelcolor=INK)
     fig.tight_layout()
     for ext in ("svg", "png"):
         fig.savefig(f"{out_stem}.{ext}", facecolor=PAPER, metadata={"Date": None} if ext == "svg" else None)
