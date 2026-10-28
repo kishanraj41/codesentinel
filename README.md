@@ -45,24 +45,26 @@ Three evaluation sets, all run live on Nebius Token Factory on 2026-10-27, with 
 
 | Set | Charts | Config | Precision | Recall | F1 | Review items / chart | $ / chart | P50 / P95 s |
 |---|---:|---|---:|---:|---:|---:|---:|---:|
-| **Synthea** (outside generator, 75 gold gaps) | 400 | C0+ rules | 0.051 | 0.840 | 0.096 | 3.09 | 0 | — |
-| | | C4 cascade | 0.041 | 0.027 | 0.032 | 5.11 (0.12 gap rows) | 0.0011 | 4.1 / 31.6 |
+| **Synthea held-out** (outside generator, 60 gold gaps) | 300 | C0+ rules | 0.070 | 0.817 | 0.128 | 2.35 | 0 | — |
+| | | C4 cascade | 0.183 | 0.667 | 0.288 | 3.83 (0.73 gap rows) | 0.0018 | 4.7 / 19.0 |
 | **Gold-A** (hand-labeled) | 10 | C0+ rules | 0.755 | 1.000 | 0.860 | 4.90 | 0 | — |
-| | | C4 cascade | 0.872 | 0.919 | 0.895 | 4.20 | 0.0060 | 12.6 / 94.9 |
+| | | C4 cascade | 0.868 | 0.892 | 0.880 | 4.10 | 0.0074 | 14.5 / 35.4 |
 | Gold-B (hard-negative and regression suite) | 66 | C0+ rules | 0.598 | 1.000 | 0.749 | 2.00 | 0 | — |
-| | | C4 cascade | 1.000 | 1.000 | 1.000 | 1.24 | 0.0014 | 2.05 / 14.51 |
+| | | C4 cascade | 1.000 | 0.987 | 0.994 | 1.23 | 0.0014 | 2.0 / 18.3 |
 
-**Synthea is the outside benchmark.** The 400 patients come from [Synthea](https://github.com/synthetichealth/synthea) v4.0.0 (seed `20261027`, Texas, ages 45–90), so neither the charts nor the labels were written by the author. Each patient's active Synthea conditions are mapped to ICD-10-CM with the NLM SNOMED CT to ICD-10-CM map and the FY 2027 combination-code rules. A seeded 30% of the billed codes CodeSentinel covers are then removed from the chart, and the removed codes that the 12-month chart still supports (a note, a linked medication, or a lab meeting a published criterion) become the gold gaps. Method and reproduction: [eval/synthea/README.md](eval/synthea/README.md). Full results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
+**An independent benchmark exposed three bugs; they were fixed on a dev split, and the headline is the held-out result.** The patients come from [Synthea](https://github.com/synthetichealth/synthea) v4.0.0 (seed `20261027`, Texas, ages 45–90), so neither the charts nor the labels were written by the author. Each patient's active Synthea conditions are mapped to ICD-10-CM with the NLM SNOMED CT to ICD-10-CM map and the FY 2027 combination-code rules. A seeded 30% of the billed codes CodeSentinel covers are removed from the chart, and the removed codes the 12-month chart still supports (a note, a linked medication, or a lab meeting a published criterion) are the gold gaps. Method and reproduction: [eval/synthea/README.md](eval/synthea/README.md). Full results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
 
-The result is a weakness, and it is reported as one. Synthea notes are template text that rarely name chronic conditions, so most gold gaps (E78.5 with a statin, I10 with an antihypertensive) rest on the medication list alone. The rules find 63 of 75 gaps but bury them in 1,173 false candidates, led by urine-glucose `R81` rows (292), heart-failure rows inferred from beta-blockers and diuretics (175), GAD-7 screening lines read as anxiety (158), and unstaged `N18.9` from kidney labs (133). The cascade removes almost all of those false candidates (gap rows drop from 3.09 to 0.12 per chart), but Lightning triage labels 56 of the 75 medication-only gaps `copied_forward_unclear`, a status that drops the row instead of sending it to review, so C4 recall falls to 0.027. The two-way check also flags almost every billed code that the sparse notes never mention: 1,962 flags on codes Synthea does have, against 34 of 34 planted unsupported codes found. That is why total review items rise to 5.11 per chart.
+The first run on all 400 charts was poor: C4 recall 0.027. It showed three bugs. Triage dropped medication-supported gaps as `copied_forward_unclear` (56 of 75) instead of sending them to review, because the rescue for medication evidence only fired on empty notes and Synthea notes are template text. Triage saw only the first 40 structured lines, which hid the medication list on 103 charts. And the unsupported-existing check flagged 1,962 billed codes Synthea does have, because it only knew terms for a short code list and ignored linked medications and labs. The 400 patients were then split by seed into 100 dev and 300 held-out charts, and the split was committed before any fix. The fixes, plus a blood-glucose LOINC that had been mapped to glycosuria and an R73 Excludes1 rule, were made and checked on dev only (dev C4 recall 0.067 to 0.933). The held-out charts were run once afterwards.
+
+On held-out, C4 recall is 0.667 (95% CI 0.54–0.77), up from 0.017 before the fixes, with precision 0.183 against 0.070 for the rules queue. It is still weaker than dev, and it is reported that way: 8 held-out gaps were still dropped as `copied_forward_unclear`, and most false positives are statin and ACE-inhibitor rows that the medication policy sends to review (Synthea prescribes both for prevention). The two-way check found 19 of 20 planted unsupported codes. It still flags about three billed codes per chart, because the 12-month chart has no mention, linked medication or lab for many chronic conditions.
 
 <p align="center">
-  <img src="docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 400 Synthea charts, with recall for each configuration." width="760">
+  <img src="docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 300 held-out Synthea charts, with recall for each configuration." width="760">
 </p>
 
-**Gold-A** is ten outpatient charts labeled by hand, with labels pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.79–0.97). C4 raises precision from 0.755 to 0.872 and cuts the queue from 4.9 to 4.2 items per chart, at the cost of three missed codes (`D64.9` and `I12.9` on pt-001, `I50.9` on pt-004). The P95 comes from one slow chart (pt-002, 150 s end to end); the other nine finished in 27 s or less. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md), commit `9409d3b`.
+**Gold-A** is ten outpatient charts labeled by hand, with labels pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.75–0.96). C4 raises precision from 0.755 to 0.868 and cuts the queue from 4.9 to 4.1 items per chart, at the cost of four missed codes (`D64.9` and `I12.9` on pt-001, `I12.9` and `I50.9` on pt-004). The previous run (v6, before the Synthea fixes) had C4 at 0.872 / 0.919. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md), commit `b623d53`.
 
-**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 37.9% against C0+ (2.00 to 1.24) at $0.00143 per chart. Two live C4 passes agreed on 64 of 66 charts (0.970). No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF.
+**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 38.6% against C0+ (2.00 to 1.23) at $0.00136 per chart. It missed one combination code (`I12.9` on gb-0042) that v6 found. Two live C4 passes agreed on 65 of 66 charts. No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF.
 
 Cost is reported Token Factory usage times the public catalog price. `eval/results/mock/` holds offline regression output from the recorded client; those numbers are not model quality. The schema is in [docs/eval.md](docs/eval.md).
 
@@ -220,7 +222,7 @@ eval/                    Gold sets, harness, and mock or live runner
 eval/results/live/       Published live run: summary, RESULTS.md, recorded completions
 eval/results/mock/       Offline regression output
 eval/synthea/            Synthea benchmark: generator command, SNOMED to ICD-10-CM map, builder, runner
-eval/results/synthea/    Published Synthea run: summary, RESULTS.md, labels, chart hashes
+eval/results/synthea/    Synthea held-out run (headline), dev/ and pre-fix baseline-v0/, labels, chart hashes
 web/                     Judge demo (Audit and Eval tabs)
 docs/api.md              Audit contract 1.0.0
 docs/eval.md             Metrics schema
@@ -246,7 +248,7 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 - English, outpatient-style notes. The regex tiers miss paraphrases the recorded client will not invent.
 - No claim of HIPAA compliance. A production deployment would need Zero Data Retention, a dedicated endpoint, and the right agreements.
 - `MAX_DAILY_USD` is documented in [.env.example](.env.example) and is not enforced on the audit service yet.
-- On the Synthea benchmark the cascade drops most medication-only gaps (C4 recall 0.027) and the two-way check flags billed codes the notes never mention; see Results. Synthea labels are derived by code, not reviewed by a coder.
+- On the Synthea held-out split C4 recall is 0.667 and precision 0.183, and the two-way check still flags about three billed codes per chart; see Results. Synthea labels are derived by code, not reviewed by a coder.
 - Gold-A is 10 charts pending coder sign-off. Gold-B was built around the same phenomena as the rules, so it is a regression suite rather than an independent benchmark.
 
 <details>

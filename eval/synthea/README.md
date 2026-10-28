@@ -5,7 +5,7 @@ medications and notes come from [Synthea](https://github.com/synthetichealth/syn
 open-source patient simulator. The author wrote no chart content and no per-chart label. Labels
 are derived by code from Synthea's own condition list.
 
-Results: [eval/results/synthea/RESULTS.md](../results/synthea/RESULTS.md).
+Results: [eval/results/synthea/RESULTS.md](../results/synthea/RESULTS.md) (held-out, the headline), [dev/](../results/synthea/dev/RESULTS.md) and the pre-fix [baseline-v0/](../results/synthea/baseline-v0/RESULTS.md).
 
 ## How a chart and its label are made
 
@@ -49,8 +49,8 @@ eval/synthea/generate.sh synthea-out
 # 2. Charts and labels. Writes BENCH/bundles/, BENCH/labels.jsonl, BENCH/manifest.json.
 python -m eval.synthea.build --synthea-dir synthea-out/fhir --out BENCH --seed 20261027
 
-# 3. Live run (both keys set). --limit 20 is the smoke subset.
-python -m eval.synthea.run --bench BENCH --out eval/results/synthea --mode live --workers 6
+# 3. Live run (both keys set). --split dev|held_out reads split.json; --limit 20 is the smoke subset.
+python -m eval.synthea.run --bench BENCH --out eval/results/synthea --mode live --split held_out --workers 5
 
 # 4. Frontier chart (needs matplotlib).
 python -m eval.synthea.frontier eval/results/synthea/summary.json docs/assets/synthea-frontier
@@ -85,6 +85,8 @@ python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held
 ```
 
 ## Limits
+
+- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counts as a heart-failure drug even though the triage policy treats it as nonspecific. Found after the held-out run; not fixed.
 
 - Synthea notes are template text. They rarely name the chronic conditions, so evidence is mostly
   medications and labs.
