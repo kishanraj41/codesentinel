@@ -82,6 +82,15 @@ class MedicationRescueTests(unittest.TestCase):
         self.assertEqual(result.assertion_status, "lab_only")
 
 
+    def test_lab_panel_name_is_not_a_condition_mention(self):
+        notes = TEMPLATE_NOTE + "\nThe following lab reports were completed:\n- lipid panel with direct ldl - serum or plasma"
+        profile = {"medications": [{"medication_id": "m1", "name": "Simvastatin 10 MG Oral Tablet", "status": "active"}]}
+        result = reconcile_triage(
+            _triage(), code="E78.5", condition="Hyperlipidemia", notes=notes, profile=profile,
+        )
+        self.assertEqual(result.assertion_status, "medication_supported")
+
+
 class TriageLinesTests(unittest.TestCase):
     def _long_profile(self):
         observations = [
@@ -158,6 +167,26 @@ class UnsupportedExistingTests(unittest.TestCase):
         items = unsupported_existing_items(profile)
         self.assertEqual([item.code for item in items], ["J44.9"])
         self.assertEqual(items[0].drop_reason, "no_meat")
+
+
+class PrediabetesExcludesTests(unittest.TestCase):
+    def test_no_r73_candidate_when_diabetes_is_coded(self):
+        import logging
+
+        from gap_pipeline import run_gap_pipeline
+
+        logging.getLogger("gapdetect.pipeline").setLevel(logging.ERROR)
+        profile = {
+            "clinical_notes": [],
+            "observations": [{"observation_id": "o1", "name": "HbA1c", "loinc": "4548-4", "value": 6.0, "unit": "%",
+                              "date": "2026-09-01"}],
+            "medications": [],
+            "conditions": [{"icd10_code": "E11.9", "display": "Type 2 diabetes mellitus"}],
+            "claims_codes": {"E11.9"},
+        }
+        out = run_gap_pipeline(profile, {}, verify=False)
+        codes = {g.get("icd10_code") for bucket in ("approved", "review", "rejected") for g in out[bucket]}
+        self.assertFalse(any(str(c).startswith("R73") for c in codes))
 
 
 class LoincMapTests(unittest.TestCase):

@@ -59,6 +59,31 @@ python -m eval.synthea.frontier eval/results/synthea/summary.json docs/assets/sy
 `eval/results/synthea/manifest.json` records the SHA-256 of every chart bundle the published run
 used, so a rebuilt benchmark can be checked chart by chart.
 
+## Dev / held-out protocol
+
+The first full run (all 400 charts, before any change) exposed three cascade bugs. They were
+fixed under a split fixed in advance, so the published number is on charts the fixes never saw.
+
+1. **Split first.** `split.json` assigns the 400 patient ids with `random.Random(20261028)` over the
+   sorted ids: the first 100 are `dev`, the other 300 `held_out`. It was committed (`ebf1f9c`)
+   before any cascade change.
+2. **Fix on dev only.** Bugs were diagnosed from dev charts and from the dev rows of the first
+   run. Held-out per-chart outcomes were not opened while fixing. The live iteration runs were
+   `--split dev` only.
+3. **One held-out run.** After the fixes were committed, the 300 held-out charts were run once
+   with every configuration (`--split held_out`). No change was made after that run.
+4. **Benchmark unchanged.** `labels.jsonl` and the chart bundles are the ones from the first
+   run (manifest SHA-256s unchanged). No label was edited.
+
+Known exposure before the split: the aggregate 400-chart results and a handful of smoke-run
+charts (which can include held-out patients) had been read while writing up the first run.
+No fix was designed from a specific held-out chart.
+
+```bash
+python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
+python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held_out
+```
+
 ## Limits
 
 - Synthea notes are template text. They rarely name the chronic conditions, so evidence is mostly

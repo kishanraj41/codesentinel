@@ -591,8 +591,17 @@ def _blocked_by_chart_context(code: str, condition: str, notes: str) -> bool:
     return False
 
 
+# Lab and questionnaire names. "Lipid panel with direct LDL" or "Hemoglobin A1c" in a list of
+# completed lab reports names a test, not the condition, so it does not count as a mention
+# that would stop a medication or lab rescue.
+_ANALYTE_KEYWORDS = frozenset({
+    "hba1c", "a1c", "egfr", "ldl", "cholesterol", "bnp", "tsh", "hemoglobin", "ferritin", "uric",
+    "alt", "phq-9", "phq9", "gad", "vitamin d", "ejection fraction",
+})
+
+
 def _has_present_mention(code: str, condition: str, notes: str) -> bool:
-    keys = keywords_for(code, condition)
+    keys = [key for key in keywords_for(code, condition) if key not in _ANALYTE_KEYWORDS]
     if not keys:
         return False
     for sentence in _sentences(notes):

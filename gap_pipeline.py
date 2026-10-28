@@ -538,6 +538,10 @@ def run_gap_pipeline(
         if upgrade.get("icd10_code") not in present:
             deduped.append(upgrade)
             present.add(upgrade.get("icd10_code"))
+    # ICD-10-CM R73 Excludes1 diabetes mellitus (E08-E13): no prediabetes or abnormal-glucose
+    # code once diabetes is coded.
+    if any(str(code)[:3] in {"E08", "E09", "E10", "E11", "E13"} for code in all_coded):
+        deduped = [gap for gap in deduped if not str(gap.get("icd10_code") or "").startswith("R73")]
     log.info(f"After dedup: {len(deduped)} unique candidates")
 
     # ── HCC + RAF Scoring ──
