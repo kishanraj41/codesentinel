@@ -61,7 +61,7 @@ used, so a rebuilt benchmark can be checked chart by chart.
 
 ## Dev / held-out protocol
 
-This section describes the first held-out run (v1). The second (v2) is below.
+This section describes the first held-out run (v1), which ran on the v7 code. The later runs (v2 on the v8 code, then v9) are below.
 
 The first full run (all 400 charts, before any change) exposed three cascade bugs. They were
 fixed under a split fixed in advance, so the published number is on charts the fixes never saw.
@@ -88,46 +88,64 @@ so they no longer excuse an `I13` code on their own either; also not rerun.
 
 ```bash
 python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
-python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held_out
-```
+python -m eval.synthea.run --bench ## Later held-out runs: v8 (gate + adaptive, gate reverted) and v9
 
-## Second held-out run (held-out v2)
+The 300 held-out charts have been run three times, once per code version. Each run is kept; none
+was edited afterward. Labels and chart bundles are the v1 ones throughout.
 
-This is the **second** run on the 300 held-out charts. The first (v1, `b623d53`, results in
-[eval/results/synthea/](../results/synthea/RESULTS.md)) is unchanged. v2 results:
-[eval/results/synthea/heldout-v2/](../results/synthea/heldout-v2/RESULTS.md), chart
-`docs/assets/synthea-frontier-v2.{svg,png}`.
+| Held-out run | Code | Results |
+|---|---|---|
+| v1 | v7 (`b623d53`) | [eval/results/synthea/](../results/synthea/RESULTS.md) |
+| v2 | v8: info gate + adaptive C4a (`def9241`) | [heldout-v2/](../results/synthea/heldout-v2/RESULTS.md), `docs/assets/synthea-frontier-v2.{svg,png}` |
+| v9 | v9: gate reverted, C4a always escalates combination/specificity (`8ab01be`) | [heldout-v9/](../results/synthea/heldout-v9/RESULTS.md), `docs/assets/synthea-frontier-v9.{svg,png}` |
 
-Why a second run. The v1 **aggregate** showed two things: about 3 unsupported-existing flags per chart
-(912 in total) on billed codes Synthea does have, because thin template charts carry no mention of most
-chronic codes; and C1 to C4 nearly identical, because Synthea has almost no combination or specificity
-gaps, so Super, Tavily and Ultra cost money without changing answers. No held-out chart was opened to
-design either fix. Both were designed from that aggregate and tuned on the 100 **dev** charts only
-([dev-v2/](../results/synthea/dev-v2/README.md), two live rounds):
+**v7 (held-out v1).** The aggregate showed about 3 unsupported-existing flags per chart (912 in total)
+on billed codes Synthea does have, because thin template charts carry no mention of most chronic codes;
+and C1 to C4 nearly identical, because Synthea has almost no combination or specificity gaps.
 
-1. **Info gate.** When no note sentence in the chart window names a condition (a term from the code
-   lexicon or from any billed condition; negated and family-history sentences count; clauses naming a
-   procedure or screening instrument do not), a billed code with no evidence becomes an informational row
-   (`decision: info`). It is shown, but it is not review work and is outside review items and P/R.
-   Charts with any condition mention keep the old behavior. Dev round 2 added the procedure/instrument rule.
-2. **Adaptive depth (C4a).** C1, escalating the chart to the full C4 path only when a combination or
-   specificity candidate survives triage. C0-C4 are unchanged, so the comparison holds. The service and
-   web demo default to C4a.
+**v8 (held-out v2).** Two fixes designed from that aggregate (no held-out chart opened) and tuned on
+the 100 dev charts only ([dev-v2/](../results/synthea/dev-v2/README.md), two live rounds):
 
-The held-out split was then run once with every config (`--split held_out`, commit `def9241`). Nothing
-was changed after the run. Labels and chart bundles are the v1 ones.
+1. *Info gate.* When no note sentence in the chart window named a condition, a billed code with no
+   evidence became an informational row (`decision: info`), outside review items and P/R.
+2. *Adaptive depth (C4a).* C1, escalating to the full C4 path only when a combination or specificity
+   candidate survived triage.
 
-| Config | Run | P | R | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Info rows / chart | $ / chart | Charts past C1 |
+Held-out v2 cut C4 review items per chart from 3.83 to 2.02 with gap P/R unchanged, but **planted
+unsupported codes flagged fell from 19/20 (v1) to 7/20 (v2), because the info gate demoted 13 of the 20
+planted codes to info rows.** Catching a billed code with no support is the point of that check, so the
+gate was **reverted** (`4d13c16`, `fdf174c`, normal revert commits). The unsupported-existing check is
+again exactly the v7 one (`codesentinel/policy.py` matches `main`).
+
+**v9 (held-out v9).** v8 minus the gate, plus one routing change to C4a, which stays the service
+default: a chart goes past C1 when the rules pipeline proposes **any** combination or specificity
+candidate, whatever triage said or how confident it was, and every such candidate goes to Super, the
+Tavily gate and Ultra as in C4. If triage would have dropped it and the models accept it anyway, it is
+held as review. The routing change was checked only on mock dev; nothing was tuned on held-out.
+Held-out was then run once with every config on the shipped commit `8ab01be`.
+
+| Config | Run | P | R | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Planted unsupported caught | $ / chart | Charts past C1 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| C0+ | v1 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | — | 0 | 0% |
-| C0+ | v2 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0.00 | 0 | 0% |
-| C1 | v1 | 0.187 | 0.667 | 0.292 | 3.82 | 0.71 | 174 | — | 0.00085 | 0% |
-| C1 | v2 | 0.183 | 0.667 | 0.288 | 2.03 | 0.73 | 178 | 1.81 | 0.00082 | 0% |
-| C4 | v1 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | — | 0.00175 | 100% |
-| C4 | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 1.81 | 0.00173 | 100% |
-| C4a (adaptive, new) | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 1.81 | 0.00087 | 2% |
+| C0+ | v1 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0/20 | 0 | 0% |
+| C0+ | v9 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0/20 | 0 | 0% |
+| C1 | v1 | 0.187 | 0.667 | 0.292 | 3.82 | 0.71 | 174 | 19/20 | 0.00085 | 0% |
+| C1 | v2 | 0.183 | 0.667 | 0.288 | 2.03 | 0.73 | 178 | 7/20 | 0.00082 | 0% |
+| C1 | v9 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | 20/20 | 0.00081 | 0% |
+| C3 | v9 | 0.184 | 0.667 | 0.289 | 3.83 | 0.72 | 177 | 20/20 | 0.00120 | 100% |
+| C4 | v1 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | 19/20 | 0.00175 | 100% |
+| C4 | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 7/20 | 0.00173 | 100% |
+| C4 | v9 | 0.183 | 0.667 | 0.287 | 3.84 | 0.73 | 179 | 20/20 | 0.00170 | 100% |
+| C4a | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 7/20 | 0.00087 | 2% |
+| C4a | v9 | 0.182 | 0.683 | 0.288 | 3.86 | 0.75 | 184 | 20/20 | 0.00118 | 6% |
 
-Unsupported existing codes (C4 and C4a identical): v1 flagged 19 of 20 planted codes and 912 billed codes Synthea does have; v2 flags 7 of 20 planted and 383 billed codes Synthea has. **Planted unsupported codes flagged fell from 19/20 (v1) to 7/20 (v2), because the info gate turned 13 of them into info rows** (they sit on charts whose notes name no condition, so the gate treats silence as no evidence either way). The v1 C4 figures differ slightly from the v1 C1 figures because each config is a separate live pass.
+In v9 the unsupported check flags all 20 planted codes, and again 912 billed codes Synthea does have
+(the v1 figure; review items per chart are back to about 3.8). The 20th planted code (19/20 in v1) is the `I50.9` that carvedilol and furosemide used to excuse; the post-v1 drug-list fix above caught it. C4a v9 finds one more gold gap than C4
+(recall 0.683 vs 0.667) and shows 7 more false-positive gap rows (184 vs 177–179). It costs about
+70% of C4 per chart, with 6% of charts past C1 (2% in v2, because candidates dropped at triage now
+escalate too). Each config is a separate live pass, so small differences between configs and runs
+include live variance.
+
+figures because each config is a separate live pass.
 
 
 ## Limits

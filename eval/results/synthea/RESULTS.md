@@ -3,7 +3,11 @@
 > **Second held-out run (v2), 2026-10-28.** The 300 held-out charts were run a second time after two
 > dev-only fixes (info gate for unsupported-existing flags, adaptive config C4a). Results:
 > [heldout-v2/RESULTS.md](heldout-v2/RESULTS.md). This file is the first run (v1) and is unchanged below this note.
-> Protocol: [eval/synthea/README.md](../../synthea/README.md#second-held-out-run-held-out-v2).
+> Protocol: [eval/synthea/README.md](../../synthea/README.md#later-held-out-runs-v8-gate--adaptive-gate-reverted-and-v9).
+>
+> **Third held-out run (v9).** The info gate was reverted because it cost 13 of the 20 planted codes. v9 (commit `8ab01be`)
+> flags 20/20 planted codes again. C4 P/R is 0.183 / 0.667 and C4a is 0.182 / 0.683, with 6% of charts past C1 and $0.00118 per chart against $0.00170 for C4.
+> Results: [heldout-v9/RESULTS.md](heldout-v9/RESULTS.md).
 >
 > | Config | Run | P | R | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Info rows / chart | $ / chart | Charts past C1 |
 > |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
