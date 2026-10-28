@@ -232,7 +232,7 @@ def markdown(summary: dict) -> str:
     lines += [
         "",
         "Review items count every row sent to a coder, including unsupported-existing flags on billed codes. Gap rows count only proposed additions. "
-        "Charts past C1 is the share of charts where Super, Tavily or Ultra ran (C2-C4 always; C4a only when a combination or specificity candidate survived triage).",
+        "Charts past C1 is the share of charts where Super, Tavily or Ultra ran (C2-C4 always; C4a only when the chart has a combination or specificity candidate).",
         "",
         "## 95% intervals (Wilson)",
         "",

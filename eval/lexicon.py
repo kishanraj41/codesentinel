@@ -169,5 +169,5 @@ CONFIG_LABELS: dict[str, str] = {
     "C2": "C1 + Super adjudication, no Tavily",
     "C3": "C2 + Tavily guideline grounding",
     "C4": "C3 + Ultra escalation (full cascade)",
-    "C4a": "Adaptive: C1, full C4 only if a combination/specificity candidate survives triage",
+    "C4a": "Adaptive: C1, full C4 when the chart has a combination/specificity candidate",
 }

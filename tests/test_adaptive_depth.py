@@ -1,8 +1,9 @@
 """Fix B: adaptive depth (config C4a).
 
-C4a runs C1 (Lightning triage + quote verifier) and escalates the chart to the full
-C4 path (Super, Tavily, Ultra) only when a combination or specificity candidate
-survives triage. C1-C4 are unchanged. The audit records which depth ran.
+C4a runs C1 (Lightning triage + quote verifier) for a chart with no combination or
+specificity candidate. A chart with one runs the full C4 path (Super, Tavily, Ultra),
+and every such candidate reaches Super whatever triage said. C1-C4 are unchanged.
+The audit records which depth ran.
 """
 
 import os
@@ -25,7 +26,7 @@ NOTE = (
 
 
 class _Client:
-    def __init__(self, status="present", confidence=0.95):
+    def __init__(self, status="present", confidence=0.95, decision="accept", quotes=None):
         self.mock = True
         self.used_fallback = False
         self.degraded_reasons = []
@@ -33,6 +34,8 @@ class _Client:
         self.confidence = confidence
         self.calls = []
         self.models = []
+        self.decision = decision
+        self.quotes = quotes
 
     def ensure_models(self):
         return None
@@ -47,13 +50,13 @@ class _Client:
         if name == "triage":
             data = TriageResult(
                 assertion_status=self.status,
-                supporting_quotes=[NOTE.split(". ")[0] if "E78" in str(kwargs) else NOTE],
+                supporting_quotes=self.quotes if self.quotes is not None else [NOTE.split(". ")[0] if "E78" in str(kwargs) else NOTE],
                 section="assessment_plan",
                 confidence=self.confidence,
             )
         else:
             data = AdjudicationResult(
-                decision="accept", icd10_code="E11.22", code_display="Type 2 DM with diabetic CKD",
+                decision=self.decision, icd10_code="E11.22", code_display="Type 2 DM with diabetic CKD",
                 rationale="Scripted accept.", physician_query_needed=False,
             )
         return Completion(data=data, raw="{}", input_tokens=10, output_tokens=5, latency_ms=1,
@@ -132,10 +135,37 @@ class AdaptiveDepthTests(unittest.TestCase):
         strip = lambda rows: [(r["icd10_code"], r["decision"]) for r in rows]
         self.assertEqual(strip(a["worklist"]), strip(b["worklist"]))
 
-    def test_combination_dropped_at_triage_does_not_escalate(self):
-        result, client, _g = _run([COMBO], "C4a", client=_Client(status="negated"))
-        self.assertEqual(result["depth"]["depth_used"], "C1")
+    def test_combination_dropped_by_triage_still_reaches_super_and_ultra(self):
+        result, client, guidelines = _run([COMBO], "C4a", client=_Client(status="negated", decision="accept"))
+        self.assertEqual(result["depth"]["depth_used"], "C4")
+        self.assertIn(SUPER, client.models)
+        self.assertIn(ULTRA, client.models)
+        self.assertTrue(guidelines.lookups)
+        # Models accepted over a triage drop: held for a coder, never auto-accepted.
+        self.assertEqual([(r["icd10_code"], r["decision"]) for r in result["worklist"]], [("E11.22", "review")])
+
+    def test_combination_dropped_by_triage_and_rejected_stays_dropped(self):
+        result, client, _g = _run([COMBO], "C4a", client=_Client(status="negated", decision="reject"))
+        self.assertIn(SUPER, client.models)
+        self.assertEqual(result["worklist"], [])
+        self.assertEqual([d["reason"] for d in result["dropped"]], ["rejected"])
+
+    def test_low_confidence_combination_reaches_super(self):
+        result, client, _g = _run([COMBO], "C4a", client=_Client(confidence=0.3))
+        self.assertIn(SUPER, client.models)
+        self.assertEqual(result["depth"]["depth_used"], "C4")
+
+    def test_combination_without_any_verbatim_quote_is_dropped_by_verifier(self):
+        gap = dict(COMBO, evidence_sources=["a sentence that is not in the chart at all"])
+        result, client, _g = _run([gap], "C4a", client=_Client(quotes=["also not in the chart anywhere"]))
+        self.assertEqual(result["worklist"], [])
+        self.assertEqual([d["reason"] for d in result["dropped"]], ["unsupported"])
+        self.assertEqual(result["depth"]["depth_used"], "C4")
+
+    def test_c4_still_drops_a_triage_negated_combination(self):
+        result, client, _g = _run([COMBO], "C4", client=_Client(status="negated"))
         self.assertEqual(client.calls, ["triage"])
+        self.assertEqual(result["worklist"], [])
 
     def test_fixed_configs_unchanged(self):
         for config in ("C1", "C2", "C3", "C4"):
@@ -153,6 +183,7 @@ class AdaptiveDepthTests(unittest.TestCase):
                 {"gap": {"tier": "TIER_1_LAB", "icd10_code": "N18.3"}},
                 {"gap": {"tier": "COMBINATION_CODE", "icd10_code": "I12.9"}}]
         self.assertEqual(needs_deep_cascade(rows), ["E11.65", "I12.9"])
+        self.assertEqual(needs_deep_cascade([row["gap"] for row in rows]), ["E11.65", "I12.9"])
         self.assertEqual(needs_deep_cascade([]), [])
 
 

@@ -61,9 +61,9 @@ _DROP_DETAIL = {
 # review evidence, not negations, even when Lightning tagged them as dropped.
 _KEEP_ASSERTIONS = {"present", "medication_supported", "lab_only"}
 
-# Fixed-depth configs, and the adaptive one. C4a runs C1 (triage + verifier) and goes
-# on to the full C4 path (Super, Tavily, Ultra) only for a chart where at least one
-# combination or specificity candidate survives triage and the quote verifier.
+# Fixed-depth configs, and the adaptive one. C4a runs C1 (triage + verifier) for a chart
+# with no combination or specificity candidate. A chart with one runs the full C4 path
+# (Super, Tavily, Ultra), and every such candidate goes to Super whatever triage said.
 FIXED_CONFIGS = ("C1", "C2", "C3", "C4")
 ADAPTIVE_CONFIG = "C4a"
 CASCADE_CONFIGS = FIXED_CONFIGS + (ADAPTIVE_CONFIG,)
@@ -72,18 +72,26 @@ DEFAULT_SERVICE_CONFIG = ADAPTIVE_CONFIG
 _DEEP_GAP_TYPES = frozenset({"combination", "specificity_upgrade"})
 
 
-def needs_deep_cascade(survivors: list[dict]) -> list[str]:
-    """Codes of surviving combination or specificity candidates.
+def is_deep_candidate(gap: dict) -> bool:
+    """A combination or specificity candidate, by the rules pipeline's own tiers
+    (COMBINATION_CODE, SPECIFICITY_UPGRADE via gap_type_of): E11.2x and I12/I13
+    combinations, E11.65 and N18 stage or I50 type upgrades."""
+    return gap_type_of(gap) in _DEEP_GAP_TYPES
 
-    Uses the rules pipeline's own tiers (COMBINATION_CODE, SPECIFICITY_UPGRADE via
-    gap_type_of): E11.2x and I12/I13 combinations, E11.65 and N18 stage or I50 type
-    upgrades. An empty list means the adaptive config stops at C1.
+
+def needs_deep_cascade(candidates: list[dict]) -> list[str]:
+    """Codes of the combination or specificity candidates among the rules candidates.
+
+    Accepts rules gaps or survivor rows ({"gap": ...}). An empty list means the
+    adaptive config stops at C1. Triage outcome does not matter: a chart with any
+    such candidate runs the full cascade.
     """
-    return sorted({
-        str(row["gap"].get("icd10_code") or "")
-        for row in survivors
-        if gap_type_of(row["gap"]) in _DEEP_GAP_TYPES
-    })
+    codes = set()
+    for item in candidates:
+        gap = item.get("gap") if isinstance(item.get("gap"), dict) else item
+        if is_deep_candidate(gap):
+            codes.add(str(gap.get("icd10_code") or ""))
+    return sorted(codes)
 
 
 def run_cascade(
@@ -97,8 +105,11 @@ def run_cascade(
     """config selects how far the same cascade runs.
 
     C1 stops after triage and the quote verifier. C2 adds Super. C3 adds
-    guideline lookup. C4 adds Ultra. C4a (adaptive) stops at C1 unless a
-    combination or specificity candidate survives triage, and then runs C4.
+    guideline lookup. C4 adds Ultra. C4a (adaptive) stops at C1 when the chart has
+    no combination or specificity candidate. Otherwise it runs C4, and every such
+    candidate is adjudicated by Super (then the guideline gate and, as in C4, Ultra)
+    even when triage would have dropped it; a model accept over a triage drop is held
+    as review. The deterministic verifier still applies: a row needs a verbatim quote.
     C0 is not handled here. The result's `depth` block records what ran.
     """
     depth = config if config in CASCADE_CONFIGS else "C4"
@@ -113,6 +124,8 @@ def run_cascade(
     corpus = build_corpus(profile)
     candidates = list(rules.get("approved") or []) + list(rules.get("review") or [])
     notes = corpus.notes_text
+    deep_codes = needs_deep_cascade(candidates)
+    force_deep = adaptive and bool(deep_codes)
 
     timeline_latency = {step: 0 for step, _label, _key in _TIMELINE}
     timeline_status = {step: "skipped" for step, _label, _key in _TIMELINE}
@@ -185,6 +198,19 @@ def run_cascade(
             profile=profile,
             gap=gap,
         )
+        if force_deep and is_deep_candidate(gap) and (
+            triage.assertion_status not in _KEEP_ASSERTIONS
+            or not verified_quotes(triage.supporting_quotes, corpus)
+        ):
+            grounded = verified_quotes(
+                list(triage.supporting_quotes) + [str(e) for e in (gap.get("evidence_sources") or [])], corpus
+            )
+            if grounded:
+                survivors.append({
+                    "gap": gap, "triage": triage, "quotes": grounded, "triage_model": completion.model,
+                    "forced": triage.assertion_status if triage.assertion_status not in _KEEP_ASSERTIONS else "unsupported",
+                })
+                continue
         if triage.assertion_status not in _KEEP_ASSERTIONS:
             asserted += 1
             dropped.append(
@@ -220,21 +246,23 @@ def run_cascade(
     )
     timeline_latency["verifier"] = int((time.perf_counter() - started) * 1000)
 
-    deep_codes = needs_deep_cascade(survivors)
+    forced = sorted({str(row["gap"].get("icd10_code") or "") for row in survivors if row.get("forced")})
+    if forced:
+        timeline_detail["verifier"] += f"; sent to Super despite triage: {', '.join(forced)}"
     if adaptive:
-        escalate = bool(deep_codes)
+        escalate = force_deep
         use_super = use_guidelines = use_ultra = escalate
         depth_used = "C4" if escalate else "C1"
         depth_reason = (
-            "combination or specificity candidate survived triage: " + ", ".join(deep_codes)
+            "combination or specificity candidate: " + ", ".join(deep_codes)
             if escalate
-            else "no combination or specificity candidate survived triage"
+            else "no combination or specificity candidate"
         )
     else:
         depth_used = depth
         depth_reason = "fixed depth"
     stop_note = (
-        "adaptive: no combination or specificity candidate survived triage"
+        "adaptive: no combination or specificity candidate"
         if adaptive and depth_used == "C1" else None
     )
 
@@ -327,8 +355,8 @@ def run_cascade(
             if needs_super(triage.confidence, gap_type):
                 decision = "review"
                 rationale = (
-                    "Triage held this candidate. The adaptive cascade stopped at triage because no "
-                    "combination or specificity candidate survived."
+                    "Triage held this candidate. The adaptive cascade stopped at triage because the "
+                    "chart has no combination or specificity candidate."
                     if stop_note else
                     "Triage held this candidate. This config stops before Super adjudication."
                 )
@@ -359,6 +387,15 @@ def run_cascade(
             final_by = ULTRA
 
         decision, rationale = apply_guideline_gate(decision, gap_type, citation_dicts, rationale)
+        if row.get("forced") and decision == "accept":
+            # Super (and Ultra, if it ran) accepted a code Lightning triage would have dropped.
+            # Two models disagree, so a coder decides.
+            decision = "review"
+            rationale = (
+                f"Triage tagged this {row['forced'].replace('_', ' ')}, but adjudication accepted it. "
+                "Held for coder review."
+            )
+            query_needed = True
         if triage.assertion_status == "medication_supported" and decision in {"accept", "reject"}:
             decision = "abstain"
             rationale = (

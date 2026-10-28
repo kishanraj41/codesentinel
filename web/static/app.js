@@ -356,8 +356,8 @@ function renderWorklist(payload) {
   renderDepth(box, audit.depth);
 }
 
-// Which cascade depth ran. C4a stays at Lightning triage unless a combination or
-// specificity candidate survived; then it runs Super, Tavily and Ultra.
+// Which cascade depth ran. C4a stays at Lightning triage unless the chart has a combination or
+// specificity candidate; then it runs Super, Tavily and Ultra on it.
 function renderDepth(box, depth) {
   if (!depth || !depth.config) return;
   const text = depth.adaptive
