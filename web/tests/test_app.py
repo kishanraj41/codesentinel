@@ -382,3 +382,47 @@ def test_live_concurrency_cap_falls_back_to_cache():
     assert first["delivery"]["source"] == "upstream"
     assert second["delivery"]["fallback_reason"] == "busy"
     assert app.state.budget.snapshot()["spent_usd"] == 0.0
+
+
+def test_cached_fallback_shows_amber_banner():
+    # Capacity fallback: rate limit after one live run.
+    app = create_app(Settings(
+        audit_api_base="http://audit.test",
+        max_daily_usd=5,
+        estimated_live_usd=0.01,
+        live_rate_per_hour=1,
+    ))
+
+    async def ok(body):
+        return {
+            "worklist": [],
+            "dropped": [],
+            "mode": "live",
+            "patient_id": body.get("patient_id"),
+            "timeline": [],
+            "receipt": {"totals": {"cost_usd": 0.004}},
+        }
+
+    app.state.upstream.audit = ok
+    client = TestClient(app)
+    live = client.post("/api/audit", json={"patient_id": "pt-001", "mode": "live"}).json()
+    assert live["delivery"]["source"] == "upstream"
+    assert "banner" not in live["delivery"]
+    cached = client.post("/api/audit", json={"patient_id": "pt-001", "mode": "live"}).json()
+    assert cached["delivery"]["source"] == "cache"
+    assert cached["delivery"]["banner"] == "Showing a cached result: live capacity reached, try again shortly."
+
+    # Budget fallback and an explicit cached request also carry a banner.
+    broke = create_app(Settings(audit_api_base="http://audit.test", max_daily_usd=0, estimated_live_usd=0.03))
+    budget = TestClient(broke).post("/api/audit", json={"patient_id": "pt-009", "mode": "live"}).json()
+    assert budget["delivery"]["banner"].startswith("Showing a cached result: live capacity reached")
+    chosen = _client().post("/api/audit", json={"patient_id": "margaret-whitmore", "mode": "cached"}).json()
+    assert chosen["delivery"]["source"] == "cache"
+    assert chosen["delivery"]["banner"].startswith("Showing a cached result")
+
+    # The UI renders the banner for every cached response, styled amber.
+    script = (WEB / "static" / "app.js").read_text(encoding="utf-8")
+    css = (WEB / "static" / "app.css").read_text(encoding="utf-8")
+    assert 'delivery.source === "cache"' in script
+    assert '"cache-banner"' in script and "delivery.banner" in script
+    assert ".cache-banner" in css and "#ffe7a3" in css

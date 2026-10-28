@@ -43,6 +43,15 @@ FALLBACK_MESSAGES = {
     "rate_limit": "Live run limit reached for this network. Showing the cached run.",
     "busy": "Several live audits are already running. Showing the cached run.",
 }
+# Amber banner the UI shows whenever a response is served from the cache.
+CACHE_BANNERS = {
+    None: "Showing a cached result: recorded for the demo, not a live Token Factory call.",
+    "api_unconfigured": "Showing a cached result: the live audit is not connected.",
+    "api_error": "Showing a cached result: the live audit did not respond, try again shortly.",
+    "budget": "Showing a cached result: live capacity reached, try again shortly.",
+    "rate_limit": "Showing a cached result: live capacity reached, try again shortly.",
+    "busy": "Showing a cached result: live capacity reached, try again shortly.",
+}
 PASTE_OFFLINE = (
     "No identifiers detected. Nothing was stored. "
     "The live audit service is not connected, so this note was not coded."
@@ -220,6 +229,7 @@ class AuditService:
                 "source": "cache",
                 "fallback_reason": reason,
                 "message": message,
+                "banner": CACHE_BANNERS.get(reason, CACHE_BANNERS["budget"]),
                 "recorded_at": bundle["recorded_at"],
             },
             "chart": bundle["chart"],

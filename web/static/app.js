@@ -283,6 +283,10 @@ function renderResult(payload) {
   const audit = payload.audit;
   const summary = audit.summary || {};
   const kept = summary.worklist_count || 0;
+  if (delivery.source === "cache") {
+    head.append(el("p", { class: "cache-banner", role: "alert", id: "cache-banner",
+      text: delivery.banner || "Showing a cached result: live capacity reached, try again shortly." }));
+  }
   head.append(
     el("p", { class: "oknote", role: "status" },
       el("span", { class: "tag", text: tagFor(payload) }),
