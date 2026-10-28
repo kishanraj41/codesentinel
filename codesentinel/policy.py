@@ -104,7 +104,9 @@ _FAMILY_DRUGS: dict[str, tuple[str, ...]] = {
     "I13": ("lisinopril", "losartan", "valsartan", "furosemide", "carvedilol"),
     "I25": ("nitroglycerin", "isosorbide", "clopidogrel", "ranolazine"),
     "I48": ("warfarin", "apixaban", "rivaroxaban", "dabigatran", "edoxaban", "digoxin"),
-    "I50": ("sacubitril", "spironolactone", "eplerenone", "furosemide", "carvedilol"),
+    # Carvedilol (also hypertension) and furosemide (also edema, CKD) are not specific to heart
+    # failure, so they do not support or excuse an I50 code on their own.
+    "I50": ("sacubitril", "spironolactone", "eplerenone"),
     "J44": ("tiotropium", "umeclidinium", "spiriva", "fluticasone / salmeterol", "budesonide / formoterol"),
     "J45": ("albuterol", "fluticasone", "montelukast", "budesonide"),
     "G30": ("donepezil", "memantine", "galantamine", "rivastigmine"),

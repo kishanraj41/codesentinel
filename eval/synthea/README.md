@@ -79,6 +79,9 @@ Known exposure before the split: the aggregate 400-chart results and a handful o
 charts (which can include held-out patients) had been read while writing up the first run.
 No fix was designed from a specific held-out chart.
 
+Post-run fix: carvedilol and furosemide were removed from the heart-failure (`I50`) drug list in
+`codesentinel/policy.py`, because they excused a planted unsupported `I50.9`. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
+
 ```bash
 python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
 python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held_out
@@ -86,7 +89,7 @@ python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held
 
 ## Limits
 
-- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counts as a heart-failure drug even though the triage policy treats it as nonspecific. Found after the held-out run; not fixed.
+- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counted as a heart-failure drug even though the triage policy treats it as nonspecific. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
 
 - Synthea notes are template text. They rarely name the chronic conditions, so evidence is mostly
   medications and labs.

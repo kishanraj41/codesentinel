@@ -149,6 +149,28 @@ class UnsupportedExistingTests(unittest.TestCase):
         )
         self.assertEqual(unsupported_existing_items(profile), [])
 
+    def test_nonspecific_drugs_do_not_excuse_heart_failure(self):
+        # Found on the Synthea held-out run: carvedilol excused a planted unsupported I50.9.
+        for drug in ("Carvedilol 25 MG Oral Tablet", "Furosemide 40 MG Oral Tablet"):
+            with self.subTest(drug=drug):
+                profile = self._profile(
+                    TEMPLATE_NOTE,
+                    [{"icd10_code": "I50.9", "display": "Heart failure, unspecified"}],
+                    medications=[{"name": drug}],
+                )
+                items = unsupported_existing_items(profile)
+                self.assertEqual([item.code for item in items], ["I50.9"])
+                self.assertEqual(items[0].decision, "review")
+                self.assertEqual(items[0].drop_reason, "no_meat")
+
+    def test_heart_failure_specific_drug_still_supports_i50(self):
+        profile = self._profile(
+            TEMPLATE_NOTE,
+            [{"icd10_code": "I50.9", "display": "Heart failure, unspecified"}],
+            medications=[{"name": "Sacubitril 97 MG / Valsartan 103 MG Oral Tablet"}, {"name": "Carvedilol 25 MG"}],
+        )
+        self.assertEqual(unsupported_existing_items(profile), [])
+
     def test_qualifying_lab_supports_prediabetes(self):
         profile = self._profile(
             TEMPLATE_NOTE,
