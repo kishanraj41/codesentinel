@@ -101,7 +101,8 @@ _FAMILY_DRUGS: dict[str, tuple[str, ...]] = {
     "I10": ("lisinopril", "amlodipine", "losartan", "valsartan", "hydrochlorothiazide", "hctz",
             "chlorthalidone", "olmesartan", "irbesartan"),
     "I12": ("lisinopril", "losartan", "valsartan", "irbesartan", "amlodipine"),
-    "I13": ("lisinopril", "losartan", "valsartan", "furosemide", "carvedilol"),
+    # Carvedilol and furosemide are not specific enough to excuse an I13 code on their own.
+    "I13": ("lisinopril", "losartan", "valsartan"),
     "I25": ("nitroglycerin", "isosorbide", "clopidogrel", "ranolazine"),
     "I48": ("warfarin", "apixaban", "rivaroxaban", "dabigatran", "edoxaban", "digoxin"),
     # Carvedilol (also hypertension) and furosemide (also edema, CKD) are not specific to heart

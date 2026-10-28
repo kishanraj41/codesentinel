@@ -30,6 +30,8 @@ Held-out recall (0.667) is below dev (0.933): 8 held-out gaps were still dropped
 `copied_forward_unclear`, 1 as negated, and 11 were never proposed by the rules. One planted
 unsupported code was missed (an `I50.9` excused by carvedilol, which the fix wrongly counts as a
 heart-failure drug). Those are reported, not fixed.
+Note: the carvedilol `I50.9` miss was fixed after the held-out run in `c670460` (with the matching
+`I13` change in the follow-up commit). The held-out numbers here are from before the fix and were not rerun.
 
 300 Synthea patients (Synthea v4.0.0, seed 20261027, Texas, ages 45-90, reference date 2026-10-27). Conditions are Synthea's, mapped to ICD-10-CM with the NLM SNOMED CT to ICD-10-CM map and the FY 2027 combination-code guidelines. A seeded 30% of the in-scope billed codes were removed from each chart's condition list; the removed codes the 12-month chart still supports are the gold gaps (60 gaps on 57 charts). 103 removed codes with no support in the chart are neutral. 20 charts carry one billed code Synthea says the patient does not have.
 

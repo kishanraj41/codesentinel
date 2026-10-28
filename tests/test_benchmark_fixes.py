@@ -163,6 +163,27 @@ class UnsupportedExistingTests(unittest.TestCase):
                 self.assertEqual(items[0].decision, "review")
                 self.assertEqual(items[0].drop_reason, "no_meat")
 
+    def test_nonspecific_drugs_do_not_excuse_hypertensive_heart_ckd(self):
+        for drug in ("Carvedilol 25 MG Oral Tablet", "Furosemide 40 MG Oral Tablet"):
+            with self.subTest(drug=drug):
+                profile = self._profile(
+                    TEMPLATE_NOTE,
+                    [{"icd10_code": "I13.0", "display": "Hypertensive heart and chronic kidney disease with heart failure"}],
+                    medications=[{"name": drug}],
+                )
+                items = unsupported_existing_items(profile)
+                self.assertEqual([item.code for item in items], ["I13.0"])
+                self.assertEqual(items[0].decision, "review")
+                self.assertEqual(items[0].drop_reason, "no_meat")
+
+    def test_family_drug_still_supports_i13(self):
+        profile = self._profile(
+            TEMPLATE_NOTE,
+            [{"icd10_code": "I13.0", "display": "Hypertensive heart and chronic kidney disease with heart failure"}],
+            medications=[{"name": "Lisinopril 10 MG Oral Tablet"}, {"name": "Furosemide 40 MG"}],
+        )
+        self.assertEqual(unsupported_existing_items(profile), [])
+
     def test_heart_failure_specific_drug_still_supports_i50(self):
         profile = self._profile(
             TEMPLATE_NOTE,

@@ -81,6 +81,8 @@ No fix was designed from a specific held-out chart.
 
 Post-run fix: carvedilol and furosemide were removed from the heart-failure (`I50`) drug list in
 `codesentinel/policy.py`, because they excused a planted unsupported `I50.9`. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
+The same two drugs were then removed from the `I13` (hypertensive heart and chronic kidney disease) list,
+so they no longer excuse an `I13` code on their own either; also not rerun.
 
 ```bash
 python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
