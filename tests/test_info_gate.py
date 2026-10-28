@@ -64,6 +64,25 @@ class ConditionMentionTests(unittest.TestCase):
             with self.subTest(sentence=sentence):
                 self.assertTrue(notes_mention_conditions(_profile(sentence, [ANEMIA], observations=OBS)))
 
+    def test_procedure_and_instrument_lines_are_not_mentions(self):
+        for line in (
+            "- diabetic retinal eye exam (procedure)",
+            "- sleep apnea assessment (procedure)",
+            "- generalized anxiety disorder 7 item (gad-7)",
+            "- lifestyle education regarding hypertension (procedure)",
+            "PHQ-9 questionnaire for major depressive disorder screening was completed.",
+        ):
+            with self.subTest(line=line):
+                profile = _profile(SILENT_NOTE + "\n" + line, [ANEMIA], observations=OBS)
+                self.assertFalse(notes_mention_conditions(profile))
+
+    def test_condition_clause_next_to_a_procedure_still_counts(self):
+        profile = _profile(
+            "Patient is presenting with essential hypertension (disorder), depression screening (procedure).",
+            [ANEMIA], observations=OBS,
+        )
+        self.assertTrue(notes_mention_conditions(profile))
+
     def test_section_header_alone_is_not_a_mention(self):
         profile = _profile("# Assessment and Plan\n\n## Plan\nFollow up in one year.", [ANEMIA], observations=OBS)
         self.assertFalse(notes_mention_conditions(profile))
