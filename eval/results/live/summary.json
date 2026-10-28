@@ -1,6 +1,6 @@
 {
   "schema": "codesentinel.eval.summary.v1",
-  "generated_at": "2026-10-27T22:57:22.559111+00:00",
+  "generated_at": "2026-10-28T01:36:48.586690+00:00",
   "mode": "live",
   "mode_detail": "C0 and C0+ stay on the rules pipeline. C1\u2013C4 ran through the real cascade on Token Factory. Nemotron responses were recorded under eval/fixtures/nemotron. Guideline citations target the ICD-10-CM Official Guidelines in force on the run date. Tavily retrieves the passage live from cms.gov or cdc.gov, and it is cited only when it is verbatim in the official PDF fetched in the same run; curated sections are the fallback and cross-check. Citation provenance per config is in summary.json (citation_provenance). Replay those Nemotron completions with CODESENTINEL_REPLAY=1.",
   "keys": {
@@ -102,8 +102,8 @@
         "abstain_count": 0,
         "abstain_rate": 0.0,
         "candidates_considered": 49,
-        "latency_p50_s": 0.00075,
-        "latency_p95_s": 0.002383,
+        "latency_p50_s": 0.000913,
+        "latency_p95_s": 0.002234,
         "cost_per_chart_usd": 0.0,
         "tavily_credits_per_chart": 0.0,
         "tavily_cache_hits_per_chart": 0.0,
@@ -187,8 +187,8 @@
         "abstain_count": 0,
         "abstain_rate": 0.0,
         "candidates_considered": 49,
-        "latency_p50_s": 3e-06,
-        "latency_p95_s": 8e-06,
+        "latency_p50_s": 4e-06,
+        "latency_p95_s": 9e-06,
         "cost_per_chart_usd": 0.0,
         "tavily_credits_per_chart": 0.0,
         "tavily_cache_hits_per_chart": 0.0,
@@ -272,9 +272,9 @@
         "abstain_count": 0,
         "abstain_rate": 0.0,
         "candidates_considered": 52,
-        "latency_p50_s": 2.427505,
-        "latency_p95_s": 3.799988,
-        "cost_per_chart_usd": 0.000579,
+        "latency_p50_s": 1.893587,
+        "latency_p95_s": 4.091119,
+        "cost_per_chart_usd": 0.000581,
         "tavily_credits_per_chart": 0.0,
         "tavily_cache_hits_per_chart": 0.0,
         "tavily_credits_if_uncached_per_chart": 0.0,
@@ -288,22 +288,22 @@
       {
         "n_charts": 10,
         "tp": 35,
-        "fp": 6,
+        "fp": 5,
         "fn": 2,
-        "precision": 0.853659,
+        "precision": 0.875,
         "precision_ci95": [
-          0.715562,
-          0.931158
+          0.738876,
+          0.945406
         ],
         "recall": 0.945946,
         "recall_ci95": [
           0.82295,
           0.985049
         ],
-        "f1": 0.897436,
-        "review_items": 44,
-        "review_burden_per_chart": 4.4,
-        "false_positives_per_chart": 0.6,
+        "f1": 0.909091,
+        "review_items": 43,
+        "review_burden_per_chart": 4.3,
+        "false_positives_per_chart": 0.5,
         "hard_negative_pass_rate": {
           "overall": 0.857143,
           "pass": 18,
@@ -354,12 +354,12 @@
           "recall": 1.0
         },
         "unsupported_claim_drops": 0,
-        "abstain_count": 10,
-        "abstain_rate": 0.192308,
+        "abstain_count": 8,
+        "abstain_rate": 0.153846,
         "candidates_considered": 52,
-        "latency_p50_s": 6.939085,
-        "latency_p95_s": 12.99203,
-        "cost_per_chart_usd": 0.001582,
+        "latency_p50_s": 7.455217,
+        "latency_p95_s": 16.775712,
+        "cost_per_chart_usd": 0.001586,
         "tavily_credits_per_chart": 0.0,
         "tavily_cache_hits_per_chart": 0.0,
         "tavily_credits_if_uncached_per_chart": 0.0,
@@ -367,93 +367,6 @@
         "id": "C2",
         "label": "C1 + Super adjudication, no Tavily",
         "citation_provenance": {},
-        "latency_scope": "live_wall_clock",
-        "cost_basis": "token_factory_usage_x_catalog_price"
-      },
-      {
-        "n_charts": 10,
-        "tp": 35,
-        "fp": 4,
-        "fn": 2,
-        "precision": 0.897436,
-        "precision_ci95": [
-          0.764208,
-          0.959387
-        ],
-        "recall": 0.945946,
-        "recall_ci95": [
-          0.82295,
-          0.985049
-        ],
-        "f1": 0.921053,
-        "review_items": 42,
-        "review_burden_per_chart": 4.2,
-        "false_positives_per_chart": 0.4,
-        "hard_negative_pass_rate": {
-          "overall": 0.857143,
-          "pass": 18,
-          "total": 21,
-          "by_category": {
-            "family_history": {
-              "pass": 2,
-              "total": 2,
-              "rate": 1.0
-            },
-            "hypothetical_plan": {
-              "pass": 3,
-              "total": 3,
-              "rate": 1.0
-            },
-            "medication_only": {
-              "pass": 3,
-              "total": 3,
-              "rate": 1.0
-            },
-            "negation": {
-              "pass": 7,
-              "total": 7,
-              "rate": 1.0
-            },
-            "screening": {
-              "pass": 1,
-              "total": 1,
-              "rate": 1.0
-            },
-            "unspecified_sibling": {
-              "pass": 2,
-              "total": 2,
-              "rate": 1.0
-            },
-            "wrong_specificity": {
-              "pass": 0,
-              "total": 3,
-              "rate": 0.0
-            }
-          }
-        },
-        "unsupported_existing": {
-          "tp": 3,
-          "fp": 0,
-          "fn": 0,
-          "precision": 1.0,
-          "recall": 1.0
-        },
-        "unsupported_claim_drops": 0,
-        "abstain_count": 7,
-        "abstain_rate": 0.134615,
-        "candidates_considered": 52,
-        "latency_p50_s": 6.715444,
-        "latency_p95_s": 13.455002,
-        "cost_per_chart_usd": 0.001723,
-        "tavily_credits_per_chart": 0.0,
-        "tavily_cache_hits_per_chart": 1.1,
-        "tavily_credits_if_uncached_per_chart": 0.0,
-        "guideline_decision_changes": 0,
-        "id": "C3",
-        "label": "C2 + Tavily guideline grounding",
-        "citation_provenance": {
-          "tavily_live": 10
-        },
         "latency_scope": "live_wall_clock",
         "cost_basis": "token_factory_usage_x_catalog_price"
       },
@@ -526,12 +439,99 @@
           "recall": 1.0
         },
         "unsupported_claim_drops": 0,
-        "abstain_count": 7,
-        "abstain_rate": 0.134615,
+        "abstain_count": 9,
+        "abstain_rate": 0.173077,
         "candidates_considered": 52,
-        "latency_p50_s": 12.588849,
-        "latency_p95_s": 94.89205,
-        "cost_per_chart_usd": 0.006018,
+        "latency_p50_s": 6.958822,
+        "latency_p95_s": 12.422738,
+        "cost_per_chart_usd": 0.001712,
+        "tavily_credits_per_chart": 0.0,
+        "tavily_cache_hits_per_chart": 1.1,
+        "tavily_credits_if_uncached_per_chart": 0.0,
+        "guideline_decision_changes": 0,
+        "id": "C3",
+        "label": "C2 + Tavily guideline grounding",
+        "citation_provenance": {
+          "tavily_live": 11
+        },
+        "latency_scope": "live_wall_clock",
+        "cost_basis": "token_factory_usage_x_catalog_price"
+      },
+      {
+        "n_charts": 10,
+        "tp": 33,
+        "fp": 5,
+        "fn": 4,
+        "precision": 0.868421,
+        "precision_ci95": [
+          0.726728,
+          0.942462
+        ],
+        "recall": 0.891892,
+        "recall_ci95": [
+          0.752912,
+          0.957149
+        ],
+        "f1": 0.88,
+        "review_items": 41,
+        "review_burden_per_chart": 4.1,
+        "false_positives_per_chart": 0.5,
+        "hard_negative_pass_rate": {
+          "overall": 0.857143,
+          "pass": 18,
+          "total": 21,
+          "by_category": {
+            "family_history": {
+              "pass": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "hypothetical_plan": {
+              "pass": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "medication_only": {
+              "pass": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "negation": {
+              "pass": 7,
+              "total": 7,
+              "rate": 1.0
+            },
+            "screening": {
+              "pass": 1,
+              "total": 1,
+              "rate": 1.0
+            },
+            "unspecified_sibling": {
+              "pass": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "wrong_specificity": {
+              "pass": 0,
+              "total": 3,
+              "rate": 0.0
+            }
+          }
+        },
+        "unsupported_existing": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "unsupported_claim_drops": 0,
+        "abstain_count": 8,
+        "abstain_rate": 0.153846,
+        "candidates_considered": 52,
+        "latency_p50_s": 14.537196,
+        "latency_p95_s": 35.43178,
+        "cost_per_chart_usd": 0.007441,
         "tavily_credits_per_chart": 0.0,
         "tavily_cache_hits_per_chart": 1.1,
         "tavily_credits_if_uncached_per_chart": 0.0,
@@ -539,7 +539,7 @@
         "id": "C4",
         "label": "C3 + Ultra escalation (full cascade)",
         "citation_provenance": {
-          "tavily_live": 11
+          "tavily_live": 9
         },
         "latency_scope": "live_wall_clock",
         "cost_basis": "token_factory_usage_x_catalog_price"
@@ -639,8 +639,8 @@
       "abstain_count": 0,
       "abstain_rate": 0.0,
       "candidates_considered": 132,
-      "latency_p50_s": 0.000607,
-      "latency_p95_s": 0.000838,
+      "latency_p50_s": 0.000564,
+      "latency_p95_s": 0.0009,
       "cost_per_chart_usd": 0.0,
       "tavily_credits_per_chart": 0.0,
       "tavily_cache_hits_per_chart": 0.0,
@@ -759,22 +759,22 @@
     },
     {
       "n_charts": 66,
-      "tp": 79,
+      "tp": 78,
       "fp": 2,
-      "fn": 0,
-      "precision": 0.975309,
+      "fn": 1,
+      "precision": 0.975,
       "precision_ci95": [
-        0.914371,
-        0.993203
+        0.913354,
+        0.993117
       ],
-      "recall": 1.0,
+      "recall": 0.987342,
       "recall_ci95": [
-        0.953627,
-        1.0
+        0.931723,
+        0.997762
       ],
-      "f1": 0.9875,
-      "review_items": 84,
-      "review_burden_per_chart": 1.272727,
+      "f1": 0.981132,
+      "review_items": 83,
+      "review_burden_per_chart": 1.257576,
       "false_positives_per_chart": 0.030303,
       "hard_negative_pass_rate": {
         "overall": 0.962264,
@@ -849,8 +849,8 @@
       "abstain_count": 0,
       "abstain_rate": 0.0,
       "candidates_considered": 135,
-      "latency_p50_s": 1.910378,
-      "latency_p95_s": 2.289444,
+      "latency_p50_s": 1.357235,
+      "latency_p95_s": 2.807081,
       "cost_per_chart_usd": 0.000202,
       "tavily_credits_per_chart": 0.0,
       "tavily_cache_hits_per_chart": 0.0,
@@ -864,22 +864,22 @@
     },
     {
       "n_charts": 66,
-      "tp": 79,
+      "tp": 77,
       "fp": 2,
-      "fn": 0,
-      "precision": 0.975309,
+      "fn": 2,
+      "precision": 0.974684,
       "precision_ci95": [
-        0.914371,
-        0.993203
+        0.912312,
+        0.99303
       ],
-      "recall": 1.0,
+      "recall": 0.974684,
       "recall_ci95": [
-        0.953627,
-        1.0
+        0.912312,
+        0.99303
       ],
-      "f1": 0.9875,
-      "review_items": 84,
-      "review_burden_per_chart": 1.272727,
+      "f1": 0.974684,
+      "review_items": 82,
+      "review_burden_per_chart": 1.242424,
       "false_positives_per_chart": 0.030303,
       "hard_negative_pass_rate": {
         "overall": 0.962264,
@@ -951,12 +951,12 @@
         "recall": 1.0
       },
       "unsupported_claim_drops": 0,
-      "abstain_count": 2,
-      "abstain_rate": 0.014815,
+      "abstain_count": 6,
+      "abstain_rate": 0.044444,
       "candidates_considered": 135,
-      "latency_p50_s": 1.977073,
-      "latency_p95_s": 7.814263,
-      "cost_per_chart_usd": 0.000447,
+      "latency_p50_s": 1.610568,
+      "latency_p95_s": 6.93363,
+      "cost_per_chart_usd": 0.000419,
       "tavily_credits_per_chart": 0.0,
       "tavily_cache_hits_per_chart": 0.0,
       "tavily_credits_if_uncached_per_chart": 0.0,
@@ -969,22 +969,22 @@
     },
     {
       "n_charts": 66,
-      "tp": 79,
+      "tp": 78,
       "fp": 0,
-      "fn": 0,
+      "fn": 1,
       "precision": 1.0,
       "precision_ci95": [
-        0.953627,
+        0.953061,
         1.0
       ],
-      "recall": 1.0,
+      "recall": 0.987342,
       "recall_ci95": [
-        0.953627,
-        1.0
+        0.931723,
+        0.997762
       ],
-      "f1": 1.0,
-      "review_items": 82,
-      "review_burden_per_chart": 1.242424,
+      "f1": 0.993631,
+      "review_items": 81,
+      "review_burden_per_chart": 1.227273,
       "false_positives_per_chart": 0.0,
       "hard_negative_pass_rate": {
         "overall": 1.0,
@@ -1059,39 +1059,39 @@
       "abstain_count": 3,
       "abstain_rate": 0.022222,
       "candidates_considered": 135,
-      "latency_p50_s": 1.951792,
-      "latency_p95_s": 7.687581,
-      "cost_per_chart_usd": 0.000492,
+      "latency_p50_s": 2.259323,
+      "latency_p95_s": 12.613922,
+      "cost_per_chart_usd": 0.000481,
       "tavily_credits_per_chart": 0.121212,
-      "tavily_cache_hits_per_chart": 0.30303,
+      "tavily_cache_hits_per_chart": 0.287879,
       "tavily_credits_if_uncached_per_chart": 0.0,
       "guideline_decision_changes": 0,
       "id": "C3",
       "label": "C2 + Tavily guideline grounding",
       "citation_provenance": {
-        "tavily_live": 24
+        "tavily_live": 23
       },
       "latency_scope": "live_wall_clock",
       "cost_basis": "token_factory_usage_x_catalog_price"
     },
     {
       "n_charts": 66,
-      "tp": 79,
+      "tp": 78,
       "fp": 0,
-      "fn": 0,
+      "fn": 1,
       "precision": 1.0,
       "precision_ci95": [
-        0.953627,
+        0.953061,
         1.0
       ],
-      "recall": 1.0,
+      "recall": 0.987342,
       "recall_ci95": [
-        0.953627,
-        1.0
+        0.931723,
+        0.997762
       ],
-      "f1": 1.0,
-      "review_items": 82,
-      "review_burden_per_chart": 1.242424,
+      "f1": 0.993631,
+      "review_items": 81,
+      "review_burden_per_chart": 1.227273,
       "false_positives_per_chart": 0.0,
       "hard_negative_pass_rate": {
         "overall": 1.0,
@@ -1163,20 +1163,20 @@
         "recall": 1.0
       },
       "unsupported_claim_drops": 0,
-      "abstain_count": 3,
-      "abstain_rate": 0.022222,
+      "abstain_count": 5,
+      "abstain_rate": 0.037037,
       "candidates_considered": 135,
-      "latency_p50_s": 2.045991,
-      "latency_p95_s": 14.507537,
-      "cost_per_chart_usd": 0.001434,
+      "latency_p50_s": 2.023917,
+      "latency_p95_s": 18.257763,
+      "cost_per_chart_usd": 0.00136,
       "tavily_credits_per_chart": 0.0,
-      "tavily_cache_hits_per_chart": 0.363636,
+      "tavily_cache_hits_per_chart": 0.348485,
       "tavily_credits_if_uncached_per_chart": 0.0,
       "guideline_decision_changes": 0,
       "id": "C4",
       "label": "C3 + Ultra escalation (full cascade)",
       "citation_provenance": {
-        "tavily_live": 24
+        "tavily_live": 23
       },
       "latency_scope": "live_wall_clock",
       "cost_basis": "token_factory_usage_x_catalog_price"
@@ -1199,31 +1199,31 @@
     },
     {
       "config": "C1",
-      "recall": 1.0,
-      "precision": 0.975309,
-      "review_burden_per_chart": 1.272727,
+      "recall": 0.987342,
+      "precision": 0.975,
+      "review_burden_per_chart": 1.257576,
       "cost_per_chart_usd": 0.000202
     },
     {
       "config": "C2",
-      "recall": 1.0,
-      "precision": 0.975309,
-      "review_burden_per_chart": 1.272727,
-      "cost_per_chart_usd": 0.000447
+      "recall": 0.974684,
+      "precision": 0.974684,
+      "review_burden_per_chart": 1.242424,
+      "cost_per_chart_usd": 0.000419
     },
     {
       "config": "C3",
-      "recall": 1.0,
+      "recall": 0.987342,
       "precision": 1.0,
-      "review_burden_per_chart": 1.242424,
-      "cost_per_chart_usd": 0.000492
+      "review_burden_per_chart": 1.227273,
+      "cost_per_chart_usd": 0.000481
     },
     {
       "config": "C4",
-      "recall": 1.0,
+      "recall": 0.987342,
       "precision": 1.0,
-      "review_burden_per_chart": 1.242424,
-      "cost_per_chart_usd": 0.001434
+      "review_burden_per_chart": 1.227273,
+      "cost_per_chart_usd": 0.00136
     }
   ],
   "comparisons": {
@@ -1231,37 +1231,37 @@
     "configs": {
       "C1": {
         "review_burden_per_chart_from": 2.0,
-        "review_burden_per_chart_to": 1.272727,
-        "review_burden_reduction_vs_c0_plus": 0.363637,
+        "review_burden_per_chart_to": 1.257576,
+        "review_burden_reduction_vs_c0_plus": 0.371212,
         "recall_from": 1.0,
-        "recall_to": 1.0,
+        "recall_to": 0.987342,
         "precision_from": 0.598485,
-        "precision_to": 0.975309
+        "precision_to": 0.975
       },
       "C2": {
-        "review_burden_per_chart_from": 2.0,
-        "review_burden_per_chart_to": 1.272727,
-        "review_burden_reduction_vs_c0_plus": 0.363637,
-        "recall_from": 1.0,
-        "recall_to": 1.0,
-        "precision_from": 0.598485,
-        "precision_to": 0.975309
-      },
-      "C3": {
         "review_burden_per_chart_from": 2.0,
         "review_burden_per_chart_to": 1.242424,
         "review_burden_reduction_vs_c0_plus": 0.378788,
         "recall_from": 1.0,
-        "recall_to": 1.0,
+        "recall_to": 0.974684,
+        "precision_from": 0.598485,
+        "precision_to": 0.974684
+      },
+      "C3": {
+        "review_burden_per_chart_from": 2.0,
+        "review_burden_per_chart_to": 1.227273,
+        "review_burden_reduction_vs_c0_plus": 0.386363,
+        "recall_from": 1.0,
+        "recall_to": 0.987342,
         "precision_from": 0.598485,
         "precision_to": 1.0
       },
       "C4": {
         "review_burden_per_chart_from": 2.0,
-        "review_burden_per_chart_to": 1.242424,
-        "review_burden_reduction_vs_c0_plus": 0.378788,
+        "review_burden_per_chart_to": 1.227273,
+        "review_burden_reduction_vs_c0_plus": 0.386363,
         "recall_from": 1.0,
-        "recall_to": 1.0,
+        "recall_to": 0.987342,
         "precision_from": 0.598485,
         "precision_to": 1.0
       }
@@ -1280,6 +1280,18 @@
     }
   },
   "known_failures": [
+    {
+      "dataset": "gold-b",
+      "patient_id": "gb-0042",
+      "split": "test",
+      "scenario": "combo_forbid",
+      "code": "I12.9",
+      "failure_type": "false_negative",
+      "configs_affected": [
+        "C4"
+      ],
+      "cause": "C4 did not show a gold gap. If the rules never proposed it, every config misses it."
+    },
     {
       "dataset": "gold-a",
       "patient_id": "pt-001",
@@ -1309,14 +1321,14 @@
     "dataset": "gold-b:test",
     "charts": 66,
     "false_positives": 0,
-    "false_negatives": 0
+    "false_negatives": 1
   },
   "stability": {
     "config": "C4",
     "runs": 2,
     "charts": 66,
-    "decision_agreement": 0.969697,
-    "charts_identical": 64,
+    "decision_agreement": 0.984848,
+    "charts_identical": 65,
     "note": "Two live C4 passes. Agreement is the share of charts with the same shown (code, decision) set."
   },
   "guardrail_probe": {
@@ -1328,7 +1340,7 @@
     "status": "pending_csv",
     "accuracy_claimed": false,
     "csv_present": false,
-    "reason": "MTSAMPLES_CSV is unset and --mtsamples was not passed",
+    "reason": "skipped",
     "documented_baseline_review_items": 1188,
     "documented_baseline_source": "test_mtsamples.py module docstring, prior rules run",
     "rules_review_items": null,
