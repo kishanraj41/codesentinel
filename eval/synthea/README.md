@@ -61,6 +61,8 @@ used, so a rebuilt benchmark can be checked chart by chart.
 
 ## Dev / held-out protocol
 
+This section describes the first held-out run (v1). The second (v2) is below.
+
 The first full run (all 400 charts, before any change) exposed three cascade bugs. They were
 fixed under a split fixed in advance, so the published number is on charts the fixes never saw.
 
@@ -88,6 +90,45 @@ so they no longer excuse an `I13` code on their own either; also not rerun.
 python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
 python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held_out
 ```
+
+## Second held-out run (held-out v2)
+
+This is the **second** run on the 300 held-out charts. The first (v1, `b623d53`, results in
+[eval/results/synthea/](../results/synthea/RESULTS.md)) is unchanged. v2 results:
+[eval/results/synthea/heldout-v2/](../results/synthea/heldout-v2/RESULTS.md), chart
+`docs/assets/synthea-frontier-v2.{svg,png}`.
+
+Why a second run. The v1 **aggregate** showed two things: about 3 unsupported-existing flags per chart
+(912 in total) on billed codes Synthea does have, because thin template charts carry no mention of most
+chronic codes; and C1 to C4 nearly identical, because Synthea has almost no combination or specificity
+gaps, so Super, Tavily and Ultra cost money without changing answers. No held-out chart was opened to
+design either fix. Both were designed from that aggregate and tuned on the 100 **dev** charts only
+([dev-v2/](../results/synthea/dev-v2/README.md), two live rounds):
+
+1. **Info gate.** When no note sentence in the chart window names a condition (a term from the code
+   lexicon or from any billed condition; negated and family-history sentences count; clauses naming a
+   procedure or screening instrument do not), a billed code with no evidence becomes an informational row
+   (`decision: info`). It is shown, but it is not review work and is outside review items and P/R.
+   Charts with any condition mention keep the old behavior. Dev round 2 added the procedure/instrument rule.
+2. **Adaptive depth (C4a).** C1, escalating the chart to the full C4 path only when a combination or
+   specificity candidate survives triage. C0-C4 are unchanged, so the comparison holds. The service and
+   web demo default to C4a.
+
+The held-out split was then run once with every config (`--split held_out`, commit `def9241`). Nothing
+was changed after the run. Labels and chart bundles are the v1 ones.
+
+| Config | Run | P | R | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Info rows / chart | $ / chart | Charts past C1 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| C0+ | v1 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | — | 0 | 0% |
+| C0+ | v2 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0.00 | 0 | 0% |
+| C1 | v1 | 0.187 | 0.667 | 0.292 | 3.82 | 0.71 | 174 | — | 0.00085 | 0% |
+| C1 | v2 | 0.183 | 0.667 | 0.288 | 2.03 | 0.73 | 178 | 1.81 | 0.00082 | 0% |
+| C4 | v1 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | — | 0.00175 | 100% |
+| C4 | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 1.81 | 0.00173 | 100% |
+| C4a (adaptive, new) | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 1.81 | 0.00087 | 2% |
+
+Unsupported existing codes (C4 and C4a identical): v1 flagged 19 of 20 planted codes and 912 billed codes Synthea does have; v2 flags 7 of 20 planted and 383 billed codes Synthea has. **Planted unsupported codes flagged fell from 19/20 (v1) to 7/20 (v2), because the info gate turned 13 of them into info rows** (they sit on charts whose notes name no condition, so the gate treats silence as no evidence either way). The v1 C4 figures differ slightly from the v1 C1 figures because each config is a separate live pass.
+
 
 ## Limits
 

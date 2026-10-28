@@ -86,7 +86,7 @@ def main(summary_path: str, out_stem: str, before_path: str | None = None, befor
     d = summary["dataset"]
     split = d.get("split", "all")
     which = {"held_out": "held-out ", "dev": "dev "}.get(split, "")
-    label = f" ({summary['run_label']})" if summary.get("run_label") else ""
+    label = f" ({summary['run_label'].split(',')[0]})" if summary.get("run_label") else ""
     ax.set_title(f"Cost vs review burden on {d['charts']} {which}Synthea charts{label}", color=INK, fontsize=13, fontweight="bold", loc="left")
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
@@ -95,7 +95,7 @@ def main(summary_path: str, out_stem: str, before_path: str | None = None, befor
     ax.tick_params(colors=INK)
     tops = total + [rules["gap_rows_per_chart"] if rules else 0] + [c["review_burden_per_chart"] for c in (before or [])]
     ax.set_ylim(0, max(tops) * 1.55)
-    ax.legend(frameon=False, fontsize=9, loc="lower left", bbox_to_anchor=(0.0, 0.12), labelcolor=INK)
+    ax.legend(frameon=False, fontsize=9, loc="upper right", bbox_to_anchor=(1.0, 1.0), labelcolor=INK)
     fig.tight_layout()
     for ext in ("svg", "png"):
         fig.savefig(f"{out_stem}.{ext}", facecolor=PAPER, metadata={"Date": None} if ext == "svg" else None)
