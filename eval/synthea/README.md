@@ -40,6 +40,15 @@ adjustments in `run.py`: a shown code that is the dotted parent of a label code 
 code (CodeSentinel writes `N18.3`; the FY 2027 billable code is `N18.30`), and neutral rows are
 removed before scoring.
 
+## Frontier chart
+
+Review rows per chart against Token Factory cost per chart for C1 to C4 on the 300 held-out charts,
+with recall for each configuration ([synthea-frontier.png](../../docs/assets/synthea-frontier.png)):
+
+<p align="center">
+  <img src="../../docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 300 held-out Synthea charts, with recall for each configuration." width="760">
+</p>
+
 ## Reproduce
 
 ```bash
@@ -60,6 +69,12 @@ python -m eval.synthea.frontier eval/results/synthea/summary.json docs/assets/sy
 used, so a rebuilt benchmark can be checked chart by chart.
 
 ## Dev / held-out protocol
+
+From the project README (moved here verbatim):
+
+The first run on all 400 charts was poor: C4 recall 0.027. It showed three bugs. Triage dropped medication-supported gaps as `copied_forward_unclear` (56 of 75) instead of sending them to review, because the rescue for medication evidence only fired on empty notes and Synthea notes are template text. Triage saw only the first 40 structured lines, which hid the medication list on 103 charts. And the unsupported-existing check flagged 1,962 billed codes Synthea does have, because it only knew terms for a short code list and ignored linked medications and labs. The 400 patients were then split by seed into 100 dev and 300 held-out charts, and the split was committed before any fix. The fixes, plus a blood-glucose LOINC that had been mapped to glycosuria and an R73 Excludes1 rule, were made and checked on dev only (dev C4 recall 0.067 to 0.933). The held-out charts were run once afterwards.
+
+On held-out, C4 recall is 0.667 (95% CI 0.54–0.77), up from 0.017 before the fixes, with precision 0.183 against 0.070 for the rules queue. It is still weaker than dev, and it is reported that way: 8 held-out gaps were still dropped as `copied_forward_unclear`, and most false positives are statin and ACE-inhibitor rows that the medication policy sends to review (Synthea prescribes both for prevention). The two-way check found 19 of 20 planted unsupported codes. It still flags about three billed codes per chart, because the 12-month chart has no mention, linked medication or lab for many chronic conditions.
 
 The first full run (all 400 charts, before any change) exposed three cascade bugs. They were
 fixed under a split fixed in advance, so the published number is on charts the fixes never saw.

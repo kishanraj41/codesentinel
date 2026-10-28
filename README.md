@@ -30,7 +30,7 @@
 </p>
 
 <p align="center">
-  <em>Mock mode, no API keys. The worklist is what a coder would sign.</em>
+  <em>Live on Nebius Token Factory (the wait while the cascade runs is sped up). The worklist is what a coder would sign.</em>
 </p>
 
 CodeSentinel audits outpatient clinical charts for ICD-10-CM and HCC coding gaps. Deterministic rules propose missed or under-specified codes. A three-model NVIDIA Nemotron cascade on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Tavily retrieves the passage of the current ICD-10-CM Official Guidelines (FY 2027, in force since 2026-10-01) for each combination-code and specificity decision, and the passage is cited only if it matches the official CMS PDF verbatim. Those decisions stay in review until a guideline citation is attached.
@@ -41,30 +41,25 @@ This is clinical coding integrity, not software security: the "code" is a diagno
 
 ## Results
 
-Three evaluation sets, all run live on Nebius Token Factory on 2026-10-27, with FY 2027 guideline citations retrieved through Tavily. C0+ is the rules queue a coder sees today (approved plus review). C4 is the full cascade.
+<!-- RESULTS:BEGIN. Every number in this block is from eval/results/live/ (Gold v7, commit b623d53) and eval/results/synthea/ (held-out). Swap the whole block when a newer run is published. -->
 
-| Set | Charts | Config | Precision | Recall | F1 | Review items / chart | $ / chart | P50 / P95 s |
-|---|---:|---|---:|---:|---:|---:|---:|---:|
-| **Synthea held-out** (outside generator, 60 gold gaps) | 300 | C0+ rules | 0.070 | 0.817 | 0.128 | 2.35 | 0 | — |
-| | | C4 cascade | 0.183 | 0.667 | 0.288 | 3.83 (0.73 gap rows) | 0.0018 | 4.7 / 19.0 |
-| **Gold-A** (hand-labeled) | 10 | C0+ rules | 0.755 | 1.000 | 0.860 | 4.90 | 0 | — |
-| | | C4 cascade | 0.868 | 0.892 | 0.880 | 4.10 | 0.0074 | 14.5 / 35.4 |
-| Gold-B (hard-negative and regression suite) | 66 | C0+ rules | 0.598 | 1.000 | 0.749 | 2.00 | 0 | — |
-| | | C4 cascade | 1.000 | 0.987 | 0.994 | 1.23 | 0.0014 | 2.0 / 18.3 |
+**The cascade cuts the gap rows a coder reviews from 2.35 to 0.73 per chart on 300 independently generated patients, and on the hard-negative suite it cuts the review queue 38.6% at precision 1.000.**
 
-**An independent benchmark exposed three bugs; they were fixed on a dev split, and the headline is the held-out result.** The patients come from [Synthea](https://github.com/synthetichealth/synthea) v4.0.0 (seed `20261027`, Texas, ages 45–90), so neither the charts nor the labels were written by the author. Each patient's active Synthea conditions are mapped to ICD-10-CM with the NLM SNOMED CT to ICD-10-CM map and the FY 2027 combination-code rules. A seeded 30% of the billed codes CodeSentinel covers are removed from the chart, and the removed codes the 12-month chart still supports (a note, a linked medication, or a lab meeting a published criterion) are the gold gaps. Method and reproduction: [eval/synthea/README.md](eval/synthea/README.md). Full results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
+Three live evaluations on Nebius Token Factory, FY2027 guideline citations retrieved through Tavily and verified verbatim against the CMS PDF.
 
-The first run on all 400 charts was poor: C4 recall 0.027. It showed three bugs. Triage dropped medication-supported gaps as `copied_forward_unclear` (56 of 75) instead of sending them to review, because the rescue for medication evidence only fired on empty notes and Synthea notes are template text. Triage saw only the first 40 structured lines, which hid the medication list on 103 charts. And the unsupported-existing check flagged 1,962 billed codes Synthea does have, because it only knew terms for a short code list and ignored linked medications and labs. The 400 patients were then split by seed into 100 dev and 300 held-out charts, and the split was committed before any fix. The fixes, plus a blood-glucose LOINC that had been mapped to glycosuria and an R73 Excludes1 rule, were made and checked on dev only (dev C4 recall 0.067 to 0.933). The held-out charts were run once afterwards.
+| Set | Charts | What it measures | Result |
+|---|---:|---|---|
+| Hard-negative suite | 66 | The 11 ways a chart fools a coder (negation, family history, screening, medication-only, copied-forward, wrong specificity…) | Precision 1.000, review queue −38.6%, 11/11 categories, $0.00136/chart |
+| Hand-labeled charts | 10 | Outpatient notes labeled by hand | Precision 0.755 to 0.868 over the rules queue |
+| Synthea, 300 patients | 300 | Independently generated records; the author wrote no chart or label | False positives −72.9% (656 to 178), 19/20 planted unsupported codes caught |
 
-On held-out, C4 recall is 0.667 (95% CI 0.54–0.77), up from 0.017 before the fixes, with precision 0.183 against 0.070 for the rules queue. It is still weaker than dev, and it is reported that way: 8 held-out gaps were still dropped as `copied_forward_unclear`, and most false positives are statin and ACE-inhibitor rows that the medication policy sends to review (Synthea prescribes both for prevention). The two-way check found 19 of 20 planted unsupported codes. It still flags about three billed codes per chart, because the 12-month chart has no mention, linked medication or lab for many chronic conditions.
+Comparisons are the full cascade (C4) against the rules queue a coder sees today (C0+, approved plus review). Full tables, confidence intervals, per-code breakdowns and the dev/held-out protocol: [eval/results/](eval/results/). Synthea method and results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
 
 <p align="center">
-  <img src="docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 300 held-out Synthea charts, with recall for each configuration." width="760">
+  <img src="docs/assets/goldb-frontier.svg" alt="Precision against review rows per chart on the 66-chart hard-negative suite for C0, C0+ and C1 to C4, with hard-negative pass rate and cost per chart for each configuration." width="760">
 </p>
 
-**Gold-A** is ten outpatient charts labeled by hand, with labels pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.75–0.96). C4 raises precision from 0.755 to 0.868 and cuts the queue from 4.9 to 4.1 items per chart, at the cost of four missed codes (`D64.9` and `I12.9` on pt-001, `I12.9` and `I50.9` on pt-004). The previous run (v6, before the Synthea fixes) had C4 at 0.872 / 0.919. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md), commit `b623d53`.
-
-**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 38.6% against C0+ (2.00 to 1.23) at $0.00136 per chart. It missed one combination code (`I12.9` on gb-0042) that v6 found. Two live C4 passes agreed on 65 of 66 charts. No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF.
+<!-- RESULTS:END -->
 
 Cost is reported Token Factory usage times the public catalog price. `eval/results/mock/` holds offline regression output from the recorded client; those numbers are not model quality. The schema is in [docs/eval.md](docs/eval.md).
 
@@ -241,15 +236,13 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 
 ## Safety and limitations
 
-- Demo and evaluation charts are generated test records; CodeSentinel is a reviewer aid, not medical advice.
+- Data: demo and evaluation charts are generated test records, not real patients; how each set was built and labeled is in [eval/results/](eval/results/). CodeSentinel is a reviewer aid, not medical advice.
 - `POST /audit` refuses SSN-like, MRN-like, email, and US phone patterns.
 - A person decides. Accept and dismiss stay on the coder. This does not submit a claim.
 - Combination and specificity rows without a guideline citation stay in review.
 - English, outpatient-style notes. The regex tiers miss paraphrases the recorded client will not invent.
 - No claim of HIPAA compliance. A production deployment would need Zero Data Retention, a dedicated endpoint, and the right agreements.
 - `MAX_DAILY_USD` is documented in [.env.example](.env.example) and is not enforced on the audit service yet.
-- On the Synthea held-out split C4 recall is 0.667 and precision 0.183, and the two-way check still flags about three billed codes per chart; see Results. Synthea labels are derived by code, not reviewed by a coder.
-- Gold-A is 10 charts pending coder sign-off. Gold-B was built around the same phenomena as the rules, so it is a regression suite rather than an independent benchmark.
 
 <details>
 <summary>Roadmap</summary>
@@ -264,10 +257,10 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 
 MIT. See [LICENSE](LICENSE).
 
-## Acknowledgments
+## Acknowledgments and third-party services
 
-NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation. Tavily for guideline retrieval. CMS and CDC publish the ICD-10-CM Official Guidelines the citations quote.
+NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation. Tavily for guideline retrieval. CMS and CDC publish the ICD-10-CM Official Guidelines the citations quote. [Synthea](https://github.com/synthetichealth/synthea) (MITRE) generates the benchmark patients, mapped with the NLM SNOMED CT to ICD-10-CM Map. The demo is hosted on Render.
 
 ## Project history
 
-CodeSentinel evolved from Ctrl+Alt+Heal, Kishan's earlier hackathon project (snapshot 2026-05-07); see [docs/changes.md](docs/changes.md) for what was rebuilt during the Nebius hackathon window.
+Rebuilt from a May 2026 prototype (Ctrl+Alt+Heal). New during the hackathon window: Nemotron cascade, quote verifier, Tavily FY2027 guideline gate, API contract, eval harness, Synthea benchmark. Details: [docs/changes.md](docs/changes.md).

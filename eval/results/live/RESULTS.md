@@ -125,3 +125,10 @@ C4 decision agreement across 2 passes: 0.984848. Two live C4 passes. Agreement i
 - Gold-A is the headline set, but it is 10 hand-labeled charts and a certified coder has not signed those labels yet (`review_status` in `eval/gold/gold_a.json`).
 - Gold-B labels were written by construction, by the same author as the offline policy. The policy does not read the labels, but it was designed around the same phenomena. Held-out means the test charts were not used to edit prompts; it does not mean an independent model.
 
+## Notes moved from the project README
+
+These paragraphs were in the top-level README for the v7 run. They are kept here unchanged apart from relative links.
+
+**Gold-A** is ten outpatient charts labeled by hand, with labels pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](../../gold/gold_a.json)). Ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.75–0.96). C4 raises precision from 0.755 to 0.868 and cuts the queue from 4.9 to 4.1 items per chart, at the cost of four missed codes (`D64.9` and `I12.9` on pt-001, `I12.9` and `I50.9` on pt-004). The previous run (v6, before the Synthea fixes) had C4 at 0.872 / 0.919. Commit `b623d53`.
+
+**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 38.6% against C0+ (2.00 to 1.23) at $0.00136 per chart. It missed one combination code (`I12.9` on gb-0042) that v6 found. Two live C4 passes agreed on 65 of 66 charts. No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF.
