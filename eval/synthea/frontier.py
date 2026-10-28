@@ -60,14 +60,16 @@ def main(summary_path: str, out_stem: str) -> None:
     ax.set_xlabel("Token Factory cost per chart (USD x 1,000)", color=INK)
     ax.set_ylabel("Rows a coder reviews per chart", color=INK)
     d = summary["dataset"]
-    ax.set_title(f"Cost vs review burden on {d['charts']} Synthea charts", color=INK, fontsize=13, fontweight="bold", loc="left")
+    split = d.get("split", "all")
+    which = {"held_out": "held-out ", "dev": "dev "}.get(split, "")
+    ax.set_title(f"Cost vs review burden on {d['charts']} {which}Synthea charts", color=INK, fontsize=13, fontweight="bold", loc="left")
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
     for spine in ("left", "bottom"):
         ax.spines[spine].set_color(INK)
     ax.tick_params(colors=INK)
     ax.set_ylim(0, max(total + [rules["gap_rows_per_chart"] if rules else 0]) * 1.25)
-    ax.legend(frameon=False, fontsize=9, loc="center right", labelcolor=INK)
+    ax.legend(frameon=False, fontsize=9, loc="center right", bbox_to_anchor=(1.0, 0.36), labelcolor=INK)
     fig.tight_layout()
     for ext in ("svg", "png"):
         fig.savefig(f"{out_stem}.{ext}", facecolor=PAPER, metadata={"Date": None} if ext == "svg" else None)

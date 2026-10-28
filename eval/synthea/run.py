@@ -180,7 +180,8 @@ def _fmt(value, digits=3):
 
 CAVEATS = [
     "Synthea notes are template text and rarely name chronic conditions, so most evidence is medications and labs. The cascade sends lab-only and medication-only rows to review instead of accepting them.",
-    "The cascade prompt carries the first 40 structured lines of the chart, labs first, so medication lines can be cut on lab-heavy charts.",
+    "A statin, metformin or antihypertensive with no matching diagnosis goes to review under CodeSentinel's medication policy. Synthea prescribes statins and ACE inhibitors for prevention (heart disease, diabetes), so most E78.5 and I10 false positives are those review rows.",
+    "Unsupported-existing flags stay high: about three per chart on billed codes Synthea does have, because the 12-month chart (3 template notes, labs only, no vitals) carries no mention, linked medication or lab for many chronic codes.",
     "Synthea sometimes records a diabetic kidney condition without a type 2 diabetes condition; the NLM map still maps it to an E11 code. Those charts rarely support an E11.22 gap, so most are neutral.",
     "Gold gaps are dominated by E78.5 and I10, which Synthea links to statins and antihypertensives. Diabetes, CKD and combination-code gaps are few, so their per-code numbers are anecdotal.",
     "Codes outside CodeSentinel's rules (for example I11.0, I13.0, N18.1, N18.2, E11.29, E11.40) stay billed and are never removed. The benchmark measures gap finding on the codes the rules cover.",
@@ -196,6 +197,9 @@ def markdown(summary: dict) -> str:
         f"Run: {summary['mode']}, commit `{summary.get('commit', '')}`, finished {summary['generated_local']}. "
         "Raw numbers: [summary.json](summary.json).",
         "",
+        *([f"Split: `{d['split']}` from `eval/synthea/split.json` (seed 20261028; 100 dev, 300 held-out). "
+           "Fixes were made on dev only; held-out was run once after they were committed.", ""]
+          if d.get("split", "all") != "all" else []),
         f"{d['charts']} Synthea patients (Synthea {d['synthea_version']}, seed {d['seed']}, {d['state']}, ages {d['ages']}, "
         f"reference date {d['reference_date']}). Conditions are Synthea's, mapped to ICD-10-CM with the NLM SNOMED CT to "
         "ICD-10-CM map and the FY 2027 combination-code guidelines. "
