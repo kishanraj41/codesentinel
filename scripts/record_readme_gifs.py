@@ -1,4 +1,4 @@
-"""Record the README demo GIFs from the local web demo (no API keys).
+"""Record the README demo GIFs from the local web demo.
 
 Start the demo first, from web/:
 
@@ -8,7 +8,12 @@ Then:
 
     python scripts/record_readme_gifs.py
 
-Uses Playwright Chromium and ffmpeg. Frames are synthetic charts only.
+With NEBIUS_API_KEY and TAVILY_API_KEY set in the demo's environment, the
+audit-findings GIF is a live Token Factory run (about $0.015 of spend); the
+wait while the cascade runs is sped up in the GIF. Without keys every GIF is the
+offline recorded client. Set ONLY=audit-findings to record one GIF.
+
+Uses Playwright Chromium and ffmpeg. Frames are generated test charts only.
 """
 
 from __future__ import annotations
@@ -32,6 +37,8 @@ def _chrome() -> str:
         return override
     root = Path(os.environ.get("LOCALAPPDATA", "")) / "ms-playwright"
     candidates = sorted(root.glob("chromium-*/chrome-win64/chrome.exe"))
+    if not candidates:
+        candidates = sorted((Path.home() / ".cache" / "ms-playwright").glob("chromium-*/chrome-linux64/chrome"))
     if not candidates:
         raise SystemExit("Playwright Chromium not found. Run: python -m playwright install chromium")
     return str(candidates[-1])
@@ -84,14 +91,27 @@ def _record(name: str, action) -> Path:
     return dest
 
 
+# Seconds into the recording where a live wait starts and ends, set by findings().
+WAIT: dict[str, tuple[float, float]] = {}
+
+
 def findings(page) -> None:
+    import time
+
+    start = time.monotonic()
     _prepare(page)
     page.wait_for_timeout(900)
+    clicked = time.monotonic() - start + 1.5
     page.get_by_role("button", name="Audit chart, Margaret Whitmore").click()
-    page.wait_for_selector("#work-heading")
-    page.wait_for_timeout(2200)
+    page.wait_for_selector("#work-heading", timeout=120_000)
+    done = time.monotonic() - start - 0.5
+    if done - clicked > 3:
+        WAIT["audit-findings"] = (clicked, done)
+    page.wait_for_timeout(2600)
     page.mouse.wheel(0, 320)
-    page.wait_for_timeout(1800)
+    page.wait_for_timeout(2000)
+    page.locator("#receipt").scroll_into_view_if_needed()
+    page.wait_for_timeout(2600)
 
 
 def evidence(page) -> None:
@@ -125,15 +145,29 @@ def review(page) -> None:
     page.wait_for_timeout(2200)
 
 
-def _gif(webm: Path, gif: Path) -> None:
+def _gif(webm: Path, gif: Path, wait: tuple[float, float] | None = None) -> None:
+    palette = "fps=10,scale=1200:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=diff:max_colors=80[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3"
+    if wait:
+        # Play the live wait at 8x so the GIF stays short; the rest is real time.
+        a, b = wait
+        vf = (
+            f"[0:v]trim=0:{a},setpts=PTS-STARTPTS[v0];"
+            f"[0:v]trim={a}:{b},setpts=(PTS-STARTPTS)/8[v1];"
+            f"[0:v]trim=start={b},setpts=PTS-STARTPTS[v2];"
+            f"[v0][v1][v2]concat=n=3:v=1[c];[c]{palette}"
+        )
+        flag = "-filter_complex"
+    else:
+        vf = palette
+        flag = "-vf"
     subprocess.run(
         [
             FFMPEG,
             "-y",
             "-i",
             str(webm),
-            "-vf",
-            "fps=10,scale=1200:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=diff:max_colors=80[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3",
+            flag,
+            vf,
             "-loop",
             "0",
             str(gif),
@@ -148,10 +182,13 @@ def main() -> None:
         ("guideline-evidence", evidence),
         ("review-and-eval", review),
     )
+    only = os.environ.get("ONLY", "").strip()
     for name, action in jobs:
+        if only and name != only:
+            continue
         webm = _record(name, action)
         gif = OUT / f"{name}.gif"
-        _gif(webm, gif)
+        _gif(webm, gif, WAIT.get(name))
         webm.unlink(missing_ok=True)
         print(f"{gif.name} {gif.stat().st_size} bytes")
 
