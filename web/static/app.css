@@ -321,7 +321,7 @@ textarea {
   color: var(--ink);
 }
 .row-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.row-actions button.ghost { background: #fff; }
+.row-actions button.ghost { background: #fff; color: var(--ink); border-color: var(--line); }
 .row-actions button[aria-pressed="true"] { background: var(--spine); color: var(--spine-ink); border-color: var(--spine); }
 .evidence { margin-top: 0.7rem; border-top: 1px solid var(--line); padding-top: 0.7rem; }
 .evidence h4 { margin: 0.6rem 0 0.3rem; font-size: 0.95rem; }
