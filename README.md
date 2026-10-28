@@ -49,15 +49,17 @@ Three live evaluations on Nebius Token Factory, FY2027 guideline citations retri
 
 | Set | Charts | What it measures | Result |
 |---|---:|---|---|
-| Hard-negative suite | 66 | The 11 ways a chart fools a coder (negation, family history, screening, medication-only, copied-forward, wrong specificity…) | Precision 1.000, review queue −38.6%, 11/11 categories, $0.00136/chart |
-| Hand-labeled charts | 10 | Outpatient notes labeled by hand | Precision 0.755 to 0.868 over the rules queue |
-| Synthea, 300 patients | 300 | Independently generated records; the author wrote no chart or label | False positives −72.9% (656 to 178), 19/20 planted unsupported codes caught |
+| Hard-negative suite | 66 | The 11 ways a chart fools a coder: negation, family history, screening, medication-only, copied-forward, hypothetical plan, resolved, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity | Precision 0.598 to 1.000, review queue −38.6% (2.000 to 1.227 rows/chart), 11/11 categories, 3/3 unsupported billed codes caught, $0.00136/chart |
+| Hand-labeled charts | 10 | Outpatient notes labeled by hand | Precision 0.755 to 0.868 over the rules queue, queue 4.9 to 4.1 rows/chart |
+| Synthea, 300 patients | 300 | Independently generated records (MITRE Synthea v4.0.0); the author wrote no chart or label | False positives −72.9% (656 to 178), gap rows per chart 2.35 to 0.73, 19/20 planted unsupported codes caught |
 
 Comparisons are the full cascade (C4) against the rules queue a coder sees today (C0+, approved plus review). Full tables, confidence intervals, per-code breakdowns and the dev/held-out protocol: [eval/results/](eval/results/). Synthea method and results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
 
 <p align="center">
-  <img src="docs/assets/goldb-frontier.svg" alt="Precision against review rows per chart on the 66-chart hard-negative suite for C0, C0+ and C1 to C4, with hard-negative pass rate and cost per chart for each configuration." width="760">
+  <img src="docs/assets/cascade-frontier.svg" alt="Review rows and false positives per chart against Token Factory cost for the rules queue and cascade depths C1 to C3 on the 66-chart hard-negative suite, with the full cascade C4 in the stats box." width="760">
 </p>
+
+Most of the gain comes at the first step: Lightning triage plus the quote verifier (C1) removes 51 of the rules' 53 false positives on the hard-negative suite. Precision reaches 1.000 at C3, the depth that adds Super adjudication and the Tavily guideline gate (false positives 2 to 0). C4 adds Ultra for conflicts and the physician query at the same precision and queue. Two live C4 passes agreed on 65 of 66 charts, and every C3/C4 citation was retrieved live and verified in the FY 2027 PDF.
 
 <!-- RESULTS:END -->
 
@@ -144,7 +146,7 @@ nvidia/Nemotron-3.5-Super-VL
 - Source tier on every citation: `Official guidelines` or `Secondary source`. Mislabeled code lists are dropped.
 - Receipt per audit, plus `POST /audit` contract 1.0.0 and an MCP endpoint.
 - PHI patterns (SSN, MRN, email, US phone) are refused before a note is sent.
-- Mock mode with the keys unset, so the demo and the test suite run offline.
+- Recorded client with the keys unset, so the test suite and local development run offline.
 
 ## Quickstart
 
@@ -236,7 +238,8 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 
 ## Safety and limitations
 
-- Data: demo and evaluation charts are generated test records, not real patients; how each set was built and labeled is in [eval/results/](eval/results/). CodeSentinel is a reviewer aid, not medical advice.
+- Data: demo and evaluation charts are generated test records, not real patients. CodeSentinel is a reviewer aid, not medical advice.
+- Evaluation sets are small or generated; per-set caveats, confidence intervals and known misses are in [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md) and [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
 - `POST /audit` refuses SSN-like, MRN-like, email, and US phone patterns.
 - A person decides. Accept and dismiss stay on the coder. This does not submit a claim.
 - Combination and specificity rows without a guideline citation stay in review.
