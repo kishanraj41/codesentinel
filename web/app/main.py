@@ -44,12 +44,17 @@ def settings_from_env() -> Settings:
         per_hour = int(rate) if rate else 10
     except ValueError:
         per_hour = 10
+    try:
+        concurrent = int(os.environ.get("LIVE_MAX_CONCURRENT", "").strip() or 3)
+    except ValueError:
+        concurrent = 3
     return Settings(
         audit_api_base=os.environ.get("AUDIT_API_BASE", "").strip(),
         audit_api_key=os.environ.get("AUDIT_API_KEY", "").strip(),
         max_daily_usd=num("MAX_DAILY_USD", 3.0),
         estimated_live_usd=num("ESTIMATED_LIVE_USD", 0.03),
         live_rate_per_hour=per_hour,
+        live_max_concurrent=concurrent,
     )
 
 
@@ -101,6 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "audit_api_configured": app.state.upstream.configured,
             "budget": app.state.budget.snapshot(),
             "live_rate_per_hour": settings.live_rate_per_hour,
+            "live_max_concurrent": settings.live_max_concurrent,
         }
 
     @app.get("/api/patients")
@@ -222,11 +228,22 @@ async def _run(request: Request, body: dict | None = None) -> dict:
 
 
 def _client_ip(request: Request) -> str:
+    """Rate-limit key for a visitor.
+
+    The left of X-Forwarded-For is whatever the visitor sent, so it can be
+    forged to dodge the per-IP limit. Each trusted proxy appends the address it
+    saw, so count TRUSTED_PROXY_HOPS entries from the right (default 1: the
+    host's edge proxy). 0 ignores the header.
+    """
+    try:
+        hops = int(os.environ.get("TRUSTED_PROXY_HOPS", "1").strip() or 1)
+    except ValueError:
+        hops = 1
     forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        first = forwarded.split(",")[0].strip()
-        if first:
-            return first
+    if hops > 0 and forwarded:
+        parts = [part.strip() for part in forwarded.split(",") if part.strip()]
+        if parts:
+            return parts[-min(hops, len(parts))]
     if request.client and request.client.host:
         return request.client.host
     return "unknown"

@@ -1,6 +1,6 @@
 # CodeSentinel eval
 
-The published numbers live in `eval/results/summary.json` and the table in `eval/RESULTS.md`. This file is the schema and the run contract. The web eval tab should read `eval/results/summary.json`.
+The published numbers are the live run in `eval/results/live/summary.json`, with the table in `eval/results/live/RESULTS.md` and the recorded Nemotron completions in `eval/results/live/recordings/`. `eval/results/mock/` is offline regression output from the recorded client; it is not live model quality. `--mode live` writes to `eval/results/live/`, mock runs write to `eval/results/mock/`, and `EVAL_OUT_DIR` overrides both. The web Eval tab reads `eval/results/live/summary.json` and falls back to the mock summary.
 
 ## What is measured
 
@@ -40,7 +40,13 @@ Every scenario has at least two test charts. The published file is the test spli
 
 Labels are in `eval/gold/gold_b.jsonl` (no note text). Bundles are in `eval/gold/bundles/`. `eval/gold/manifest.json` carries `label_sha256`.
 
-Gold-A is the ten synthetic patients `pt-001` through `pt-010` from `test_dataset.py`, labeled in `eval/gold/gold_a.json`. `review_status` is `pending_coder_signoff`. Gold-A is not the headline benchmark. Its summary is `eval/results/gold_a_summary.json`.
+Gold-A is the ten synthetic patients `pt-001` through `pt-010` from `test_dataset.py`, labeled in `eval/gold/gold_a.json`. `review_status` is `pending_coder_signoff`. The README leads with the Synthea benchmark (outside generator, see below), then Gold-A, which is ten charts with labels pending certified-coder sign-off. Its summary is `gold_a_summary.json` in the same results folder. Gold-B is a hard-negative and regression suite built by the same author as the policy, not a benchmark.
+
+## Synthea benchmark
+
+400 Synthea v4.0.0 patients with labels derived from Synthea's own conditions. Method, sources and reproduction commands: [eval/synthea/README.md](../eval/synthea/README.md). Runner: `python -m eval.synthea.run`. Output: `eval/results/synthea/` (`summary.json`, `RESULTS.md`, `charts.json`, `labels.jsonl`, `manifest.json`). Scoring reuses `eval/score.py`; a shown dotted parent code counts as its label child (`N18.3` for `N18.30`), and removed codes the chart cannot support are neutral.
+
+**Dev / held-out protocol.** `eval/synthea/split.json` splits the 400 patients with `random.Random(20261028)` over the sorted ids: 100 `dev`, 300 `held_out`. It was committed (`ebf1f9c`) before any cascade change. Bugs exposed by the first 400-chart run were fixed and checked on dev only (`python -m eval.synthea.run --split dev`; fixes in `47bfbd1` and `b623d53`). The held-out split was then run once (`--split held_out`) and is the published headline in `eval/results/synthea/`. Nothing was changed after that run; problems it showed are listed in the results as open. `eval/results/synthea/dev/` holds the dev runs and `eval/results/synthea/baseline-v0/` the pre-fix 400-chart run. Labels and chart bundles did not change. Exposure before the split: the aggregate 400-chart results and a few smoke-run charts had been read while writing up the first run.
 
 Label change: Gold-A pt-002's expected heart-failure code is I50.22, not I50.9, because the note documents HFrEF (reduced ejection fraction).
 
@@ -103,7 +109,7 @@ Item fields the scorer reads: `code`, `decision` (`accept`, `review`, `reject`, 
 
 ## Schema `codesentinel.eval.summary.v1`
 
-`eval/results/summary.json` (Gold-B test):
+`eval/results/<mode>/summary.json` (Gold-B test):
 
 | Field | Meaning |
 |---|---|
@@ -127,7 +133,7 @@ Item fields the scorer reads: `code`, `decision` (`accept`, `review`, `reject`, 
 
 Each `configs[]` object includes `id`, `label`, `n_charts`, `tp`, `fp`, `fn`, `precision`, `precision_ci95`, `recall`, `recall_ci95`, `f1`, `review_items`, `review_burden_per_chart`, `false_positives_per_chart`, `hard_negative_pass_rate` (`overall`, `pass`, `total`, `by_category`), `unsupported_existing`, `unsupported_claim_drops`, `abstain_count`, `abstain_rate`, `latency_p50_s`, `latency_p95_s`, `cost_per_chart_usd`, `tavily_credits_per_chart`, `tavily_cache_hits_per_chart`, `tavily_credits_if_uncached_per_chart`, `guideline_decision_changes`, `latency_scope`, `cost_basis`.
 
-Per-config files `eval/results/C0.json`, `C0_plus.json`, `C1.json`–`C4.json` add a `charts` array (patient id, scenario, tp/fp/fn codes, shown codes, gold codes, review items, latency, cost, mode). Gold-A uses the `gold_a_` prefix. `gold_a_summary.json` is the same schema reduced to `dataset`, `configs`, and `chart_series`.
+Per-config files `eval/results/<mode>/C0.json`, `C0_plus.json`, `C1.json`–`C4.json` add a `charts` array (patient id, scenario, tp/fp/fn codes, shown codes, gold codes, review items, latency, cost, mode). Gold-A uses the `gold_a_` prefix. `gold_a_summary.json` is the same schema reduced to `dataset`, `configs`, and `chart_series`.
 
 A known-failure object: `dataset`, `patient_id`, `split`, `scenario`, `code`, `failure_type` (`false_positive` or `false_negative`), `configs_affected`, `cause`.
 

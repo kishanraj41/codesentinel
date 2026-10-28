@@ -67,6 +67,7 @@ def _audit_dict(profile, demographics, snapshot, cascade) -> dict:
         "patient_name": patient_name,
         "mode": cascade["mode"],
         "guideline_mode": cascade["guideline_mode"],
+        "guideline_provenance": cascade.get("guideline_provenance") or {},
         "degraded_reasons": list(cascade["degraded_reasons"]),
         "summary": {
             "candidates_generated": len(snapshot["approved"]) + len(snapshot["review"]),

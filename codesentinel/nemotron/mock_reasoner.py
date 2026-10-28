@@ -47,6 +47,7 @@ _LOINC_FAMILIES = {
     "17856-6": ("E11",),
     "1558-6": ("E11",),
     "2345-7": ("E11",),
+    "2339-0": ("E11",),
     "33914-3": ("N18",),
     "48642-3": ("N18",),
     "62238-1": ("N18",),
@@ -163,15 +164,15 @@ TRIAGE_INSTRUCTIONS = (
     "it on the medication alone). An ACE inhibitor, ARB, beta blocker, loop diuretic, PPI, or "
     "antidepressant does not establish CKD, heart failure, GERD, or depression by itself: "
     "assertion_status is copied_forward_unclear when that is the only evidence. "
-    "An active medication list plus a same-day refill is current treatment evidence, not a copied "
-    "problem list. When the note says refills were sent, medications were refilled, the visit was a "
-    "refill check, or see medication list, and the drug specifically treats the code (metformin or "
+    "An active medication list is current treatment evidence, not a copied problem list. "
+    "When no note sentence affirms or rules out the condition (the note is silent, a template, a "
+    "refill check, or says see medication list) and an active drug specifically treats the code (metformin or "
     "insulin for diabetes, a statin for hyperlipidemia, levothyroxine for hypothyroidism, an "
     "antihypertensive for hypertension), assertion_status is medication_supported. Do not mark that "
     "pattern copied_forward_unclear. An explicit negation, family history, screening, hypothetical, "
     "or resolved sentence still outranks the medication list. "
-    "An empty note is not a negation. When the note is empty and the only support is an abnormal "
-    "lab for that code, assertion_status is lab_only, not negated. "
+    "An empty or silent note is not a negation. When no note sentence names the condition and the "
+    "only support is an abnormal lab for that code, assertion_status is lab_only, not negated. "
     "If the note says not to use a combination code, assertion_status for that combination is negated. "
     "An N18 code needs a documented CKD diagnosis (chronic kidney disease, CKD, nephropathy, or dialysis) "
     "or kidney-disease chronicity of at least 3 months, including two abnormal kidney labs at least 90 days apart. "
@@ -322,6 +323,57 @@ def _related_meds(code: str, medications: list[dict]) -> list[str]:
             if any(marker in lowered for marker in markers):
                 lines.append(medication_line(medication))
     return lines
+
+
+# Structured lines sent to triage. Short charts are sent whole and in chart order. Long charts
+# send the lines that bear on the candidate first (its family's labs, drugs that treat or
+# merely accompany it, the threshold lab), then every other active medication, then the
+# remaining labs, newest first, within the line and character budget.
+TRIAGE_LINE_LIMIT = 60
+TRIAGE_CHAR_BUDGET = 7000
+_SHORT_CHART_LINES = 40
+
+
+def _drug_lines_for(code: str, medications: list[dict]) -> list[str]:
+    prefix = (code or "")[:3].upper()
+    drugs = _SPECIFIC_DRUGS.get(prefix, ()) + _NONSPECIFIC_DRUGS.get(prefix, ())
+    out = []
+    for medication in medications:
+        name = str(medication.get("name") or "").lower()
+        if any(drug in name for drug in drugs):
+            out.append(medication_line(medication))
+    return out
+
+
+def triage_structured_lines(gap: dict, profile: dict, all_lines: list[str]) -> list[str]:
+    if len(all_lines) <= _SHORT_CHART_LINES:
+        return list(all_lines)
+    code = str((gap or {}).get("icd10_code") or "")
+    medications = [m for m in profile.get("medications") or [] if isinstance(m, dict)]
+    observations = [o for o in profile.get("observations") or [] if isinstance(o, dict)]
+    ordered: list[str] = []
+    lab = supporting_lab_observation(code, observations, gap)
+    if lab is not None:
+        ordered.append(lab_line(lab))
+    ordered += _related_meds(code, medications) + _drug_lines_for(code, medications)
+    ordered += _related_labs(code, observations)
+    ordered += [medication_line(m) for m in _active_medications(medications)]
+    ordered += [medication_line(m) for m in medications]
+    dated = sorted(observations, key=lambda o: str(o.get("date") or o.get("effective") or ""), reverse=True)
+    ordered += [lab_line(o) for o in dated]
+    known = set(all_lines)
+    picked: list[str] = []
+    seen: set[str] = set()
+    used = 0
+    for line in ordered:
+        if line in seen or line not in known:
+            continue
+        if len(picked) >= TRIAGE_LINE_LIMIT or used + len(line) > TRIAGE_CHAR_BUDGET:
+            break
+        seen.add(line)
+        picked.append(line)
+        used += len(line)
+    return picked
 
 
 _CKD_DIAGNOSIS = re.compile(
@@ -539,8 +591,17 @@ def _blocked_by_chart_context(code: str, condition: str, notes: str) -> bool:
     return False
 
 
+# Lab and questionnaire names. "Lipid panel with direct LDL" or "Hemoglobin A1c" in a list of
+# completed lab reports names a test, not the condition, so it does not count as a mention
+# that would stop a medication or lab rescue.
+_ANALYTE_KEYWORDS = frozenset({
+    "hba1c", "a1c", "egfr", "ldl", "cholesterol", "bnp", "tsh", "hemoglobin", "ferritin", "uric",
+    "alt", "phq-9", "phq9", "gad", "vitamin d", "ejection fraction",
+})
+
+
 def _has_present_mention(code: str, condition: str, notes: str) -> bool:
-    keys = keywords_for(code, condition)
+    keys = [key for key in keywords_for(code, condition) if key not in _ANALYTE_KEYWORDS]
     if not keys:
         return False
     for sentence in _sentences(notes):
@@ -550,12 +611,29 @@ def _has_present_mention(code: str, condition: str, notes: str) -> bool:
     return False
 
 
+# A billed code in these categories already accounts for a drug that treats the candidate.
+_COVERING_FAMILIES = {
+    "I10": ("I10", "I11", "I12", "I13", "I15", "I16"),
+}
+
+
+def _billed_code_explains_drug(code: str, profile: dict) -> bool:
+    """The drug already has a billed indication in the same category (or a combination code)."""
+    prefix = (code or "")[:3].upper()
+    covering = _COVERING_FAMILIES.get(prefix, (prefix,))
+    billed = {str(c).upper() for c in profile.get("claims_codes") or []}
+    billed |= {str(c.get("icd10_code") or "").upper() for c in profile.get("conditions") or [] if isinstance(c, dict)}
+    return any(b[:3] in covering and b != (code or "").upper() for b in billed if b)
+
+
 def _medication_rescue(result: TriageResult, code: str, condition: str, notes: str, profile: dict) -> TriageResult | None:
     if result.assertion_status not in _RESCUE_STATUSES and result.assertion_status != "medication_supported":
         return None
+    # The note is silent or neutral about this condition. A note that affirms it is left to the
+    # model, and a negation, family-history, screening, resolved, or copied-forward sentence wins.
     if _has_present_mention(code, condition, notes) or _blocked_by_chart_context(code, condition, notes):
         return None
-    if not (_note_empty(notes) or _MED_SUPPORT_CUE.search(notes or "")):
+    if _billed_code_explains_drug(code, profile):
         return None
     medications = _active_medications(profile.get("medications") or [])
     if drug_specificity(code, medications) != "high":
@@ -579,8 +657,12 @@ def _medication_rescue(result: TriageResult, code: str, condition: str, notes: s
     )
 
 
-def _lab_only_rescue(result: TriageResult, code: str, notes: str, profile: dict, gap: dict | None) -> TriageResult | None:
-    if not _note_empty(notes):
+def _lab_only_rescue(
+    result: TriageResult, code: str, notes: str, profile: dict, gap: dict | None, condition: str = ""
+) -> TriageResult | None:
+    if not _note_empty(notes) and (
+        _has_present_mention(code, condition, notes) or _blocked_by_chart_context(code, condition, notes)
+    ):
         return None
     if str(code).upper().startswith("N18") and result.assertion_status == "hypothetical_plan":
         return None
@@ -610,7 +692,11 @@ def reconcile_triage(
     profile: dict,
     gap: dict | None = None,
 ) -> TriageResult:
-    """Keep medication-list and empty-note lab evidence from being dropped as a negation.
+    """Keep medication-list and lab evidence from being dropped when the note is silent.
+
+    A high-specificity active drug becomes medication_supported (shown for review) and a
+    lab past the code's threshold becomes lab_only (review) when no note sentence affirms or
+    rules out the condition. Template or unrelated note text no longer blocks the rescue.
 
     Runs on the recorded client and on a live triage tag. It does not read gold labels.
     An explicit negation, retraction, family-history, or copied-forward sentence still wins.
@@ -619,9 +705,16 @@ def reconcile_triage(
         return result
     rescued = _medication_rescue(result, code, condition, notes, profile)
     if rescued is None:
-        rescued = _lab_only_rescue(result, notes=notes, code=code, profile=profile, gap=gap)
+        rescued = _lab_only_rescue(result, notes=notes, code=code, profile=profile, gap=gap, condition=condition)
     if rescued is None:
         rescued = result
+    if rescued.assertion_status == "medication_supported" and _billed_code_explains_drug(code, profile):
+        rescued = TriageResult(
+            assertion_status="copied_forward_unclear",
+            supporting_quotes=list(rescued.supporting_quotes),
+            section=rescued.section,
+            confidence=min(rescued.confidence or 0.5, 0.5),
+        )
     return _hold_unestablished_n18(rescued, code, notes, profile.get("observations") or [])
 
 
@@ -988,6 +1081,19 @@ def apply_guideline_gate(decision: str, gap_type: str, citations: list, rational
     so the coder can see that the missing guideline is why it was not accepted.
     """
     needs_citation = gap_type in {"specificity_upgrade", "combination"}
+    superseded = [
+        item for item in citations or []
+        if isinstance(item, dict) and item.get("anchor_status") == "superseded" and item.get("provenance") == "tavily_live"
+    ]
+    if needs_citation and superseded:
+        old = superseded[0].get("supersedes") or {}
+        note = (
+            f"Decided on the {superseded[0].get('fiscal_year') or 'current'} guideline text "
+            f"({superseded[0].get('section') or 'section'} p. {superseded[0].get('page') or '?'}); "
+            f"the curated {old.get('fiscal_year') or 'prior-year'} passage was superseded."
+        )
+        if note not in rationale:
+            rationale = f"{note} {rationale}".strip()
     if needs_citation and not citations and decision == "accept":
         decision = "review"
     if needs_citation and not citations and decision == "review":

@@ -1,4 +1,9 @@
-"""Curated FY2026 guideline sections cited ahead of a live search."""
+"""Curated ICD-10-CM guideline sections: the fallback and cross-check for live citations.
+
+Each anchor is a verbatim span of the current edition (FY 2027), and
+``verified_in`` records the editions it was checked against. In live mode the
+anchor is re-verified against the fetched PDF before it is used.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +15,7 @@ from pathlib import Path
 _DIR = Path(__file__).resolve().parent
 ANCHORS_PATH = _DIR / "anchors.json"
 EXCERPT_PATH = _DIR / "excerpt.txt"
-OFFICIAL_PDF_URL = "https://www.cms.gov/files/document/fy-2026-icd-10-cm-coding-guidelines.pdf"
+OFFICIAL_PDF_URL = "https://www.cms.gov/files/document/fy-2027-icd-10-cm-coding-guidelines.pdf"
 OFFICIAL_TITLE = "ICD-10-CM Official Guidelines for Coding and Reporting"
 
 
@@ -35,3 +40,31 @@ def anchor_for(code_family: str, issue: str) -> dict | None:
         if row.get("key") == key:
             return row
     return None
+
+
+def excerpt_pages() -> dict[int, str]:
+    """Pages of the committed excerpt, keyed by PDF page number."""
+    pages: dict[int, list[str]] = {}
+    current = None
+    for line in EXCERPT_PATH.read_text(encoding="utf-8").splitlines():
+        if line.startswith("===== PAGE ") and line.endswith("====="):
+            current = int(line.split()[2])
+            pages[current] = []
+            continue
+        if current is not None:
+            pages[current].append(line)
+    return {number: "\n".join(lines) for number, lines in pages.items()}
+
+
+def excerpt_official_text():
+    """An OfficialText built from the committed excerpt (anchor pages only). Offline tests use it."""
+    from codesentinel.guidelines.editions import EDITIONS
+    from codesentinel.guidelines.official_text import OfficialText
+
+    meta = load_anchors()
+    year = int(str(meta.get("fiscal_year") or "FY 2027").split()[-1])
+    edition = EDITIONS[year]
+    pages = excerpt_pages()
+    total = max(edition.pages, max(pages) if pages else 0)
+    ordered = [pages.get(number, "") for number in range(1, total + 1)]
+    return OfficialText(edition, ordered, str(meta.get("pdf_sha256") or ""), edition.pdf_url)

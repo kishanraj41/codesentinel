@@ -116,6 +116,29 @@ class SchemaRepairTests(unittest.TestCase):
         self.assertEqual(client.select_triage_model(), "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B")
 
 
+    def test_models_list_retries_once_after_timeout(self):
+        calls = {"n": 0}
+
+        def get_transport(url, headers=None, timeout=None):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise TimeoutError("read timed out")
+            return _Response(200, {"data": [{"id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"}]})
+
+        client = NemotronClient(api_key="test-key", get_transport=get_transport, sleep=lambda _s: None)
+        self.assertEqual(client.select_triage_model(), "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B")
+        self.assertEqual(calls["n"], 2)
+        self.assertFalse(any("models.list failed" in r for r in client.degraded_reasons))
+
+    def test_models_list_reports_failure_after_retries(self):
+        def get_transport(url, headers=None, timeout=None):
+            raise TimeoutError("read timed out")
+
+        client = NemotronClient(api_key="test-key", get_transport=get_transport, sleep=lambda _s: None)
+        client.ensure_models()
+        self.assertTrue(any("models.list failed" in r for r in client.degraded_reasons))
+
+
 class ReplayTests(unittest.TestCase):
     def test_replay_skips_transport(self):
         import tempfile

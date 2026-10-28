@@ -83,6 +83,18 @@ def estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
 
+# models.list is checked once per process and base URL, for MODELS_CACHE_TTL_S. A slow
+# catalog call is retried once before the triage model falls back to the catalog id.
+MODELS_LIST_TIMEOUT_S = 45
+MODELS_LIST_ATTEMPTS = 2
+MODELS_CACHE_TTL_S = 600
+_MODELS_CACHE: dict[str, tuple[float, list[str]]] = {}
+
+
+def reset_models_cache() -> None:
+    _MODELS_CACHE.clear()
+
+
 class NemotronClient:
     def __init__(
         self,
@@ -146,7 +158,7 @@ class NemotronClient:
         response = self._get(
             self.base_url + "models",
             headers=self._headers(),
-            timeout=30,
+            timeout=MODELS_LIST_TIMEOUT_S,
         )
         self._note_headers(getattr(response, "headers", {}))
         response.raise_for_status()
@@ -160,14 +172,29 @@ class NemotronClient:
         if self.mock or self._models_checked:
             return
         self._models_checked = True
-        try:
-            found = self.models_list()
-        except Exception as exc:  # network, auth, parse
-            self.available_models = None
-            self.triage_model = LIGHTNING
-            with self._lock:
-                self.degraded_reasons.append(f"models.list failed: {exc}")
-            return
+        key = self.base_url
+        cached = _MODELS_CACHE.get(key) if self._get is requests.get else None
+        if cached and time.monotonic() - cached[0] < MODELS_CACHE_TTL_S:
+            found = list(cached[1])
+        else:
+            found = None
+            last_exc: Optional[Exception] = None
+            for attempt in range(MODELS_LIST_ATTEMPTS):
+                try:
+                    found = self.models_list()
+                    break
+                except Exception as exc:  # network, auth, parse
+                    last_exc = exc
+                    if attempt + 1 < MODELS_LIST_ATTEMPTS:
+                        self._sleep(1.0)
+            if found is None:
+                self.available_models = None
+                self.triage_model = LIGHTNING
+                with self._lock:
+                    self.degraded_reasons.append(f"models.list failed: {last_exc}")
+                return
+            if self._get is requests.get:
+                _MODELS_CACHE[key] = (time.monotonic(), list(found))
         self.available_models = found
         if LIGHTNING in found:
             self.triage_model = LIGHTNING

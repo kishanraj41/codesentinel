@@ -21,6 +21,7 @@ from codesentinel.nemotron.mock_reasoner import (
     needs_escalation,
     needs_super,
     safe_physician_query,
+    triage_structured_lines,
 )
 from codesentinel.nemotron.schemas import (
     ADJUDICATION_SCHEMA,
@@ -220,9 +221,17 @@ def run_cascade(
         credits_used = float(getattr(guidelines, "credits", 0) or 0) - credits_before
         cache_hits = int(getattr(guidelines, "cache_hits", 0) or 0) - hits_before
         timeline_status["guidelines"] = "ok"
-        timeline_detail["guidelines"] = (
-            f"{len(groups)} lookups; cache hits {cache_hits}; credits {credits_used:g}"
-        )
+        cited = [item for row in survivors for item in row["citations"]]
+        edition = getattr(getattr(guidelines, "edition", None), "label", "")
+        detail = f"{len(groups)} lookups; cache hits {cache_hits}; credits {credits_used:g}"
+        if edition:
+            detail += f"; target {edition}"
+        if cited:
+            detail += f"; provenance {_provenance_summary(_unique_dicts(cited))}"
+        superseded = list(getattr(guidelines, "superseded_anchors", []) or [])
+        if superseded:
+            detail += f"; curated passage superseded for {', '.join(sorted(set(superseded)))}"
+        timeline_detail["guidelines"] = detail
         timeline_latency["guidelines"] = int((time.perf_counter() - started) * 1000)
         if getattr(guidelines, "use_fixtures", False) and getattr(guidelines, "live_requests", 0) == 0:
             timeline_mock["guidelines"] = True
@@ -303,7 +312,7 @@ def run_cascade(
         if triage.assertion_status == "medication_supported" and decision in {"accept", "reject"}:
             decision = "abstain"
             rationale = (
-                "An active medication list with a current refill supports human review, not an automatic add."
+                "An active medication that specifically treats this condition supports human review, not an automatic add."
             )
             query_needed = True
         elif triage.assertion_status == "lab_only" and decision in {"accept", "reject"}:
@@ -462,6 +471,7 @@ def run_cascade(
         "citations": citations,
         "mode": mode,
         "guideline_mode": _guideline_mode(citations),
+        "guideline_provenance": _provenance_block(citations, guidelines),
         "degraded_reasons": list(client.degraded_reasons) + list(getattr(guidelines, "degraded_reasons", [])),
         "legacy": {
             "approved": legacy_approved,
@@ -498,7 +508,9 @@ def _triage_one(client, model, gap, profile, notes, corpus) -> Completion:
                     "candidate": _public_gap(gap),
                     "notes": notes[:8000],
                     "mention_windows": windows,
-                    "structured_lines": list(corpus.structured_lines.values())[:40],
+                    "structured_lines": triage_structured_lines(
+                        gap, profile, list(corpus.structured_lines.values())
+                    ),
                 },
                 default=str,
             ),
@@ -540,7 +552,7 @@ def _adjudicate(client, gap, triage: TriageResult, quotes, citations, windows=No
         "gap_type": gap_type_of(gap),
         "verified_quotes": quotes,
         "triage": triage.model_dump(),
-        "guideline_excerpts": citations,
+        "guideline_excerpts": _prompt_citations(citations),
         "confidence": triage.confidence,
         "mention_windows": windows,
     }
@@ -594,7 +606,7 @@ def _escalate(client, gap, triage, quotes, citations, decision, rationale, windo
         "verified_quotes": quotes,
         "prior_decision": decision,
         "prior_rationale": rationale,
-        "guideline_excerpts": citations,
+        "guideline_excerpts": _prompt_citations(citations),
         "raf_value": gap.get("raf_value"),
         "mention_windows": windows,
     }
@@ -664,6 +676,22 @@ def _draft_query(client, gap, quotes) -> Completion:
         mock_context={"icd10_code": code, "code_display": display, "quotes": quotes},
         stage="physician_query",
     )
+
+
+_PROMPT_CITATION_FIELDS = ("url", "title", "fiscal_year", "section", "page", "quote", "source_tier")
+
+
+def _prompt_citations(citations: list[dict]) -> list[dict]:
+    """What the model sees: the passage and where it is from, not cache bookkeeping."""
+    return [{key: item.get(key) for key in _PROMPT_CITATION_FIELDS if item.get(key) not in (None, "")} for item in citations]
+
+
+def _provenance_summary(citations: list[dict]) -> str:
+    counts: dict[str, int] = {}
+    for item in citations:
+        name = item.get("provenance") or item.get("retrieved") or "unknown"
+        counts[name] = counts.get(name, 0) + 1
+    return ", ".join(f"{name} {count}" for name, count in sorted(counts.items()))
 
 
 def _citation_dicts(found) -> list[dict]:
@@ -893,6 +921,18 @@ def _public_gap(gap: dict) -> dict:
     }
 
 
+def _unique_dicts(citations: list[dict]) -> list[dict]:
+    seen = set()
+    unique = []
+    for citation in citations:
+        key = (citation.get("url"), citation.get("quote"), citation.get("issue"))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(citation)
+    return unique
+
+
 def _unique_citations(worklist: list[dict]) -> list[dict]:
     seen = set()
     unique = []
@@ -904,6 +944,20 @@ def _unique_citations(worklist: list[dict]) -> list[dict]:
             seen.add(key)
             unique.append(citation)
     return unique
+
+
+def _provenance_block(citations: list[dict], guidelines) -> dict:
+    edition = getattr(guidelines, "edition", None)
+    counts: dict[str, int] = {}
+    for item in citations:
+        name = item.get("provenance") or "unknown"
+        counts[name] = counts.get(name, 0) + 1
+    return {
+        "target_fiscal_year": getattr(edition, "label", "") if edition is not None else "",
+        "counts": counts,
+        "superseded_anchors": sorted(set(getattr(guidelines, "superseded_anchors", []) or [])),
+        "notes": list(getattr(guidelines, "notes", []) or []),
+    }
 
 
 def _guideline_mode(citations: list[dict]) -> str:

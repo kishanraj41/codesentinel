@@ -285,7 +285,7 @@ def test_eval_tab_reads_summary_json():
     assert payload["baseline"]["notes"] == 2227
     assert "not precision" in payload["baseline"]["warning"].lower()
     assert payload["status"] == "loaded"
-    assert payload["source"].replace("\\", "/").endswith("eval/results/summary.json")
+    assert payload["source"].replace("\\", "/").endswith("eval/results/live/summary.json")
     assert payload["files"] == [payload["source"]]
     ids = [row["id"] for row in payload["configs"]]
     assert ids[0] == "C0"
@@ -315,3 +315,70 @@ def test_pages_name_the_judge_path():
     assert client.get("/").status_code == 200
     assert client.get("/static/app.js").status_code == 200
     assert client.get("/static/app.css").status_code == 200
+
+
+def test_forged_forwarded_for_does_not_reset_the_ip_limit():
+    app = create_app(Settings(
+        audit_api_base="http://audit.test",
+        max_daily_usd=5,
+        estimated_live_usd=0.01,
+        live_rate_per_hour=1,
+    ))
+    calls = {"n": 0}
+
+    async def ok(_body):
+        calls["n"] += 1
+        return {"worklist": [], "mode": "live"}
+
+    app.state.upstream.audit = ok
+    client = TestClient(app)
+    first = client.post(
+        "/api/audit",
+        json={"patient_id": "pt-009", "mode": "live"},
+        headers={"X-Forwarded-For": "1.1.1.1, 203.0.113.7"},
+    )
+    forged = client.post(
+        "/api/audit",
+        json={"patient_id": "pt-009", "mode": "live"},
+        headers={"X-Forwarded-For": "9.9.9.9, 203.0.113.7"},
+    )
+    assert first.json()["delivery"]["source"] == "upstream"
+    assert forged.json()["delivery"]["fallback_reason"] == "rate_limit"
+    assert calls["n"] == 1
+
+
+def test_live_concurrency_cap_falls_back_to_cache():
+    app = create_app(Settings(
+        audit_api_base="http://audit.test",
+        max_daily_usd=5,
+        estimated_live_usd=0.01,
+        live_rate_per_hour=100,
+        live_max_concurrent=1,
+    ))
+    release = asyncio.Event()
+
+    async def slow(_body):
+        await release.wait()
+        return {"worklist": [], "mode": "live"}
+
+    app.state.upstream.audit = slow
+
+    async def run():
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+            first = asyncio.create_task(
+                client.post("/api/audit", json={"patient_id": "pt-009", "mode": "live"})
+            )
+            await asyncio.sleep(0.05)
+            second = await client.post(
+                "/api/audit",
+                json={"patient_id": "pt-009", "mode": "live"},
+                headers={"X-Forwarded-For": "198.51.100.2"},
+            )
+            release.set()
+            return (await first).json(), second.json()
+
+    first, second = asyncio.run(run())
+    assert first["delivery"]["source"] == "upstream"
+    assert second["delivery"]["fallback_reason"] == "busy"
+    assert app.state.budget.snapshot()["spent_usd"] == 0.0

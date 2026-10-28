@@ -1,10 +1,23 @@
-"""Guideline citations: a curated FY2026 section first, then Tavily.
+"""Guideline citations: the current fiscal year's official text, found live by Tavily.
 
-Anchors are official passages from the FY2026 ICD-10-CM guidelines. They are
-used in mock mode and in live mode. When a Tavily key is set, one search
-confirms the official PDF URL is reachable. Codes without an anchor still go
-through search, extract, and the description check. Fixture quotes are labeled
-as fixtures. They are not presented as live guideline text.
+Live mode (TAVILY_API_KEY set):
+
+1. The current edition of the ICD-10-CM Official Guidelines is chosen from the
+   date (FY 2027 from 2026-10-01). Its PDF is fetched once per process from
+   cms.gov or cdc.gov and indexed for verbatim checks.
+2. One Tavily search per code family and issue, restricted to cms.gov and
+   cdc.gov, returns passages from that edition's PDF. A passage is cited only
+   if it appears verbatim in the fetched PDF text. The citation carries the
+   fiscal year, URL, section, and page, with provenance ``tavily_live``.
+3. Curated anchors are the fallback and the cross-check. Each anchor is
+   re-verified against the current PDF. If it is still there and no live
+   passage verified, the anchor is cited as ``curated_fallback``. If the
+   current edition no longer contains it, the anchor is ``superseded``: it is
+   never cited, and the gate decides on the live passage or holds the row.
+
+Mock mode (no key) cites curated anchors, which tests check against the
+committed excerpt of the current edition. Codes without an anchor fall back to
+labeled fixtures; those are not presented as live guideline text.
 """
 
 from __future__ import annotations
@@ -21,7 +34,16 @@ from urllib.parse import urlparse
 
 import requests
 
-from codesentinel.guidelines import OFFICIAL_PDF_URL, OFFICIAL_TITLE, anchor_for
+from codesentinel.guidelines import OFFICIAL_PDF_URL, OFFICIAL_TITLE, anchor_for, load_anchors
+from codesentinel.guidelines.editions import EDITIONS, Edition, current_edition, edition_for_url
+from codesentinel.guidelines.official_text import (
+    SECTION_MARKERS,
+    OfficialText,
+    fold,
+    load_official_text,
+    reset_official_text_cache,
+    strip_headers,
+)
 
 FIXTURE_PATH = Path(__file__).with_name("fixtures.json")
 FIXTURE_CACHED_AT = "2026-10-24T00:00:00+00:00"
@@ -29,9 +51,37 @@ SEARCH_URL = "https://api.tavily.com/search"
 EXTRACT_URL = "https://api.tavily.com/extract"
 OFFICIAL_SUFFIXES = ("cms.gov", "cdc.gov")
 # Bump when passage matching changes so a previous empty lookup is not reused.
-FILTER_VERSION = "3"
+FILTER_VERSION = "4"
 OFFICIAL_GUIDELINE_TITLE = "ICD-10-CM Official Guidelines for Coding and Reporting"
-OFFICIAL_QUERY_SUFFIX = f'"{OFFICIAL_GUIDELINE_TITLE}" FY2026'
+OFFICIAL_QUERY_SUFFIX = f'"{OFFICIAL_GUIDELINE_TITLE}" FY{current_edition().fiscal_year}'
+MAX_QUOTE_CHARS = 900
+
+# Live queries name the rule text a coder would cite. The edition label is added.
+LIVE_QUERIES = {
+    "E11|combination-code-diabetes-ckd": (
+        '"with" convention presumes a causal relationship between the two conditions '
+        "diabetes chronic kidney disease"
+    ),
+    "E11|specificity-hyperglycemia": (
+        "diabetes mellitus codes are combination codes type of diabetes body system affected "
+        "complications assign as many codes from categories E08-E13"
+    ),
+    "I12|combination-code-hypertensive-ckd": (
+        "Assign codes from category I12 Hypertensive chronic kidney disease when both hypertension "
+        "and a condition classifiable to category N18 are present"
+    ),
+    "I13|combination-code-hypertensive-ckd": (
+        "category I13 Hypertensive heart and chronic kidney disease combination codes "
+        "hypertension heart disease chronic kidney disease"
+    ),
+    "I50|specificity-upgrade": (
+        "hypertensive heart and chronic kidney disease if heart failure is present assign an additional "
+        "code from category I50 to identify the type of heart failure"
+    ),
+    "N18|specificity-upgrade": (
+        "ICD-10-CM classifies CKD based on severity stages 1-5 stage 3 codes N18.30-N18.32 moderate CKD"
+    ),
+}
 
 ISSUE_QUERIES = {
     "combination-code-diabetes-ckd": (
@@ -62,6 +112,15 @@ class Citation:
     source_label: str = ""
     section: str = ""
     page: Optional[int] = None
+    # Provenance: tavily_live, curated_fallback, or fixture.
+    provenance: str = ""
+    fiscal_year: str = ""
+    verified_verbatim: bool = False
+    verified_against: str = ""
+    pdf_sha256: str = ""
+    # verified, superseded, unverified, or none (no curated anchor for this code).
+    anchor_status: str = ""
+    supersedes: Optional[dict] = None
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -356,7 +415,7 @@ def passage_is_strong(quote: str, tier: str) -> bool:
 
 
 def guideline_query(code_family: str, issue: str) -> str:
-    """Search text. I50 specificity names the type; every query asks for the FY2026 guidelines."""
+    """Search text. I50 specificity names the type; every query asks for the current-year guidelines."""
     family = (code_family or "").upper()
     issue_key = (issue or "").lower()
     if family == "I50" and issue_key == "specificity-upgrade":
@@ -455,9 +514,18 @@ def _is_official_guidelines(url: str, title: str) -> bool:
     return "icd-10-cm-coding-guidelines" in blob
 
 
-def _is_fy2026(url: str, title: str) -> bool:
+def _is_current_fy(url: str, title: str) -> bool:
+    """The edition in force today (FY 2027 from 2026-10-01)."""
+    edition = current_edition()
+    if edition.matches_url(url):
+        return True
     blob = f"{url} {title}".lower()
-    return "fy-2026" in blob or "fy2026" in blob or "fy 2026" in blob
+    year = edition.fiscal_year
+    return f"fy-{year}" in blob or f"fy{year}" in blob or f"fy {year}" in blob
+
+
+# Kept for callers that imported the old name.
+_is_fy2026 = _is_current_fy
 
 
 def source_tier_for(url: str, title: str) -> str:
@@ -468,12 +536,12 @@ def source_tier_for(url: str, title: str) -> str:
 
 
 def source_rank(url: str, title: str) -> int:
-    """FY2026 official guidelines outrank other guideline years, then other CMS/CDC pages."""
+    """Current-year official guidelines outrank other guideline years, then other CMS/CDC pages."""
     blob = f"{url} {title}".lower()
     rank = 0
     if _is_official_guidelines(url, title):
         rank += 1000
-        if _is_fy2026(url, title):
+        if _is_current_fy(url, title):
             rank += 100
         else:
             rank += 40
@@ -487,7 +555,7 @@ def source_rank(url: str, title: str) -> int:
 
 
 def _prefers(candidate: dict, current: dict) -> bool:
-    """Official guidelines beat every secondary page. FY2026 beats other official years."""
+    """Official guidelines beat every secondary page. The current year beats other official years."""
     if not current.get("quote"):
         return True
     new_key = (
@@ -632,14 +700,7 @@ def _window_around_match(text: str, code_family: str, issue: str) -> Optional[st
     return window[:600].strip()
 
 
-# One confirmation per process. Later clients reuse it instead of searching again.
-_pdf_confirmation = {"done": False, "reason": ""}
-
-
-def reset_pdf_confirmation() -> None:
-    """Clear the process-wide PDF confirmation. Tests call this."""
-    _pdf_confirmation["done"] = False
-    _pdf_confirmation["reason"] = ""
+_official_text_failures: dict[int, str] = {}
 
 
 def _credits(payload: dict, default: float) -> float:
@@ -654,6 +715,103 @@ def _credits(payload: dict, default: float) -> float:
     return default
 
 
+def reset_pdf_confirmation() -> None:
+    """Clear process-wide guideline state (PDF text and fetch failures). Tests call this."""
+    _official_text_failures.clear()
+    reset_official_text_cache()
+
+
+def live_query(code_family: str, issue: str, edition: Optional[Edition] = None) -> str:
+    """Tavily query for the current edition's rule text."""
+    edition = edition or current_edition()
+    family = (code_family or "").upper()
+    issue_key = (issue or "").lower()
+    base = LIVE_QUERIES.get(f"{family}|{issue_key}") or (
+        f"{family} {issue_key.replace('-', ' ')} assign code"
+    )
+    return f'"{OFFICIAL_GUIDELINE_TITLE}" {edition.label} {base}'
+
+
+_SENTENCE_BREAK = re.compile(r"(?<=[.!?])[\"”’)]?\s+(?=[A-Z0-9“\"(])")
+_CHUNK_BREAK = re.compile(r"\s*\[\s*(?:\.\.\.|…)\s*\]\s*|\s*(?:\.\.\.|…)\s+")
+
+
+def _heading_breaks(text: str) -> str:
+    """Section headings end a chunk, so a quote never straddles two sections."""
+    for _section, heading in SECTION_MARKERS:
+        text = text.replace(heading, " [...] ")
+    return text
+
+
+def _sentences(content: str) -> list[list[str]]:
+    """Chunks split into sentences. A sentence cut by a chunk break is dropped later by verification."""
+    groups: list[list[str]] = []
+    collapsed = re.sub(r"\s+", " ", strip_headers(content or ""))
+    for chunk in _CHUNK_BREAK.split(_heading_breaks(collapsed)):
+        cleaned = re.sub(r"\s+", " ", chunk).strip()
+        if len(cleaned) < 24:
+            continue
+        groups.append([part.strip() for part in _SENTENCE_BREAK.split(cleaned) if part.strip()])
+    return groups
+
+
+def verified_passage(
+    content: str,
+    text: OfficialText,
+    code_family: str,
+    issue: str,
+    *,
+    prefer_span: Optional[tuple[int, int]] = None,
+):
+    """The best run of whole sentences from a Tavily passage that is verbatim in the PDF.
+
+    Returns the PDF match (page, section, exact text) or None. A run that
+    overlaps ``prefer_span`` (where the curated anchor sits) wins, then the
+    relevance score, then the overlap, then the longer run.
+    """
+    best = None
+    best_key = None
+    for sentences in _sentences(content):
+        for i in range(len(sentences)):
+            for j in range(i + 1, min(len(sentences), i + 5) + 1):
+                candidate = " ".join(sentences[i:j])
+                if len(candidate) > MAX_QUOTE_CHARS:
+                    break
+                # Whole sentences only: a chunk can start or stop mid-sentence.
+                if not re.match(r"[A-Z0-9“\"(]", candidate) or not re.search(r"[.!?][\"”’)]?$", candidate):
+                    continue
+                match = text.find(candidate)
+                if match is None:
+                    continue
+                score = passage_score(match.text, code_family, issue)
+                overlap = 0
+                if prefer_span:
+                    overlap = max(0, min(match.end, prefer_span[1]) - max(match.start, prefer_span[0]))
+                if score <= 0 and overlap <= 0:
+                    continue
+                # A passage where the curated anchor sits is on topic even when it never names
+                # the code (the "with" convention does not mention diabetes).
+                key = (overlap > 0, score, overlap, len(match.text))
+                if best_key is None or key > best_key:
+                    best, best_key = match, key
+    return best
+
+
+def _anchor_neighborhood(row: Optional[dict], text: OfficialText) -> Optional[tuple[int, int]]:
+    """Where a superseded anchor used to sit: the span of its sentences that still match."""
+    if not row:
+        return None
+    spans = []
+    for group in _sentences(str(row.get("quote") or "")):
+        for sentence in group:
+            match = text.find(sentence)
+            if match is not None:
+                spans.append((match.start, match.end))
+    if not spans:
+        return None
+    return min(start for start, _ in spans), max(end for _, end in spans)
+
+
 class GuidelineClient:
     def __init__(
         self,
@@ -662,6 +820,8 @@ class GuidelineClient:
         use_fixtures: Optional[bool] = None,
         transport: Optional[object] = None,
         now: Optional[datetime] = None,
+        official_text: Optional[OfficialText] = None,
+        pdf_fetch: Optional[object] = None,
     ):
         if api_key is None:
             api_key = os.environ.get("TAVILY_API_KEY", "")
@@ -672,38 +832,295 @@ class GuidelineClient:
         self.ttl = timedelta(seconds=int(os.environ.get("GUIDELINE_CACHE_TTL_SECONDS", str(7 * 24 * 3600))))
         self._post = transport or requests.post
         self._now = now or datetime.now(timezone.utc)
+        self.edition = current_edition(self._now)
+        self._official_text = official_text
+        if pdf_fetch is not None:
+            self._pdf_fetch = pdf_fetch
+        elif transport is not None:
+            # An injected Tavily transport means a test: never fetch the real PDF.
+            self._pdf_fetch = _no_pdf_fetch
+        else:
+            self._pdf_fetch = requests.get
         self.credits = 0.0
         self.cache_hits = 0
         self.live_requests = 0
         self.fixture_hits = 0
+        self.live_citations = 0
+        self.fallback_citations = 0
+        self.superseded_anchors: list[str] = []
         self.degraded_reasons: list[str] = []
-        self._pdf_noted = False
+        # Informational: a fallback that is working as designed, not a failure.
+        self.notes: list[str] = []
         self._memory: dict[str, list[Citation]] = {}
 
+    # ---- entry point -------------------------------------------------------------------
+
     def lookup(self, code_family: str, issue: str) -> list[Citation]:
-        anchored = self._from_anchor(code_family, issue)
+        family = (code_family or "").upper()
+        issue_key = (issue or "").strip().lower()
+        mem_key = f"{self.edition.fiscal_year}|{family}|{issue_key}"
+        if mem_key in self._memory:
+            self.cache_hits += 1
+            return self._memory[mem_key]
+        if self.use_fixtures or not self.api_key:
+            found = self._offline(family, issue_key)
+        else:
+            found = self._current_year(family, issue_key)
+        self._memory[mem_key] = found
+        return found
+
+    # ---- offline ------------------------------------------------------------------------
+
+    def _offline(self, family: str, issue: str) -> list[Citation]:
+        anchored = self._from_anchor(family, issue)
         if anchored is not None:
-            mem_key = f"anchor:{(code_family or '').upper()}|{(issue or '').strip().lower()}"
-            if mem_key in self._memory:
-                self.cache_hits += 1
-                return self._memory[mem_key]
-            self._confirm_official_pdf()
-            self._memory[mem_key] = anchored
+            self.fallback_citations += 1
             return anchored
+        return self._legacy_lookup(family, issue)
+
+    # ---- live, current fiscal year ------------------------------------------------------
+
+    def _load_text(self) -> Optional[OfficialText]:
+        if self._official_text is not None:
+            return self._official_text
+        year = self.edition.fiscal_year
+        if year in _official_text_failures:
+            reason = _official_text_failures[year]
+            if reason not in self.degraded_reasons:
+                self.degraded_reasons.append(reason)
+            return None
+        try:
+            self._official_text = load_official_text(
+                self.edition, cache_dir=self.cache_dir, fetch=self._pdf_fetch
+            )
+        except Exception as exc:
+            reason = (
+                f"Official {self.edition.label} guideline PDF could not be loaded for verbatim checks "
+                f"({_safe_reason(exc)}); curated anchors used"
+            )
+            _official_text_failures[year] = reason
+            self.degraded_reasons.append(reason)
+            return None
+        return self._official_text
+
+    def _anchor_check(self, row: Optional[dict], text: Optional[OfficialText]):
+        """(status, match) for the curated anchor against the current edition."""
+        if not row:
+            return "none", None
+        quote = str(row.get("quote") or "")
+        if text is None:
+            return "unverified", None
+        match = text.find(quote)
+        if match is None:
+            return "superseded", None
+        return "verified", match
+
+    def _current_year(self, family: str, issue: str) -> list[Citation]:
+        text = self._load_text()
+        row = anchor_for(family, issue)
+        status, anchor_match = self._anchor_check(row, text)
+        live: Optional[Citation] = None
+        if text is not None:
+            prefer = (anchor_match.start, anchor_match.end) if anchor_match else _anchor_neighborhood(row, text)
+            try:
+                live = self._live_verified(family, issue, text, prefer)
+            except Exception as exc:
+                self.degraded_reasons.append(
+                    f"Tavily lookup failed for {family}|{issue}: {type(exc).__name__}"
+                )
+                live = None
+        if live is not None:
+            live.anchor_status = status
+            if status == "superseded":
+                live.supersedes = {
+                    "fiscal_year": str(row.get("verified_fiscal_year") or load_anchors().get("fiscal_year") or ""),
+                    "section": str(row.get("section") or ""),
+                    "page": row.get("page"),
+                    "quote": str(row.get("quote") or ""),
+                }
+                self.superseded_anchors.append(f"{family}|{issue}")
+            self.live_citations += 1
+            return [live]
+        if status == "superseded":
+            self.superseded_anchors.append(f"{family}|{issue}")
+            self.degraded_reasons.append(
+                f"Curated passage for {family}|{issue} is not in the {self.edition.label} guidelines and no "
+                "live passage verified; no citation, so the row stays in review"
+            )
+            return []
+        if row:
+            anchored = self._from_anchor(family, issue, match=anchor_match, status=status, text=text)
+            if anchored is not None:
+                self.fallback_citations += 1
+                return anchored
+        return self._legacy_lookup(family, issue, text=text)
+
+    def _live_cache_path(self, family: str, issue: str, query: str) -> Path:
+        digest = hashlib.sha256(
+            f"v{FILTER_VERSION}|{self.edition.fiscal_year}|{query}|{family}|{issue}".encode("utf-8")
+        ).hexdigest()[:24]
+        safe_family = re.sub(r"[^A-Za-z0-9]+", "", family or "na") or "na"
+        safe_issue = re.sub(r"[^A-Za-z0-9]+", "", issue or "na") or "na"
+        return self.cache_dir / f"live_fy{self.edition.fiscal_year}__{safe_family}__{safe_issue}__{digest}.json"
+
+    def _live_verified(
+        self, family: str, issue: str, text: OfficialText, prefer: Optional[tuple[int, int]]
+    ) -> Optional[Citation]:
+        query = live_query(family, issue, self.edition)
+        path = self._live_cache_path(family, issue, query)
+        results = None
+        cached_at = None
+        if path.exists():
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                stamp = datetime.fromisoformat(payload["cached_at"])
+                if stamp.tzinfo is None:
+                    stamp = stamp.replace(tzinfo=timezone.utc)
+                if payload.get("query") == query and self._now - stamp <= self.ttl:
+                    results = payload.get("results") or []
+                    cached_at = payload["cached_at"]
+            except (OSError, ValueError, KeyError):
+                results = None
+        if results is None:
+            search = self._post_json(
+                SEARCH_URL,
+                {
+                    "api_key": self.api_key,
+                    "query": query,
+                    "search_depth": "advanced",
+                    "include_domains": list(OFFICIAL_SUFFIXES),
+                    "chunks_per_source": 3,
+                    "max_results": 5,
+                    "include_usage": True,
+                },
+            )
+            self.live_requests += 1
+            self.credits += _credits(search, 2)
+            results = [
+                {"url": row.get("url") or "", "title": row.get("title") or "", "content": row.get("content") or ""}
+                for row in (search.get("results") or [])
+                if isinstance(row, dict) and _official(row.get("url") or "")
+            ]
+            try:
+                self.cache_dir.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    json.dumps({"cached_at": self._now.isoformat(), "query": query, "results": results}),
+                    encoding="utf-8",
+                )
+            except OSError as exc:
+                self.degraded_reasons.append(f"guideline cache write failed: {exc}")
+        else:
+            self.cache_hits += 1
+        best = None
+        best_row = None
+        best_key = None
+        for row in results:
+            url = row.get("url") or ""
+            if not self.edition.matches_url(url):
+                continue  # another year's PDF, or a CMS page that is not the guidelines
+            match = verified_passage(row.get("content") or "", text, family, issue, prefer_span=prefer)
+            if match is None:
+                continue
+            overlap = 0
+            if prefer:
+                overlap = max(0, min(match.end, prefer[1]) - max(match.start, prefer[0]))
+            key = (overlap > 0, passage_score(match.text, family, issue), overlap, len(match.text))
+            if best_key is None or key > best_key:
+                best, best_row, best_key = match, row, key
+        if best is None:
+            self.notes.append(
+                f"No {self.edition.label} passage from Tavily for {family}|{issue} matched the official PDF verbatim"
+            )
+            return None
+        url = best_row.get("url") or self.edition.pdf_url
+        return Citation(
+            url=url,
+            quote=best.text,
+            source=_hostname(url),
+            title=f"{OFFICIAL_TITLE} {self.edition.label}",
+            retrieved="cache" if cached_at else "live",
+            cached_at=cached_at,
+            code_family=family,
+            issue=issue,
+            source_tier="official",
+            source_label=source_label_for("official"),
+            section=best.section,
+            page=best.page,
+            provenance="tavily_live",
+            fiscal_year=self.edition.label,
+            verified_verbatim=True,
+            verified_against=text.source_url,
+            pdf_sha256=text.sha256,
+        )
+
+    # ---- curated anchors -----------------------------------------------------------------
+
+    def _from_anchor(
+        self,
+        code_family: str,
+        issue: str,
+        *,
+        match=None,
+        status: Optional[str] = None,
+        text: Optional[OfficialText] = None,
+    ) -> Optional[list[Citation]]:
+        row = anchor_for(code_family, issue)
+        if not row:
+            return None
+        quote = str(row.get("quote") or "").strip()
+        if not quote or "[...]" in quote:
+            return None
+        meta = load_anchors()
+        page = match.page if match is not None else row.get("page")
+        try:
+            page_number = int(page) if page is not None else None
+        except (TypeError, ValueError):
+            page_number = None
+        if match is not None and text is not None:
+            fiscal_year = text.edition.label
+            url = text.source_url
+            sha = text.sha256
+            verified = True
+        else:
+            # Offline: the committed excerpt of this edition is what the tests check the quote against.
+            fiscal_year = str(meta.get("fiscal_year") or "")
+            url = str(meta.get("pdf_url") or OFFICIAL_PDF_URL)
+            sha = str(meta.get("pdf_sha256") or "")
+            verified = status != "unverified"
+        return [
+            Citation(
+                url=url,
+                quote=quote,
+                source=_hostname(url) or "cms.gov",
+                title=f"{OFFICIAL_TITLE} {fiscal_year}".strip(),
+                retrieved="anchor",
+                cached_at=None,
+                code_family=(code_family or "").upper(),
+                issue=(issue or "").strip().lower(),
+                source_tier="official",
+                source_label=source_label_for("official"),
+                section=str(row.get("section") or ""),
+                page=page_number,
+                provenance="curated_fallback",
+                fiscal_year=fiscal_year,
+                verified_verbatim=verified,
+                verified_against=url if verified else "",
+                pdf_sha256=sha,
+                anchor_status=status or "verified",
+            )
+        ]
+
+    # ---- codes with no curated anchor ----------------------------------------------------
+
+    def _legacy_lookup(self, code_family: str, issue: str, text: Optional[OfficialText] = None) -> list[Citation]:
         fixture_key = f"{code_family}|{issue}"
         query = guideline_query(code_family, issue)
-        key = lookup_key(code_family, issue, query)
-        if key in self._memory:
-            self.cache_hits += 1
-            return self._memory[key]
         cached = self._read_disk(code_family, issue, query)
         if cached is not None:
             self.cache_hits += 1
-            self._memory[key] = cached
-            return cached
+            return self._mark_verified(cached, text)
         if self.use_fixtures or not self.api_key:
             found = self._from_fixture(fixture_key, code_family, issue)
-            self._memory[key] = found
             if found:
                 self.fixture_hits += 1
             return found
@@ -714,85 +1131,28 @@ class GuidelineClient:
             found = self._from_fixture(fixture_key, code_family, issue)
             if found:
                 self.fixture_hits += 1
-            self._memory[key] = found
             return found
         # Empty and matching lookups are both cached, keyed on the query and filter version.
         self._write_disk(code_family, issue, query, found)
-        self._memory[key] = found
+        return self._mark_verified(found, text)
+
+    def _mark_verified(self, found: list[Citation], text: Optional[OfficialText]) -> list[Citation]:
+        for item in found:
+            item.provenance = item.provenance or "tavily_live"
+            item.anchor_status = item.anchor_status or "none"
+            edition = edition_for_url(item.url)
+            item.fiscal_year = item.fiscal_year or (edition.label if edition else "")
+            if text is not None and edition is not None and edition.fiscal_year == text.edition.fiscal_year:
+                match = text.find(item.quote)
+                if match is not None:
+                    item.verified_verbatim = True
+                    item.verified_against = text.source_url
+                    item.pdf_sha256 = text.sha256
+                    item.section = item.section or match.section
+                    item.page = item.page or match.page
+        if found:
+            self.live_citations += 1
         return found
-
-    def _from_anchor(self, code_family: str, issue: str) -> Optional[list[Citation]]:
-        row = anchor_for(code_family, issue)
-        if not row:
-            return None
-        quote = str(row.get("quote") or "").strip()
-        if not quote or "[...]" in quote:
-            return None
-        page = row.get("page")
-        try:
-            page_number = int(page) if page is not None else None
-        except (TypeError, ValueError):
-            page_number = None
-        return [
-            Citation(
-                url=OFFICIAL_PDF_URL,
-                quote=quote,
-                source="cms.gov",
-                title=OFFICIAL_TITLE + " FY 2026",
-                retrieved="anchor",
-                cached_at=None,
-                code_family=(code_family or "").upper(),
-                issue=(issue or "").strip().lower(),
-                source_tier="official",
-                source_label=source_label_for("official"),
-                section=str(row.get("section") or ""),
-                page=page_number,
-            )
-        ]
-
-    def _confirm_official_pdf(self) -> None:
-        """One Tavily search for the official PDF. The anchor is kept either way."""
-        if self.use_fixtures or not self.api_key or self._pdf_noted:
-            return
-        self._pdf_noted = True
-        if not _pdf_confirmation["done"]:
-            _pdf_confirmation["done"] = True
-            _pdf_confirmation["reason"] = self._probe_official_pdf()
-        reason = _pdf_confirmation["reason"]
-        if reason:
-            self.degraded_reasons.append(reason)
-
-    def _probe_official_pdf(self) -> str:
-        try:
-            search = self._post_json(
-                SEARCH_URL,
-                {
-                    "api_key": self.api_key,
-                    "query": f'"{OFFICIAL_TITLE}" FY2026',
-                    "search_depth": "basic",
-                    "include_domains": ["cms.gov"],
-                    "max_results": 5,
-                    "include_usage": True,
-                },
-            )
-        except Exception as exc:
-            return (
-                "Tavily confirmation of the official FY2026 guideline PDF failed: "
-                f"{type(exc).__name__}"
-            )
-        self.live_requests += 1
-        self.credits += _credits(search, 1)
-        urls = [
-            str(row.get("url") or "")
-            for row in (search.get("results") or [])
-            if isinstance(row, dict)
-        ]
-        if any("fy-2026-icd-10-cm-coding-guidelines" in url for url in urls):
-            return ""
-        return (
-            "Tavily confirmation did not return the official FY2026 guideline PDF URL; "
-            "curated anchor still used"
-        )
 
     def _from_fixture(self, key: str, code_family: str, issue: str) -> list[Citation]:
         fixtures = _load_fixtures()
@@ -812,6 +1172,8 @@ class GuidelineClient:
                 issue=issue,
                 source_tier=tier,
                 source_label=source_label_for(tier),
+                provenance="fixture",
+                anchor_status="none",
             )
         ]
 
@@ -914,7 +1276,7 @@ class GuidelineClient:
                 "score": score,
                 "rank": source_rank(url, title),
                 "tier": tier,
-                "fy2026": tier == "official" and _is_fy2026(url, title),
+                "fy2026": tier == "official" and _is_current_fy(url, title),
             }
             if _prefers(candidate, best):
                 best.update(candidate)
@@ -1040,6 +1402,18 @@ class GuidelineClient:
         if not isinstance(payload, dict):
             raise ValueError("Tavily response was not a JSON object")
         return payload
+
+
+def _safe_reason(exc: Exception) -> str:
+    """The loader's own message lists hosts and exception classes only; anything else is reduced to its class."""
+    text = str(exc)
+    if isinstance(exc, RuntimeError) and text.startswith("could not load the"):
+        return text
+    return type(exc).__name__
+
+
+def _no_pdf_fetch(url, **_kwargs):
+    raise RuntimeError("PDF fetch is disabled for an injected transport")
 
 
 def _extract_quote(payload: dict) -> str:

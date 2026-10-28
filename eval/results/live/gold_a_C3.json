@@ -1,0 +1,378 @@
+{
+  "summary": {
+    "n_charts": 10,
+    "tp": 34,
+    "fp": 5,
+    "fn": 3,
+    "precision": 0.871795,
+    "precision_ci95": [
+      0.73294,
+      0.943973
+    ],
+    "recall": 0.918919,
+    "recall_ci95": [
+      0.78699,
+      0.97204
+    ],
+    "f1": 0.894737,
+    "review_items": 42,
+    "review_burden_per_chart": 4.2,
+    "false_positives_per_chart": 0.5,
+    "hard_negative_pass_rate": {
+      "overall": 0.857143,
+      "pass": 18,
+      "total": 21,
+      "by_category": {
+        "family_history": {
+          "pass": 2,
+          "total": 2,
+          "rate": 1.0
+        },
+        "hypothetical_plan": {
+          "pass": 3,
+          "total": 3,
+          "rate": 1.0
+        },
+        "medication_only": {
+          "pass": 3,
+          "total": 3,
+          "rate": 1.0
+        },
+        "negation": {
+          "pass": 7,
+          "total": 7,
+          "rate": 1.0
+        },
+        "screening": {
+          "pass": 1,
+          "total": 1,
+          "rate": 1.0
+        },
+        "unspecified_sibling": {
+          "pass": 2,
+          "total": 2,
+          "rate": 1.0
+        },
+        "wrong_specificity": {
+          "pass": 0,
+          "total": 3,
+          "rate": 0.0
+        }
+      }
+    },
+    "unsupported_existing": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "unsupported_claim_drops": 0,
+    "abstain_count": 9,
+    "abstain_rate": 0.173077,
+    "candidates_considered": 52,
+    "latency_p50_s": 6.958822,
+    "latency_p95_s": 12.422738,
+    "cost_per_chart_usd": 0.001712,
+    "tavily_credits_per_chart": 0.0,
+    "tavily_cache_hits_per_chart": 1.1,
+    "tavily_credits_if_uncached_per_chart": 0.0,
+    "guideline_decision_changes": 0,
+    "id": "C3",
+    "label": "C2 + Tavily guideline grounding",
+    "citation_provenance": {
+      "tavily_live": 11
+    },
+    "latency_scope": "live_wall_clock",
+    "cost_basis": "token_factory_usage_x_catalog_price"
+  },
+  "charts": [
+    {
+      "patient_id": "pt-001",
+      "scenario": null,
+      "tp": [
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "G62.9",
+        "N18.3"
+      ],
+      "fp": [
+        "E78.5"
+      ],
+      "fn": [
+        "D64.9",
+        "I12.9"
+      ],
+      "shown_codes": [
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "E78.5",
+        "G62.9",
+        "N18.3"
+      ],
+      "gold_codes": [
+        "D64.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "G62.9",
+        "I12.9",
+        "N18.3"
+      ],
+      "review_items": 6,
+      "latency_s": 7.696384445996955,
+      "cost_usd": 0.00257,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-002",
+      "scenario": null,
+      "tp": [
+        "I50.22",
+        "J44.1"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "I50.22",
+        "J44.1"
+      ],
+      "gold_codes": [
+        "I50.22",
+        "J44.1"
+      ],
+      "review_items": 2,
+      "latency_s": 7.222863671981031,
+      "cost_usd": 0.000957,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-003",
+      "scenario": null,
+      "tp": [
+        "E03.9",
+        "F32.9"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E03.9",
+        "F32.9"
+      ],
+      "gold_codes": [
+        "E03.9",
+        "F32.9"
+      ],
+      "review_items": 2,
+      "latency_s": 1.5290440139942802,
+      "cost_usd": 0.000209,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-004",
+      "scenario": null,
+      "tp": [
+        "D64.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "G62.9",
+        "I12.9"
+      ],
+      "fp": [
+        "E78.5",
+        "I50.22"
+      ],
+      "fn": [
+        "I50.9"
+      ],
+      "shown_codes": [
+        "D64.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "E78.5",
+        "G62.9",
+        "I12.9",
+        "I50.22"
+      ],
+      "gold_codes": [
+        "D64.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "G62.9",
+        "I12.9",
+        "I50.9"
+      ],
+      "review_items": 8,
+      "latency_s": 13.151484889996937,
+      "cost_usd": 0.003898,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-005",
+      "scenario": null,
+      "tp": [],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [],
+      "gold_codes": [],
+      "review_items": 3,
+      "latency_s": 0.0013772560050711036,
+      "cost_usd": 0.0,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-006",
+      "scenario": null,
+      "tp": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "gold_codes": [
+        "E11.9",
+        "E78.5",
+        "I10"
+      ],
+      "review_items": 3,
+      "latency_s": 6.694780280988198,
+      "cost_usd": 0.001786,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-007",
+      "scenario": null,
+      "tp": [
+        "D50.9",
+        "E03.9",
+        "E11.65",
+        "E55.9",
+        "E79.0"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "D50.9",
+        "E03.9",
+        "E11.65",
+        "E55.9",
+        "E79.0"
+      ],
+      "gold_codes": [
+        "D50.9",
+        "E03.9",
+        "E11.65",
+        "E55.9",
+        "E79.0"
+      ],
+      "review_items": 5,
+      "latency_s": 11.532047756016254,
+      "cost_usd": 0.002909,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-008",
+      "scenario": null,
+      "tp": [
+        "E11.65",
+        "E78.5"
+      ],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [
+        "E11.65",
+        "E78.5"
+      ],
+      "gold_codes": [
+        "E11.65",
+        "E78.5"
+      ],
+      "review_items": 2,
+      "latency_s": 4.16576743699261,
+      "cost_usd": 0.000939,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-009",
+      "scenario": null,
+      "tp": [],
+      "fp": [],
+      "fn": [],
+      "shown_codes": [],
+      "gold_codes": [],
+      "review_items": 0,
+      "latency_s": 0.001193292991956696,
+      "cost_usd": 0.0,
+      "mode": "live",
+      "degraded_reasons": []
+    },
+    {
+      "patient_id": "pt-010",
+      "scenario": null,
+      "tp": [
+        "D64.9",
+        "E03.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "G47.33",
+        "G62.9",
+        "I50.9",
+        "N18.3"
+      ],
+      "fp": [
+        "E78.5",
+        "I12.9"
+      ],
+      "fn": [],
+      "shown_codes": [
+        "D64.9",
+        "E03.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "E78.5",
+        "G47.33",
+        "G62.9",
+        "I12.9",
+        "I50.9",
+        "N18.3"
+      ],
+      "gold_codes": [
+        "D64.9",
+        "E03.9",
+        "E11.22",
+        "E11.65",
+        "E78.0",
+        "G47.33",
+        "G62.9",
+        "I50.9",
+        "N18.3"
+      ],
+      "review_items": 11,
+      "latency_s": 10.680613372998778,
+      "cost_usd": 0.003847,
+      "mode": "live",
+      "degraded_reasons": []
+    }
+  ]
+}

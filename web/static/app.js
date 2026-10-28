@@ -471,14 +471,22 @@ function renderRow(payload, item) {
 
 function renderCitation(citation) {
   const retrieved = citation.retrieved || "fixture";
+  const provenance = citation.provenance || "";
+  const where = citation.section ? citation.section + (citation.page ? " · p. " + citation.page : "") : "";
   let label = "Fixture";
-  if (retrieved === "anchor") {
-    label = citation.section ? citation.section + (citation.page ? " · p. " + citation.page : "") : "Curated section";
+  if (provenance === "tavily_live") {
+    label = "Tavily live" + (retrieved === "cache" ? " (cached this run)" : "");
+  } else if (provenance === "curated_fallback" || retrieved === "anchor") {
+    label = "Curated fallback";
   } else if (retrieved === "live") label = "Tavily · live";
   else if (retrieved === "cache") label = "Tavily · cached" + (citation.cached_at ? " " + citation.cached_at : "");
   else label = "Fixture · not a live excerpt";
   const block = el("div", { class: "query" });
   const line = el("p", {}, chip(label, "cite"));
+  if (citation.fiscal_year) line.append(chip(citation.fiscal_year + (where ? " · " + where : ""), "cite"));
+  else if (where) line.append(chip(where, "cite"));
+  if (citation.verified_verbatim) line.append(chip("Verbatim in official PDF", "cite"));
+  if (citation.anchor_status === "superseded") line.append(chip("Curated passage superseded", "review"));
   const tierLabel = citation.source_label || (citation.source_tier === "secondary" ? "Secondary source" : citation.source_tier === "official" ? "Official guidelines" : "");
   if (tierLabel) line.append(chip(tierLabel, citation.source_tier === "secondary" ? "review" : "cite"));
   const href = safeUrl(citation.url);
@@ -740,7 +748,7 @@ function renderEval(data) {
   const after = el("article", {});
   after.append(el("h2", { text: "After Nemotron" }));
   if (data.status === "loaded" && (data.configs || []).length) {
-    after.append(el("p", { text: "Measured rows from eval/results/summary.json. The MTSamples counts above stay queue counts, not precision." }));
+    after.append(el("p", { text: (data.mode === "live" ? "Measured rows from the live Token Factory run, eval/results/live/summary.json." : "Mock regression rows from eval/results/mock/summary.json, not live model quality.") + " The MTSamples counts above stay queue counts, not precision." }));
     if (data.mode_detail) after.append(el("p", { class: "meta", text: data.mode_detail }));
     after.append(configTable(data.configs));
   } else {

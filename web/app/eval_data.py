@@ -63,7 +63,11 @@ def _dirs() -> list[Path]:
     if env:
         found.append(Path(env))
     here = Path(__file__).resolve()
+    # The published live run first, then mock regression output, then legacy paths.
+    found.append(here.parents[2] / "eval" / "results" / "live")
+    found.append(here.parents[2] / "eval" / "results" / "mock")
     found.append(here.parents[2] / "eval" / "results")
+    found.append(here.parents[1] / "eval_results" / "live")
     found.append(here.parents[1] / "eval_results")
     return found
 
@@ -128,7 +132,7 @@ def _for_failure(row: dict) -> dict:
 
 
 def load_eval() -> dict:
-    """The Eval tab reads eval/results/summary.json and nothing else in that folder."""
+    """The Eval tab reads one summary.json: eval/results/live first, then eval/results/mock."""
     path = _summary_path()
     payload = None
     if path is not None:
@@ -140,18 +144,23 @@ def load_eval() -> dict:
     measured = [_for_failure(row) for row in _failures_from(payload)]
     loaded = bool(configs or measured)
     note = (
-        "Rows are from eval/results/summary.json. The MTSamples counts above stay "
-        "queue counts, not precision. Mock C4 is the cascade with the recorded client, "
-        "not a live Nemotron score."
+        (
+            "Rows are from eval/results/live/summary.json, the published live run on Nebius Token Factory. "
+            "The MTSamples counts above stay queue counts, not precision."
+            if isinstance(payload, dict) and payload.get("mode") == "live"
+            else "Rows are from eval/results/mock/summary.json. The MTSamples counts above stay "
+            "queue counts, not precision. Mock C4 is the cascade with the recorded client, "
+            "not a live Nemotron score."
+        )
         if loaded
         else (
             "Measured precision, recall, review burden, and dollars per chart "
-            "appear here when eval/results/summary.json is present."
+            "appear here when eval/results/live/summary.json is present."
         )
     )
     return {
         "status": "loaded" if loaded else "awaiting_harness",
-        "source": str(path) if path and loaded else "eval/results/summary.json",
+        "source": str(path) if path and loaded else "eval/results/live/summary.json",
         "files": [str(path)] if path and loaded else [],
         "mode": payload.get("mode") if isinstance(payload, dict) else None,
         "mode_detail": payload.get("mode_detail") if isinstance(payload, dict) else None,

@@ -1,0 +1,1649 @@
+{
+ "seed": 20261027,
+ "reference_date": "2026-10-27",
+ "window_days": 365,
+ "remove_fraction": 0.3,
+ "in_scope": [
+  "D64.9",
+  "E11.22",
+  "E11.65",
+  "E11.9",
+  "E78.1",
+  "E78.5",
+  "F32.9",
+  "I10",
+  "I12.9",
+  "I50.9",
+  "N18.30",
+  "N18.4"
+ ],
+ "rules": {
+  "R1": "Diabetes with CKD: E11.22 plus the N18 stage, replacing E11.21/E11.29. FY2027 Guidelines I.A.15 'With' (p11) and Tabular E11.22 'Use additional code to identify stage of chronic kidney disease'.",
+  "R2": "Diabetes with hyperglycemia: E11.65 replaces R73.9. ICD-10-CM Alphabetic Index, Diabetes, type 2, with hyperglycemia E11.65; Tabular R73 Excludes1 diabetes mellitus (E08-E13).",
+  "R3": "Prediabetes R73.03 is dropped when an E11 code is present. Tabular R73 Excludes1 diabetes mellitus (E08-E13).",
+  "R4": "E11.9 (without complications) is dropped when another E11 code is present. Tabular title of E11.9.",
+  "R5": "Hypertension with CKD: I12.9 (CKD 1-4) or I12.0 (CKD 5/ESRD) replaces I10. FY2027 Guidelines I.C.9.a.2 (p50).",
+  "R6": "Hypertension with heart failure: I11.0 replaces I10 (I50 code kept). FY2027 Guidelines I.C.9.a.1 (p50).",
+  "R7": "Hypertension with heart failure and CKD: I13.0 (CKD 1-4) or I13.2 (CKD 5/ESRD) replaces I10/I11/I12. FY2027 Guidelines I.C.9.a.3 (p51).",
+  "R8": "One CKD stage: Synthea leaves earlier stages active, so only the highest documented N18 stage is kept. FY2027 Guidelines I.C.14.a.1 (p62): with both a stage and ESRD documented, assign N18.6 only."
+ },
+ "support": {
+  "note": "A note in the 12-month window names the Synthea condition (its SNOMED display text).",
+  "medication": "A medication in the chart has a Synthea reasonReference to the condition.",
+  "lab": "The latest value in the window meets a published criterion (below).",
+  "criteria": {
+   "diabetes": "HbA1c (LOINC 4548-4) >= 6.5% (ADA Standards of Care, Section 2).",
+   "hyperglycemia": "Diabetes supported and plasma glucose (2339-0 or 2345-7) >= 200 mg/dL (ADA random-glucose criterion).",
+   "ckd3": "Two eGFR (33914-3) values < 60 at least 90 days apart, latest 30-59 (KDIGO 2024 chronicity and G3).",
+   "ckd4": "Two eGFR values < 60 at least 90 days apart, latest 15-29 (KDIGO 2024 G4).",
+   "hyperlipidemia": "LDL (18262-6 or 2089-1) >= 160 or total cholesterol (2093-3) >= 240 mg/dL (NCEP ATP III).",
+   "hypertriglyceridemia": "Triglycerides (2571-8) >= 200 mg/dL (NCEP ATP III 'high').",
+   "anemia": "Hemoglobin (718-7) < 13.0 g/dL in men or < 12.0 g/dL in women (WHO)."
+  },
+  "combination": "E11.22 needs both the diabetes and the CKD parts supported; I12.9 needs hypertension and CKD."
+ },
+ "eligible_pairs": 712,
+ "removed_pairs": 214,
+ "charts": [
+  {
+   "patient_id": "01a8f794-53aa-79b4-05a5-cfff6e1b65bf",
+   "sha256": "d334ce2429e160c4535200d87e4936ae951343cb3f4677eb1f742ab2007f641d"
+  },
+  {
+   "patient_id": "01dc913f-ee0e-cf68-6a0f-ba5a8f28b798",
+   "sha256": "1dc33d46328e179f314cc3cc81f19887dc9e4c86e5bac99a9407823bb10e4913"
+  },
+  {
+   "patient_id": "01df3a07-a3ce-9ec5-8a54-1b75cd44a444",
+   "sha256": "850ff9b0f57664d92352a395cc72549a8b67ea13788a6df7fd2cd2a92aebcbf5"
+  },
+  {
+   "patient_id": "031a78ec-3e0d-aae5-7f25-3ab1653120f0",
+   "sha256": "397cb969158f06f83e668df92ab503ea11892e55b52d532382adda7db9695a5d"
+  },
+  {
+   "patient_id": "03845f2c-e74a-5801-77f5-0237367c5525",
+   "sha256": "8fb17ce4c56720637382c7aab758523e921b4fa6668912bff5e980f59c902d1d"
+  },
+  {
+   "patient_id": "0396d1f8-e22c-946a-251d-df1155f300e6",
+   "sha256": "8b5200cfc62fe8362edf2c110925cf57916ed11148aba00355a511a5f0579622"
+  },
+  {
+   "patient_id": "0431d37f-a0cd-0fde-1ba0-2e9cbc5b8369",
+   "sha256": "66617e8f8dc521f5c4d49be34957701aab48248af9f56d06c10c2bddd223603a"
+  },
+  {
+   "patient_id": "0595e5b3-fda1-c772-b88f-bc73975cfd57",
+   "sha256": "f7d3a27b97e395eda9fcbf55dda600af04868d742f5063fe6dceeaf5d508a055"
+  },
+  {
+   "patient_id": "05fc8f2d-f31a-e749-5ddd-6a61f4d856c6",
+   "sha256": "f9de3b2741ba851292e51ab0a2f2f4ea4f45522e8e3bb95c07765d083c82fdfe"
+  },
+  {
+   "patient_id": "064439b1-69d2-af5a-aca5-d9c967714453",
+   "sha256": "bbd719b7b76e93b29dceecb0cd2bf1fdad0bf1d0db13819935cce63c5432974c"
+  },
+  {
+   "patient_id": "06fd13ce-fb38-c4ee-5a38-3a3b2e36582f",
+   "sha256": "78e5edb72ac1beb1215fe0c145bce714c9c8e2f41e2882ee42f6eda2cf6b80f9"
+  },
+  {
+   "patient_id": "070ef35c-dd80-21f0-fd7f-fe4b3fc3963c",
+   "sha256": "d1e659ec8b60d430f84c3ee59be539047be57f56801e7dc2c88ae5d04a1264cc"
+  },
+  {
+   "patient_id": "080049c8-5323-713e-0154-e290b8779bba",
+   "sha256": "f3c6f8f71e05ac30ac8f2f5f1702db4ed67e4827f470c3623d65ae79480e8285"
+  },
+  {
+   "patient_id": "093d4bb1-c42a-624c-c658-c1c4ad7a1474",
+   "sha256": "aa6e27826a54b7e72179d0358ad5ecce725d04652d9fd445b0420e5dcf7b686a"
+  },
+  {
+   "patient_id": "095d9145-1870-a978-3df1-361a24de72a7",
+   "sha256": "0e55270fd95455e17f687cd885c2c585f92e97bc423ae42bd2177db190196a7f"
+  },
+  {
+   "patient_id": "09c86a83-88a6-85c1-9cc1-9c5c0d85ecbb",
+   "sha256": "045cdfcd4cdca92ed95a44d1281dd60bad7aae716122ca15ebbcfd16dfc68508"
+  },
+  {
+   "patient_id": "0ac1df6b-0177-f7a2-01fe-58fc95ab8251",
+   "sha256": "876b756a00f42334e6397238825104e2b7ff270513dd11e5727c9acdd9c929d4"
+  },
+  {
+   "patient_id": "0af769a2-1ec8-68fb-7e18-7d2ceaa1058b",
+   "sha256": "0a4198ad4f28f97d8e820052836e9195d35d1c4d50daf57181bfb6c18130a16f"
+  },
+  {
+   "patient_id": "0b23c2c8-4b7f-bf1e-5cb7-45b4d8919cec",
+   "sha256": "ba9216f22a927635804ff14492ff5f10e44fdc916141adb64fe8d44b4f139109"
+  },
+  {
+   "patient_id": "0b55dd02-af8d-c4b6-1ef4-058fdcaeb1b4",
+   "sha256": "b19d2f5986aa9f3097083fdeade539e588f6991e034310ce9d8edad17454aa0c"
+  },
+  {
+   "patient_id": "0ced8ad3-c4fd-d62e-560c-ad22c71db50b",
+   "sha256": "169ddc9f4dcc45f82e01fb6866f56b72b06eb630e206ae9e1d0fd3ee2912f3da"
+  },
+  {
+   "patient_id": "0de56c42-d9dc-f48a-7116-2d8f6ea9a3fa",
+   "sha256": "f62cb5b4926738307ad795f411ac863b136b270ec11508c8cdd361ec7c69075a"
+  },
+  {
+   "patient_id": "0efffb48-af2f-e9b9-b590-e553c262a375",
+   "sha256": "c75439c88d294192965c673be5a5a92a0f3709b3440731800fbbf2562e7dc23a"
+  },
+  {
+   "patient_id": "10569bb4-c03f-28b1-70cd-d5642867e8a0",
+   "sha256": "314b566794ecee902120e63fddea6d7beffccf0129efe138c291f3e78dc6be9a"
+  },
+  {
+   "patient_id": "10bcf53c-c748-01c0-471c-433aeabff487",
+   "sha256": "62410a1c94ad62d58aef87ba96603e6aeff005e4de0502317cfc0d080cdf0cb3"
+  },
+  {
+   "patient_id": "10cf9e55-327e-14a8-2de4-0a18f4d06a5b",
+   "sha256": "09e8b383a75bb5293b520e7a29c169d65e5ae39e55afaf5e99bb5a8cab52858d"
+  },
+  {
+   "patient_id": "11014504-361a-bcec-a5f9-ec7630c14eca",
+   "sha256": "4c3d5ba228b9702eb07492ccf3d738e243d6abcae7a5948b39445c7906baf1e0"
+  },
+  {
+   "patient_id": "11e02892-5299-8b76-b753-d2ba44f29aea",
+   "sha256": "79255f4d415018e4b2ef326a427904a98ed75902fab365c1099978a2cb20e2a6"
+  },
+  {
+   "patient_id": "12490042-8976-e0c3-c5a6-9b50c4d3f9db",
+   "sha256": "fb500eac25af51fe3b96f48fbcb43c58361c6120ab9554ec7ab0c97c1b99aed1"
+  },
+  {
+   "patient_id": "125d908a-f050-7919-7a06-4445d104feeb",
+   "sha256": "39f9fa93522152abb1f475d394b1d7b441aa6bf1802d17f5df1dbdf00c574537"
+  },
+  {
+   "patient_id": "12bb3afb-783e-5361-a8e5-e58f1c1ae5f1",
+   "sha256": "d2825ed03db1e1bf02d66b9ad37831516c9757c8b569a386fe6cef9078793798"
+  },
+  {
+   "patient_id": "12e557e9-0c69-1f53-efe1-30c35fccc599",
+   "sha256": "67ab06ee8ca0aab50b1d132172e9243e49a06f7f979a3b985c9f41593dc13438"
+  },
+  {
+   "patient_id": "134822c5-e62b-989e-47d3-3f06d0396c5f",
+   "sha256": "5a4f8d2edc1a282c885b31add32913d7edf044aa4c3646e2f5a59ad51e460941"
+  },
+  {
+   "patient_id": "13d71164-d346-3334-9325-e6a512c41865",
+   "sha256": "21830181e5f297cd5ae4a62219be045bdf5cf942039f915e794e4dfcc794f295"
+  },
+  {
+   "patient_id": "14129874-851d-e609-c874-0623f2f3e935",
+   "sha256": "e497089bfeef949326a75e9af934b1526120a73ad41d49b48fe20ba393031b98"
+  },
+  {
+   "patient_id": "142b0ec3-33d2-297a-bb23-88805db45033",
+   "sha256": "6df129d5c3472289a173024585c081e781a3f2019bc4c43c76ad8a4dafd684dd"
+  },
+  {
+   "patient_id": "1681fb52-5091-4351-fe70-f99648892b50",
+   "sha256": "d0563bff8cf049654988c4edb5f21a36db059b388a8bc184c1b59c6a85b23aeb"
+  },
+  {
+   "patient_id": "173563c8-f086-7715-52b4-4117790e14ba",
+   "sha256": "9f81b8eac8758678cad4961b545ce8709b423bd6ad73368c5036f1628d783ef0"
+  },
+  {
+   "patient_id": "17f7dfaa-ca88-60f4-bba9-e7654f8f07f4",
+   "sha256": "6a08825cab2594550df9ef96a99f1a72db177b1f324fb90c64fc377ba653b091"
+  },
+  {
+   "patient_id": "194b25e2-0409-2202-0ce4-51f227ea5fbf",
+   "sha256": "caf2a3bfe9544f342fe4614bd2ef62eb8b9e002d3e5c10aeaeb7d2b4dc58862d"
+  },
+  {
+   "patient_id": "19e0939b-5235-8cf5-db5a-46d41419b75b",
+   "sha256": "9c9a722dc7d9cd88557dc2ad5d559f342d95e4cfa0c961ec322111e8da572d26"
+  },
+  {
+   "patient_id": "1a1c7e8a-79d2-c5e1-224b-0cb248df7049",
+   "sha256": "4c6ffc30531521f010da7e04ef92cc82af4efd484da8ed6053dc4412b5629b57"
+  },
+  {
+   "patient_id": "1a9478e7-ab39-fd1c-4cf0-38251e5ff6b0",
+   "sha256": "9398e1e828518ab485aa0cf88d03f69a07272926dd9e2a36fe55a10c69214aee"
+  },
+  {
+   "patient_id": "1b43f431-2a53-798d-2211-17395b320d76",
+   "sha256": "ed94174dd2ae0652cb3a5c257fda6646a7d19ce9ac6eae3bc6842927e56e1492"
+  },
+  {
+   "patient_id": "1d565ece-8d99-26e5-b0fe-77b3cc4a0d9b",
+   "sha256": "273f5f6aa37d4d75bd837fa6db4d133a83714d21f8d8e29b0f7ea613d8a8a901"
+  },
+  {
+   "patient_id": "1db962c6-d18c-756c-5e25-f16d63885307",
+   "sha256": "3ff966496e246f36b47022ecad5a53ea53c1e116624379e078a46f524a71f6a7"
+  },
+  {
+   "patient_id": "1df7b67a-00bd-653e-6c23-ba3d400e3458",
+   "sha256": "47565cc65f31578738ecc7bdc6f41301b647f83d229f22cecb6a30527ca12dae"
+  },
+  {
+   "patient_id": "1e954e18-b154-c20a-85b7-3445a93a083d",
+   "sha256": "ee2c8353ea263d236024762978018cf6e7ebbc84dd356be6c53d968b520f53dc"
+  },
+  {
+   "patient_id": "1ed0ac20-7806-fd04-e666-84580dd3a9ef",
+   "sha256": "25c843e836fcca00083b46880195bdf97b46c5e679ada04358adffcdb6fcaaf4"
+  },
+  {
+   "patient_id": "1ed5d13d-9b3b-5e91-a16d-f7c5668bc599",
+   "sha256": "0c35d6fc1dc87ca6f1db8e2303c083890c482081c4b5025e2fb78bf80d326094"
+  },
+  {
+   "patient_id": "1f94613c-28df-1463-7965-1d779fc9e18f",
+   "sha256": "6a6eb2f114a74d73860d197ba69ded502933a17459001f21af15027c102bd3a1"
+  },
+  {
+   "patient_id": "20654e15-688d-b7e3-e91f-286619da6bd6",
+   "sha256": "e3c96374d788ea8170cdb3685d900f7ed03c028d4d9bcf6c26a11bd6fe577845"
+  },
+  {
+   "patient_id": "206b2fe6-18eb-bef0-3e05-5fc451f823a2",
+   "sha256": "61ea633dca763a3e5540fe769bcec6686ceababc2596f533748438c7acaf2c3e"
+  },
+  {
+   "patient_id": "2077c1a6-a080-f35f-2649-8128d49220bb",
+   "sha256": "16bceeb88c16cf3268ee23a317f08c9466365513f97a30220803c80786f40dcd"
+  },
+  {
+   "patient_id": "21585cfb-91b2-869b-f980-99165fbc6f8b",
+   "sha256": "0f52751d91ca07c6ff54cedf1552dc18d3812ea5f0fb1e60c77d37a17a0e6019"
+  },
+  {
+   "patient_id": "22a428a6-a9b0-b042-cbef-fc0ad7c58add",
+   "sha256": "99de8e2717d8084c7e53128c8fcd42665a49f41272372acb6270a09da63d555c"
+  },
+  {
+   "patient_id": "250338f5-fe33-2924-565d-750c6d44fd1c",
+   "sha256": "5d29556a6c3fc188430547858246bfa1d943c35865bb7d68de9156d7dfd4c18d"
+  },
+  {
+   "patient_id": "263333c6-1505-d6e7-392a-0e1a7eafd725",
+   "sha256": "8392c91bccf7d6449e5febe83a631a8dcd61c7ce1d5cda4ca36bf0f7f6fba6c3"
+  },
+  {
+   "patient_id": "26d1e96d-7c57-9f8d-eb85-5675463aabcb",
+   "sha256": "eb1e2adbcf34e46cc50f24648a3a392a2a3be6b7e624d321397cff1a4a71ba73"
+  },
+  {
+   "patient_id": "286d1ee0-1fb3-b064-4e4e-7b9be20fcd01",
+   "sha256": "3ec1311f89d9d017881197f815e8c7e9c5de3ca5d8dc5ebb471b962e8d741e61"
+  },
+  {
+   "patient_id": "289ad548-d475-0117-ae8e-98c435d0f01b",
+   "sha256": "7dbba32f15958763ddf65fc7f46e2fb625f2399e23bdd132c5c0fa43b64aa4c5"
+  },
+  {
+   "patient_id": "28db8c83-405a-455b-4158-92a18217d343",
+   "sha256": "caa57adbb6c4f14a5ab22f5931a2d6ab3d888cd34a5b935421f1f74e206863a7"
+  },
+  {
+   "patient_id": "2a7942eb-b07a-d55a-53f3-e8f4fedffa47",
+   "sha256": "620f38a4b86d2ac8e50221e11692e09d36e439cec9d59e6263278524b3fa9806"
+  },
+  {
+   "patient_id": "2acc6b6a-70da-6bd6-6ff2-3a14cea01e63",
+   "sha256": "f434d920c83d1d76ff8b3ec92cea06898fd305efff930ecb32c3e0d153761e26"
+  },
+  {
+   "patient_id": "2b000d03-1a9f-3a33-d909-a16a9b8e0bac",
+   "sha256": "34a1f77134dbf53afb96b219ee8ef79e011e1c464f002cbe02f85e06a50623b2"
+  },
+  {
+   "patient_id": "2b0a6620-e478-0a43-c94c-7a206fce7a59",
+   "sha256": "f81f45232989a05df2f33344f37046efd758ecb1e7874a1e892c210173500a83"
+  },
+  {
+   "patient_id": "2b3062df-172e-1796-482e-c33c442663b7",
+   "sha256": "184de638a2c43a851ea9992311d18ba844876b1049bcb137e6143c4b9d297c92"
+  },
+  {
+   "patient_id": "2bab1420-4a46-c6f0-3528-a28029d0b34a",
+   "sha256": "9dbaadec6d501cfb0998fb641e75b0fa2d029a80af28692bd84889c2516d22bc"
+  },
+  {
+   "patient_id": "2bf33c7b-d946-a99d-8042-ded1e4275eef",
+   "sha256": "7d88ee9311e5da90132da5fa57d28f33a938c5b07a4415f98c1c26c418f0fd3b"
+  },
+  {
+   "patient_id": "2dab3381-7d80-ca97-150f-6c55b1d33cd2",
+   "sha256": "f5d5842843b5df6b095dcdb645ee028717e4790ee65bc9da1cc1275e484aada5"
+  },
+  {
+   "patient_id": "2eca5193-60fd-4df3-ba57-471c60c86145",
+   "sha256": "8b707fc201a72f70d7c4d2ad8d486b75f611c48240534a0cf12aa3ef2ed56ac0"
+  },
+  {
+   "patient_id": "2fe4de06-eac9-7b91-92be-eec07224c492",
+   "sha256": "ccce7e1973acae8f462139fc334a8e6648ddf80fe6e9361c5b525b7587b022c1"
+  },
+  {
+   "patient_id": "305ad830-c6cc-9360-e37a-8e995433fa0b",
+   "sha256": "453441c85916dc2b9ce3d379597db031852d52d6c1f37229ca502b8a97fa291c"
+  },
+  {
+   "patient_id": "30b214b3-b7f8-707c-0339-981099caec79",
+   "sha256": "42cd10c07b221f81d34669c29ba1d114e1f66207e998015486ad100e40f5efd8"
+  },
+  {
+   "patient_id": "31b626b5-eea6-8d43-d586-b79d0986c146",
+   "sha256": "b64acf95b21e6b5c6f674d0b2ced9d332ed75499b4d7c0cdec46763018e88ded"
+  },
+  {
+   "patient_id": "3446a5c9-439e-8208-6663-a12b526eac72",
+   "sha256": "28f3b594704a3adac7e58636fe15435e661607360797832be86c4990f58ac1d4"
+  },
+  {
+   "patient_id": "348410af-8bb2-19cf-d832-51a478326c35",
+   "sha256": "77fe83fba37a5f2d2a7fd3ddf398f6fe9c3abd384c290ab892a81a5a5855be97"
+  },
+  {
+   "patient_id": "36381803-13fb-e1db-54be-425e5461015f",
+   "sha256": "1802f57542f5d8bd3b9c2c1910a6bf735c766a5eb2cee53d72082f1ee56d0675"
+  },
+  {
+   "patient_id": "36571811-7de5-20b2-8ae3-7048f9c2f91f",
+   "sha256": "12f3ab6f588bb663f90525fb8376e06cc48f067a39fa0fb53db59248dd22a618"
+  },
+  {
+   "patient_id": "370cdfc0-d169-b2c6-07f0-039aa107c49a",
+   "sha256": "adce8402f96151a4a01d71661c931990e942d209e3ebfa12d69f20f67503c555"
+  },
+  {
+   "patient_id": "37c9b36e-e613-3ba7-f3c2-16a09c3a0b40",
+   "sha256": "fa5779bb377dc50a2e7e7eb535874fed40f66dbf09731d08cb4afd9762f83dd5"
+  },
+  {
+   "patient_id": "39075783-7be8-465b-6093-d434fe9fbdc1",
+   "sha256": "b3d73aa3412cf53114da019c9c1c7421002c95ae263ad4a8b422a6030f23da23"
+  },
+  {
+   "patient_id": "397666a7-0d77-4680-ca89-bb6e50938945",
+   "sha256": "76e9e6148160c552007b2888510a055b7e2a12d8cf98503cb354a631f2740e6b"
+  },
+  {
+   "patient_id": "39bf8210-6089-e4b4-aeb3-c7a8119f2500",
+   "sha256": "7c5c37e99f942c570c3ed996ed6311cd5c8626538205ad55d350cc0a1b1d749d"
+  },
+  {
+   "patient_id": "3a165219-f971-8e1e-c585-52a666bf0509",
+   "sha256": "880249f468c381bb25e631afd56fe89d8977d3db1a877aa44b4ae89a4ae71d0f"
+  },
+  {
+   "patient_id": "3acc9366-3bd7-f7e0-18ff-3979bcdd174b",
+   "sha256": "d0361847345be87c35dcf5688418ad8b5b061ea27b3f5237ab929fa81c7243d8"
+  },
+  {
+   "patient_id": "3c33a3c3-08b6-122f-50c0-377fcf945631",
+   "sha256": "d0d3d9e56df9de3e38ac5ee30a2fa0cbaa09a1ade80d1671e01904e6e7197e49"
+  },
+  {
+   "patient_id": "3cb06679-967f-0018-2f45-496384a19b08",
+   "sha256": "17a3b93ece8bbe2ba6a3538241677019207b79684628acee7434053cf1785a41"
+  },
+  {
+   "patient_id": "3cb7114a-38ae-52c6-96dc-c8bbd181bcda",
+   "sha256": "2fe03e7ac9d1b9f1c6cb099be55e4769e740af4a126f3a7924a7df0aef866b3d"
+  },
+  {
+   "patient_id": "3cfbb781-1661-f925-ab6d-c5beadc32e10",
+   "sha256": "44d06e18b69bd629827a9b9626549d34c718708178b24d9dde1a38fab338c320"
+  },
+  {
+   "patient_id": "3d725212-1a88-01c1-fb5e-8d41dc7e6b0e",
+   "sha256": "9e736f001d45ca6c98c7f88258a4b3d9e60db78e21366b776484fae74bb9925e"
+  },
+  {
+   "patient_id": "3de23e79-f375-444d-dd68-f35930338f04",
+   "sha256": "ef7304cf071a5b87a01a4c543b4bcc90d1b2092e502de69fd453cb68e04d10a2"
+  },
+  {
+   "patient_id": "3e39ebe0-b1fa-eba5-b7f3-e5ad73b27c0d",
+   "sha256": "f4474456329123d19083813df5a74de304c3312f40aadb7c08ef54fbd08e857f"
+  },
+  {
+   "patient_id": "423b33a0-0864-8109-4674-dc12ff40ebdf",
+   "sha256": "6eb220671eaf46c2b7136d3d53d3f2acac2f60fca01bcbfd72f91e7cf4e26d69"
+  },
+  {
+   "patient_id": "427d59bc-39fa-dae2-cdcb-11f255675da0",
+   "sha256": "6ca8cd9401c05e42f14b360cbc65eb2250168d4239bb0412e71daed35eb9e9fb"
+  },
+  {
+   "patient_id": "42f9f681-dce8-4394-720c-d2d32fc67a18",
+   "sha256": "b5528705fa60d8052b249ef9efb24d9bfe1ee74d3e2b86d926e18f137beb94c1"
+  },
+  {
+   "patient_id": "44b98917-ce6f-6c53-e748-1c1b6d7b60f2",
+   "sha256": "0e34d8e771932b9c4e492cb71b8dfa0a712ebeed67d07ecd35c799a1eea39512"
+  },
+  {
+   "patient_id": "44e459dd-5eb2-2292-a401-310db1c3fbdd",
+   "sha256": "448f0bee2cffb1e4f96481d2aca134273e308bbc1c0ccfb9e695f2bb0f3154a6"
+  },
+  {
+   "patient_id": "45eed487-bbac-cd92-4f63-8d905a1676b2",
+   "sha256": "6123ce66bdbf484fbe748b38d6afac6bfde895cf7637e17e7c2566e9290fc288"
+  },
+  {
+   "patient_id": "47557eef-398b-e062-a731-fc9e4bca24cf",
+   "sha256": "25e11541b5c65182d32a83d6af213b1708597e655f54f1140f8da4279ad065f4"
+  },
+  {
+   "patient_id": "4856b184-a7fc-e73f-523b-1937ccb6f0f5",
+   "sha256": "f93dd08d18666e3599311efb70bec41a00d5aec44d0fbafc2ac0daf2ed8540a6"
+  },
+  {
+   "patient_id": "49106c75-d97b-1d33-8eda-2462dff006c6",
+   "sha256": "4d32edbd2ff14450cab623b70432d4863a9926480038d2c902c7e64d3d94665a"
+  },
+  {
+   "patient_id": "4910b214-c76b-8f9b-b1b6-edab9b8870b5",
+   "sha256": "593bcf4f5b774f03c99dee20bc57aaabcf70f1fcbe628175c15020719c71e969"
+  },
+  {
+   "patient_id": "4921b339-36af-43ab-c52b-d5ee95e688d6",
+   "sha256": "88ab81570b42f4cd6bb4df54bd7f43dbc0f38b9e2389e00ebf3fc996b562a30f"
+  },
+  {
+   "patient_id": "496a4c4e-6638-708b-31a8-5f8e4f25f77e",
+   "sha256": "963d2cd0d73aff31fbd5fa03956dbb8d1145d6c2c4a69f1bf0e2bf1d786bd690"
+  },
+  {
+   "patient_id": "49aa2bb9-3ba2-d653-c006-cfc865b7129c",
+   "sha256": "8f9f9f32aad64f690050de2d888516da70860c9502ce25d556dab1b3753766c0"
+  },
+  {
+   "patient_id": "4aa815b2-4357-61b9-87b1-eba42d092f84",
+   "sha256": "51a653ff72cce63005594f0ae75412c6ef105478266c837d392bd7cd9f9311bc"
+  },
+  {
+   "patient_id": "4ac1fe50-48a9-2902-3334-b9587093ae11",
+   "sha256": "fa7d12604798e4e08f2b221456be5e1927ec40d5ab21a20459a44ea1cc975ba6"
+  },
+  {
+   "patient_id": "4b57721d-613e-767f-c4d5-ec3a59f2ca2f",
+   "sha256": "8e7e13a4329647f1527f7986b59aaa91a4b5ca20676e60e9d420181936a5edb0"
+  },
+  {
+   "patient_id": "4d2ac8f0-14ea-797f-e512-5b1d55375255",
+   "sha256": "093315974792e48c949a4cc68b2747f9a2fc5dc99dfdb92fbac1399ef9dd21b9"
+  },
+  {
+   "patient_id": "4d98b563-1294-1d6c-c227-5af8529a1933",
+   "sha256": "7ca1e085a06c79c3132898c154f3aca2fdd31e84c751701f3558da856f2c047b"
+  },
+  {
+   "patient_id": "4e92eca2-db3c-82be-aa5c-8dc5bcb92ed9",
+   "sha256": "cb35965ae4469bdc6a0a6cdad8edd9f2bb27853cb3d1b1834aa194351530df30"
+  },
+  {
+   "patient_id": "4ff3e44e-e11d-0ba5-f675-4dee01fb1c23",
+   "sha256": "2ff0196075ab0e4a791c359bd03ce37940ca1bdc4a94f1e9c19fe0443768e094"
+  },
+  {
+   "patient_id": "5032ba64-570f-e22a-abe5-16a91e5fd958",
+   "sha256": "7ac7ba93674a124bd4ebe87cd21b6c5f2050ea5c21091dab660b9ae3a1962ffd"
+  },
+  {
+   "patient_id": "51d2d9b0-c35b-4611-b6ab-b62a3b75a78d",
+   "sha256": "e8c1d7a81d1efa9af7c4222ed1458bb1d5836a89bb81bea0763112dd121d0138"
+  },
+  {
+   "patient_id": "51d574c4-4a91-cc5c-42d5-3b5ad1fa9ad7",
+   "sha256": "0b1474c11b17a65cb8a62118f7741c464318d3edb44a9fea8c00dd4e4d231bff"
+  },
+  {
+   "patient_id": "529cc741-60dd-7e3f-76ee-90291ba37f13",
+   "sha256": "b849954d1bb1f8c122bee5e326e7e0d1a4a764293702091819d7e9b07649b207"
+  },
+  {
+   "patient_id": "52a7e554-6e64-08c6-b6b6-f2e8ce3f336b",
+   "sha256": "8464b60ef10e2d315957db2aad819f9011233c79e86b7abd1793c1040001cdb7"
+  },
+  {
+   "patient_id": "52f0be4a-824a-0b49-d81a-61a78b9ba663",
+   "sha256": "b29818a52629f42a1af76df559fdf2fa94b26d3cfd3efeaf8434e615ddebbd1f"
+  },
+  {
+   "patient_id": "53670747-f21d-985e-4054-026387811dcd",
+   "sha256": "593ef64d3e0a5f28b8e3bba2d766cf7aa44893e66eedb077e975a452505200b5"
+  },
+  {
+   "patient_id": "53824460-b3f1-a4ba-02ff-7ce353ead9d3",
+   "sha256": "3341a41bbe6a492b1b6a29aa6ac6dd36fa3708d84854bebdca5d184ac7679b98"
+  },
+  {
+   "patient_id": "53a1f740-656d-1fa7-4108-2d7c35acdce7",
+   "sha256": "f5713909d5a5ef2b5be8c33b2ed493c673f472edc5bdea58bf0a39978688cb69"
+  },
+  {
+   "patient_id": "540b3f1f-736c-5d16-3ec5-7f18f50342c2",
+   "sha256": "ac26f9d3c686e3c695a43546afa8324fab4ba511a893fe7a337882259c488447"
+  },
+  {
+   "patient_id": "552a15a5-59ca-d072-fc96-e1c6546f12f4",
+   "sha256": "f4183fc8d9de5be2767c51924a65ee6e78125d30cbf745e3551698784622f2b2"
+  },
+  {
+   "patient_id": "55bb1078-9ef6-193b-69d2-df34ad096953",
+   "sha256": "679ecb8e2787a275589bfef1c04dd0572f430beae4d1ec5d40c2af6bd14d8057"
+  },
+  {
+   "patient_id": "5695d581-dd98-ddb5-935d-8c12b406fb01",
+   "sha256": "75ca65299d1f7776042d73ea28a3f77f92d4be0b755701f0fa8fa0ce5f8d9685"
+  },
+  {
+   "patient_id": "57dc7f57-0343-eeb6-624a-8b511878077d",
+   "sha256": "2f2ffffba64a08daac35978162c95b6027574445ca8826f5b7485e86399ff40a"
+  },
+  {
+   "patient_id": "5816b47f-a9f4-6613-cc8e-2005e543e989",
+   "sha256": "123669534db51951738ee175e429cb3d24931d11f66f2a9fa87ebf8eefa70123"
+  },
+  {
+   "patient_id": "5888a764-be07-cb7b-3cdb-e9b741e8d858",
+   "sha256": "f0241a7e3d3217aa59921e6c73963c86bd82cdb4f3aa7f049a9bf4bd7df76b19"
+  },
+  {
+   "patient_id": "5a747621-8865-e40f-ea48-6cb6e449617b",
+   "sha256": "ce9043bae6e6ee36da5154c8fa223e51381d580a5feea81aacb17c4f126fa64a"
+  },
+  {
+   "patient_id": "5ada7054-dcc0-2cac-a227-d459d2d7eb6a",
+   "sha256": "0984f4a769cb5ab6305f767a10a7be53f64777e660ac5cd2a943c446aacb8321"
+  },
+  {
+   "patient_id": "5b0bca92-6d67-a703-3fd7-2fda37886cc3",
+   "sha256": "faf3b348bd8ad69aba7289205b78969c11bafafb0d10bf0e11f44e0ae73822f6"
+  },
+  {
+   "patient_id": "5b5ceefb-61a0-2086-aa7d-81325d83749b",
+   "sha256": "236be9ac6314d2cfdff2730df821aac9fac35642a2f2dce67c02597fb7c61fe0"
+  },
+  {
+   "patient_id": "5bb50b93-592f-3bf2-2133-e9ab7a25ed39",
+   "sha256": "cf5d214679e2a8acf856bd2f9bfffb299179186e6b1709e7039cd6000771c480"
+  },
+  {
+   "patient_id": "5c08d363-91d0-3f48-dfcb-69b10021bd0e",
+   "sha256": "45f56dfe81b3f9e5c41bf88aa972842038fc9c86f913433831a5f38e03e2ec8d"
+  },
+  {
+   "patient_id": "5c1c8c96-b70b-ea9c-2b47-36e2a44e1658",
+   "sha256": "f75083012a1ed426be9db194f40bf29bde7d3ef794c16caedde1c998c3d02848"
+  },
+  {
+   "patient_id": "5c870987-91ca-f2a2-d257-0e771115765c",
+   "sha256": "55b22c6fab7e8a2cde67cde2fc8e64038d4b7cf55aea8367711c19a1c4fb850f"
+  },
+  {
+   "patient_id": "5c9ee753-56fa-13aa-8419-beb169ff8981",
+   "sha256": "791a2fac166895880447c43c0b7b2b63bedff046f34c6e49c03ea10cd91fc13c"
+  },
+  {
+   "patient_id": "5cb17ea8-249e-8d49-7684-b9ad0e00c0b6",
+   "sha256": "9f076ecab9fc4807ef9e9d4b5e5151dfe1761da38db3fcf7fa7cb367e49a1241"
+  },
+  {
+   "patient_id": "5d76b3c3-19d9-4ffa-c542-6076279165fa",
+   "sha256": "34fe12609ad7f3b1b24b75177ec50e97408024d7c107dd3e9337f905ad37151b"
+  },
+  {
+   "patient_id": "5dfd21fd-36d8-4c80-d012-1ffa307402b0",
+   "sha256": "4a7b844d1d4b85d1a5885113bafd0bf1a56eaa2911b90a7735f70eb43c1680b2"
+  },
+  {
+   "patient_id": "5ecb4846-ecc4-34f4-5988-3c5a6fa8d847",
+   "sha256": "ae53fac1ad8875627376b7506d6a6dc9d73932370b0950e970a329e7074e66fb"
+  },
+  {
+   "patient_id": "5f4d88e4-88ce-bb4e-a093-488ba624f9cb",
+   "sha256": "9d27170e8b02484e0e93f2cf20dfe5e3d1e2568003232e1c07341fb1136c39f9"
+  },
+  {
+   "patient_id": "60fb2e2f-9f13-6937-bce6-665c7ca0dbf6",
+   "sha256": "4dddbe8ef7b65e23226c45559ba46614100a0001296eb220dc45b8df9d7964ae"
+  },
+  {
+   "patient_id": "60fb6b2b-545b-54c1-4201-57c15d820dd7",
+   "sha256": "c33aa22e48e2800975db060d1a890597605045c9aa42f8c78d347163b57a6219"
+  },
+  {
+   "patient_id": "635f15b2-bbc5-a18e-a311-99682130d2da",
+   "sha256": "1020be8202b79173f690cfd681dff0ebde62d93fb76cc0f233ea1ff0a7b56e0a"
+  },
+  {
+   "patient_id": "637dbe5a-1821-1f69-6fef-7ccec4a34a82",
+   "sha256": "faf1547e50e373a8f5d8e27e5b8e3876dccfa92fe168e1c464c5367da621fec5"
+  },
+  {
+   "patient_id": "64287171-f320-151b-aa57-c51bad41e5bd",
+   "sha256": "c9852143880809615573c43e4fdfdb7e393a7cb9b9347004f55a84598b9fdc3e"
+  },
+  {
+   "patient_id": "643a6b38-0e90-a352-e989-8a0bb8c257b7",
+   "sha256": "b885e909f2b5c3dc19ed1e4dd1f4247d44f7f578b68513a6fd63f836cf0eb78d"
+  },
+  {
+   "patient_id": "64645f7e-49ad-30ec-0054-4d6e534c1ffd",
+   "sha256": "f7411d9a306da094d93a7b31c48e39079bc22740b728acb97e9fd652f779cf73"
+  },
+  {
+   "patient_id": "6474eabd-225d-d56a-811a-8746e0b892cb",
+   "sha256": "7f29ec2fa580a49bee3f9fe97e6203c84324c17fb2db3719804b01f36a4ce268"
+  },
+  {
+   "patient_id": "64dc9009-0398-5ccd-710b-e80c2f1097dc",
+   "sha256": "b1f7bc7671db0e4660c632d445640717a454a70e8ea3a1edf3fe25c45e1be557"
+  },
+  {
+   "patient_id": "64fef9e3-1b07-6a7b-8142-044f805e429a",
+   "sha256": "407716d1b791d18845d3cba497baf196e44c0f7c5ee0ec45d8992a960261bc26"
+  },
+  {
+   "patient_id": "6616bcf3-81ae-1324-373e-2b5c4327ccf7",
+   "sha256": "2ccc4d2f99ffeedd5262b037ac70ea19d205829f928359a3fbdc2b1d048d4e0d"
+  },
+  {
+   "patient_id": "663854fb-904e-896f-6755-ea2c4c69499b",
+   "sha256": "d4d882ebd61e432d171e277bdb68d963784a88c283629f42fb222abe48bc42a8"
+  },
+  {
+   "patient_id": "67a98003-e0e5-3515-3ac1-0e03b5f1e7d5",
+   "sha256": "650a81b6789941b055d53ac3300e89811f2beb6e1864347f71bb12506c8a6e7c"
+  },
+  {
+   "patient_id": "68126c78-1561-3ce6-6a22-62fb1cd0f802",
+   "sha256": "b92a79dd5c9bc201c7b59dc3c41ec053f0a3cc4cb5180c1deed5e5fc34d1dbb2"
+  },
+  {
+   "patient_id": "68397c50-2e1f-78b9-5fb2-770cf241b7f0",
+   "sha256": "3470136f56f18bb6427785478f6558ddcb2f89c969a49e161055f558ca8c5230"
+  },
+  {
+   "patient_id": "6874b74b-0aeb-b7e6-03c6-ad5936504ff2",
+   "sha256": "97f5472992a5d0224d6690acd0167dd421c5f730057cf2379df093d0d492d012"
+  },
+  {
+   "patient_id": "695eb8b7-4637-9570-841d-f8aeb70c9fc3",
+   "sha256": "94a8725d063de128e47987bd71abf6fd24bb3b2d1229b5120285715d114b9493"
+  },
+  {
+   "patient_id": "6a9538cf-64da-d85b-ddce-cde2334aaca0",
+   "sha256": "b1f72f8930fd1785e7118977b6dd4127734bd0497a42e362d4dbd7425affc74f"
+  },
+  {
+   "patient_id": "6b0dd9f3-8b0d-3587-1f49-3903df17017a",
+   "sha256": "7019557b33e827b1e872803df9e7c8fa644917ae6b326eebec6265b62ccac23e"
+  },
+  {
+   "patient_id": "6c658fd4-8849-cf00-f75a-392b6ae43900",
+   "sha256": "caa3a0df66a155470226f8c6f17a2fa269e4fde28c2a2700a0ca2c8b3e6d016d"
+  },
+  {
+   "patient_id": "6cd2eeda-d0c5-a660-b7b2-f48634f79eaa",
+   "sha256": "63fd5510dc0306085e8f1073dd3df01066c9673da7f0ab4be71ba76cd4ecf0fe"
+  },
+  {
+   "patient_id": "6d0d330a-c7ab-7ce8-3dd3-6dd336c0733b",
+   "sha256": "28900c09fb97b0ea08a032f5f81f0a4fac410c7e246489258be6dd9bc9eccb79"
+  },
+  {
+   "patient_id": "6e85a40a-79d5-f10b-c648-1e4f3d705d23",
+   "sha256": "4d7f47b8c1e9768387293a7ea87a58dc36ec30307ae5bc4d50a2787285cc24c8"
+  },
+  {
+   "patient_id": "6e8a4f56-f1ea-f8c6-3155-45999d30a061",
+   "sha256": "39b9514b8a1d6389bcab3a338f4018214bb33719767f6ebe4685a33198e11d93"
+  },
+  {
+   "patient_id": "6eca0c01-b3cb-a12c-f1d9-11d0f7222684",
+   "sha256": "455575c07f1b58d54f6fe101ff432bea9afc5d2fd81adefce7e238bedb1528fa"
+  },
+  {
+   "patient_id": "704f87b2-d596-a0b4-d685-b24f27a70d52",
+   "sha256": "1af0ea811aeb100d572bc8530a39f416ed7bea0c7e41a4d8b6423e8fd930d1e0"
+  },
+  {
+   "patient_id": "725db04a-2bc3-9266-72c6-065c58cbd0a8",
+   "sha256": "c90b3286bb3b4dca903ab60bd9b5193b93a71be564038cae6af84bc14afe38c3"
+  },
+  {
+   "patient_id": "72d48170-702b-0810-efa5-74a0bb6bf345",
+   "sha256": "47f8892b5b1cd26d673bd35592475574309e3a74f9d10f1b4b8f3a3812807bca"
+  },
+  {
+   "patient_id": "73388a04-2d79-b69d-a057-ae9e89b6afba",
+   "sha256": "2e9ec87b13670a9d6170e180a28d9aa3cbe6902a3a631daf4c9fa48dc7a5db92"
+  },
+  {
+   "patient_id": "73a75b94-dc79-fdcc-af2c-e689eb6f7217",
+   "sha256": "0e0c2ddcd3bcc603c9b3031a00e02203b33c1f4cf509e9406aa822946efc52d6"
+  },
+  {
+   "patient_id": "73aa2dc1-4432-b79e-60f2-1fcc82e8e62d",
+   "sha256": "4ae1b969e6e011a18c6a1344da6c12546f7531368b6ee0a7d2a85369ac1597f5"
+  },
+  {
+   "patient_id": "73e8635e-cc68-e026-09e7-0a8def3f22ac",
+   "sha256": "16ee54a29f58d468f59bf5187e0419b1765bcd2a0e6b21e6a3e50ead9ef782fe"
+  },
+  {
+   "patient_id": "73ef427a-fd7f-bd7d-3e41-40ccedf47e94",
+   "sha256": "cc8a10c22590fb363238f0af90ed7d3e6fbd180049497a0e3df743f895ad6dd7"
+  },
+  {
+   "patient_id": "7426330b-ce7d-37ce-59da-9fa8380cb3c8",
+   "sha256": "e8e69ad7dccf7f061662eebc9ea38be713586b3650ec0112d0c3abf9cdacbd5f"
+  },
+  {
+   "patient_id": "75cd2efd-3d61-fb27-b787-1aa3c3b457e1",
+   "sha256": "095b590c838c984c530822721bb778954f71863877aaaadd9e493346b95e632b"
+  },
+  {
+   "patient_id": "78266ce0-061c-3681-54b7-fc1deb430d5a",
+   "sha256": "be2c22f46247eff5384eee35ced488bf8d6e3ff16a8e0ab71623d1a077f69e38"
+  },
+  {
+   "patient_id": "782b4f12-0e70-bcf8-c47c-5502e7adea01",
+   "sha256": "9ac42675bea848652241647e5e428c3a04ffabd149902ed8db230ed1830f07a9"
+  },
+  {
+   "patient_id": "7857ece0-0743-ddd6-bd8d-0fba8a068ddd",
+   "sha256": "c75500ef85b684dc9dfa3709e9507bc207414b4b9c159a12cd6634b840317351"
+  },
+  {
+   "patient_id": "7a34ee60-16d2-c2ad-5930-cbffb39f65a3",
+   "sha256": "6140befa6be337728cde226f8dfd4025b7678119991a6b7ad8aae28601048f97"
+  },
+  {
+   "patient_id": "7b632ca7-9ea5-9074-df03-2fa4be3cd55e",
+   "sha256": "13c35688589258b21e4fa69ff259bcd532db2bcfb43caeac0f55711b0f8faa6f"
+  },
+  {
+   "patient_id": "7bc1d473-94ff-3865-15c4-59053d6e2dd6",
+   "sha256": "c56299a2c12c5f82f69ccae42c5bb4813a81f8f48c5b65f77be2d6fff16c5e13"
+  },
+  {
+   "patient_id": "7cb285af-2759-7261-ca82-2b5d10d7e08d",
+   "sha256": "78c53478cfd8badebaf58e2da9aec18372917127719572ca8480657ae89d5fa3"
+  },
+  {
+   "patient_id": "7d151d23-1fc6-4ddc-b38a-d72065ed7545",
+   "sha256": "22184e46d549bb92b658938e5304be0955f33ab51bf58176c6b9365e0ea4458a"
+  },
+  {
+   "patient_id": "7d2dbb4b-a908-ba91-5694-3ccfe4197f45",
+   "sha256": "4283a7f247f15b1446349794a0a9c78c86a120b18b4ec493f2e0913b48dd9fa5"
+  },
+  {
+   "patient_id": "7daaadf1-672e-73aa-e1c5-fa6cdf2d7d5b",
+   "sha256": "5b485895ec3d9635931c3fd069d6d0b816f4c841d0622ed1b041834bde6802aa"
+  },
+  {
+   "patient_id": "7edad4a1-4bc6-644a-ed58-b9c14e0ba14d",
+   "sha256": "8aa122f374c0e3d9482ee5413d599edd08fcc9131cf9f2dcdaf32e925df78922"
+  },
+  {
+   "patient_id": "7ef8da47-d0b3-154c-f354-1790ca6aa703",
+   "sha256": "6f4ed2b78d3ab2dde917822bd10899e3b625d8733e7940c65007845e49c11a9a"
+  },
+  {
+   "patient_id": "80591962-aa0c-f30b-acb7-1f36566df879",
+   "sha256": "929090de8f27990dcbb0e57a895c00bdaa550ff1d32f084af2242fb2ac1ce063"
+  },
+  {
+   "patient_id": "80d3e87c-fcd2-8fce-7748-3b872ee89151",
+   "sha256": "d49a4f26c84ea6554cdd66913bf17beb1999620dabf38d379742ec8187a7b573"
+  },
+  {
+   "patient_id": "81264ccd-2830-33fd-6288-c8f252a06f2c",
+   "sha256": "2f30ddd04a70801ef16652b197bae610f6c08d8d74bc2690ed2335d0376d183b"
+  },
+  {
+   "patient_id": "81912829-abaa-da8c-48cf-a111bb659703",
+   "sha256": "036e0725047bb3a20cf83aa5519b46c038ec49a5731f7693a92eb1abac7ea56b"
+  },
+  {
+   "patient_id": "824dfa2a-dc7e-07bf-f8d9-d74eb965b56a",
+   "sha256": "0f5488fa59828aed5085c3ac5f833bc25d28d2bd4719d9a7eca15ae76a0cef13"
+  },
+  {
+   "patient_id": "82fa915e-1dd9-db46-ad2e-56d60835f22e",
+   "sha256": "cb888a7640d2e303448b1d3046a8ed11c1e40d05c68d0860f4bc99386954921d"
+  },
+  {
+   "patient_id": "834531a7-9014-ce40-0653-37c1a488e9df",
+   "sha256": "426aacc00533f5f1f8129f76b965cb8bba27ead4fbcfe9828860e974e101ae65"
+  },
+  {
+   "patient_id": "8422f122-2c31-dbec-630b-f1b10c3e746c",
+   "sha256": "db118ef2611dab726c1e0dd77110ed6f45c38ef47dec7d57af75464398491e7d"
+  },
+  {
+   "patient_id": "84bbc807-bd76-2a72-b6bd-10801e99cf25",
+   "sha256": "c0cafee0a50c54239283fe92c9a5c36381ab7ad48bad2d6962e0bd98e55665f0"
+  },
+  {
+   "patient_id": "85350341-e76f-fcb3-6e55-b5d1336f825f",
+   "sha256": "081dc1e31acaa2d75251b56d40196c896eea9d66af1b41ccc68d6ab7453e303c"
+  },
+  {
+   "patient_id": "85ba45d9-5462-be5a-a662-b6f7f78d0ad6",
+   "sha256": "6d584da36ec74b67e0798484e611082cee4edefed670bed4e03d98b2d7e6a159"
+  },
+  {
+   "patient_id": "86736b27-12f7-3fb8-951c-a8c3e4d97acc",
+   "sha256": "8b77774cc263a0aed3d7a8ef2812d3f2c21125532e7aceb29fd59abc915427b2"
+  },
+  {
+   "patient_id": "86a22097-5d4a-773a-3bec-17316810e5e3",
+   "sha256": "3aca41681055e4f797ee5f30e3157c2a3065ade15702cb6d713d0ffa79903f51"
+  },
+  {
+   "patient_id": "8753504f-b3ae-f2aa-644b-77fd1f1837f2",
+   "sha256": "c61b0f78110588f17349b8a27b27ab54742c7e5e13d0bbe3269bee8c7906e439"
+  },
+  {
+   "patient_id": "87c72e41-e165-0f2f-3091-8d94cae9373e",
+   "sha256": "b36e8c5143ebeec50a9191e2e4e88fc83f0a4c0749e846091a5e66b262558eb6"
+  },
+  {
+   "patient_id": "88453aeb-e78e-6e26-9d0e-7afb271acce3",
+   "sha256": "08840ec623f0616ff45604fa706238c4221a0b5920ee622908ae39f94fbe9a81"
+  },
+  {
+   "patient_id": "892fe052-415d-987e-2d96-a50b68510d73",
+   "sha256": "99e3dd5a8921553beeffaa62453e9d84dad9fc2a9f5c722a19898db069279a87"
+  },
+  {
+   "patient_id": "89b7aeb4-4b35-5647-b5d3-38aa684dd0df",
+   "sha256": "8ebaae4d5db44ca809bbbdb79a9f380b074f151923c8a710b47993bdf0c7a724"
+  },
+  {
+   "patient_id": "89e13aa2-c3e3-4a6b-438d-6883091fc6f7",
+   "sha256": "390ef22c591068f5579a9fa37275f846c45018521b4ab50c697ba25364fd2d38"
+  },
+  {
+   "patient_id": "8b23db2f-aa90-fd9c-3548-cbfb77b3810f",
+   "sha256": "6371c4a88d94b442979980aadf5324ed82c8f2359b7a5a01110ba26a99834641"
+  },
+  {
+   "patient_id": "8b585669-64ba-b727-87a6-69aa1ec74ea4",
+   "sha256": "0deaf5c3d29657b68ae71a32a6c73b23dbabbd9d4680b473f10d33ed8749f3a6"
+  },
+  {
+   "patient_id": "8b6a2a79-4470-d269-48ca-b9ea48444cec",
+   "sha256": "aebe6b96461f0b984041878aabf35dbc7c45a0a2e550ec4a4cefd5f7a15d5e86"
+  },
+  {
+   "patient_id": "8cc62433-b9e1-cb98-7a53-18f6522f9e57",
+   "sha256": "7cca67e1a424aff8626a9d2f33a501d81a5e05f71dc2ef413b9769bfbc3ea721"
+  },
+  {
+   "patient_id": "8cdbbae2-e83c-77d5-6361-dd25d93a9e74",
+   "sha256": "162877e96da7e345fb88e7e145a54a8858b2fa878dd2bfea704f0ce6052563bb"
+  },
+  {
+   "patient_id": "8d7899ba-5073-cfa9-c9a0-eaf781bf2b29",
+   "sha256": "2a2d6257f73d374ea7a606ca0b5681f00ba4bad8e95283ad0bd8cfde18f44802"
+  },
+  {
+   "patient_id": "8e51bb88-7a03-883c-ee68-e8fc67cc7f10",
+   "sha256": "c3d7143d58ddb81aecd31937378ed0d528165be141c7b5143135353251e7f9b2"
+  },
+  {
+   "patient_id": "8ec7064e-241d-f5d1-6f27-2f60c8dbe330",
+   "sha256": "77216dfa89104ff75e0c03466c69093cf559937cfddf5cb61fc01403380b9855"
+  },
+  {
+   "patient_id": "8f38d159-d868-aa2f-62a8-6f49f48f659b",
+   "sha256": "a6d03dd6b0f54465ea2c438f27dc4df5ed6d93c9819ae895ebbf07c3c027f997"
+  },
+  {
+   "patient_id": "8fe4e404-ee05-0754-ef1c-06c41cf1aa1d",
+   "sha256": "67f432355a87f43012319eb8ed8fe549273a0bbb3c0b8c76746916937af776f7"
+  },
+  {
+   "patient_id": "907bef51-ed5b-36d5-cb3a-f8a7bbf0b1e7",
+   "sha256": "7da3ab5c4685f77f5f28010bd22f916fdaeb4e2179ecda7115b03be9f29998e2"
+  },
+  {
+   "patient_id": "917dbd24-b88a-ff9f-1b7f-90da58e1b572",
+   "sha256": "fafcae7ef196fcff3ec51e84c11ede7f65ce33289d3a8cbebbdb71531ca37ebf"
+  },
+  {
+   "patient_id": "91c54971-a83e-4bd7-180b-aef2a014260d",
+   "sha256": "d4ad33e7a99343be4923e24b3058be047872d5d043937f3574f6a859a02d1963"
+  },
+  {
+   "patient_id": "924bcf3b-8e35-17a1-b98f-dcf2c24f9caf",
+   "sha256": "a9761e253d3a3ec7eee1ee3ae3b471ad7bea7b182bf2bfa666130d69d60f4bef"
+  },
+  {
+   "patient_id": "929953ce-845c-872e-d318-79e4541b2353",
+   "sha256": "a8cfa0c0bd5b40955f91cb49ea793b1fa9ee36ca15820ee82e24ee92b45bf96f"
+  },
+  {
+   "patient_id": "9424290d-0a0f-474b-c435-707a22acccb3",
+   "sha256": "857bfcee208876c33a4b39c00d0a97afc99101571e468821cf3c7acd0ffbc055"
+  },
+  {
+   "patient_id": "9442da5c-adb9-d453-afb2-d3a6d70c6393",
+   "sha256": "c143ea443047b3bfe342de8315499d1b97a05b22f5109b5e5a15ddddfbdd6714"
+  },
+  {
+   "patient_id": "94f80226-3c4b-32c4-038a-fd9dc90dc5c3",
+   "sha256": "ddba0cc0fba70b88abce836bbb8334df8c007e0f972bdccdf370f28a2b1762fe"
+  },
+  {
+   "patient_id": "96c77206-9964-71d9-0f5c-7000de4fc5aa",
+   "sha256": "41b519df2255387ba1cb9611cc08397a4cda1e69cedd7e3b7cbcb9f38c2c761c"
+  },
+  {
+   "patient_id": "96e497b6-5089-501d-e56c-b8524448d815",
+   "sha256": "91042d14afbc9d1a66a29788026728156bd2d9de9d103188381ea472897f1315"
+  },
+  {
+   "patient_id": "9726788b-0177-493f-4d65-3e2bce371f11",
+   "sha256": "181104d323aeefffe1a231b3575eaaef0d4e80d34c3723ec1de7b70db306a688"
+  },
+  {
+   "patient_id": "976d1c74-7ab6-fd4d-4d48-36d7ed3e242c",
+   "sha256": "29abc4d5384b1bf96cba829d3e9241cf66f8dfe039ed05b70fc9865a3230970c"
+  },
+  {
+   "patient_id": "9891c8c0-2b0a-ba5c-335a-dff43fe9a89a",
+   "sha256": "806573a73f9d40e066c22fbf1a492a9029e3216c623a7f26909be93e1fa9407a"
+  },
+  {
+   "patient_id": "98e72c7c-d80a-198a-d4cc-e89937dc0e8d",
+   "sha256": "ef9c3f9175d9ff4f4069a01718aab4c644fd66903ea5f93d356de9e28bf2c298"
+  },
+  {
+   "patient_id": "99de5253-5c56-7a7d-a039-ed1bf64bd1e7",
+   "sha256": "15c517348ef6c959520164f8600dad3c989b1571238549e00e7c5e55aa5a3b8f"
+  },
+  {
+   "patient_id": "9a423de2-1158-4d84-2f66-175d7f0daa1d",
+   "sha256": "7adf047cc77a44081c90726f4a8ea60cf0919867d153b71d26b16418fa152b9a"
+  },
+  {
+   "patient_id": "9ab0e133-3a15-d415-dfca-e6f79d0920d6",
+   "sha256": "d4a55a842b1df8bf96fdc7517089ccbf823f31b5c74c28f44b8605d5d053965b"
+  },
+  {
+   "patient_id": "9acdea6d-5ab0-ad7f-4810-1c9743f0387b",
+   "sha256": "e2e99fe5e7863e25084c8f318e734df3798ba727d40582e5fc7b1a2c5b8bff85"
+  },
+  {
+   "patient_id": "9b2014f6-5a37-a958-4554-121e2df713d0",
+   "sha256": "17b9072c121b5123eca49024a1f413e73d0ffb6f9ae0fe139106032b6b81a685"
+  },
+  {
+   "patient_id": "9c861bc5-84fe-0752-d64f-d5b4ac9b2c4b",
+   "sha256": "9dfb661307f1e5eb1fd43a051e303c31e37471a019433cdfb30cbe509ee26ddf"
+  },
+  {
+   "patient_id": "9c96949e-11f3-59b3-7b9b-2271b91e836a",
+   "sha256": "d682d73f6b1616b3dfe0341e9adbb5dda8290f77f86a7858e8a944584a8a58ad"
+  },
+  {
+   "patient_id": "9d958beb-f506-61be-40d2-938669ac5e4a",
+   "sha256": "7afbf5537001d79a80041bf81f1169aaa6544e51636c76a98597118eae919264"
+  },
+  {
+   "patient_id": "9f04c304-754d-242b-f5f7-7a38aa1ea101",
+   "sha256": "d2143c2c262c3b6e02a286b84df055b92b620e11bb8cedeeebab75413d4498de"
+  },
+  {
+   "patient_id": "9f0876a7-c0de-7dcd-8b2d-fb1d64fd7b04",
+   "sha256": "682c7b8888b58e76f67b27e5594244a6e4104dfc9f5ec37877f72b9fba234b65"
+  },
+  {
+   "patient_id": "a026a679-d095-16bf-d63f-48a097a400d4",
+   "sha256": "5a49cbb0835b9e8d90b413227805ab0bebf81a161a76d6862e529db68d596ac9"
+  },
+  {
+   "patient_id": "a0764a27-1d70-1be1-94f7-84cb93849f91",
+   "sha256": "e099088df94fbfc2a03220729776bd569297bc2c9592ce57b455b24114c1d360"
+  },
+  {
+   "patient_id": "a0dcff77-43e4-cb5a-fa45-2c28e9882938",
+   "sha256": "b2c0e04bfb576e14959ccd160beff01e00b892b06516e13621c902956d4852b4"
+  },
+  {
+   "patient_id": "a14a969b-267a-aa8e-8dda-76791a3db6c7",
+   "sha256": "14f4cc845527f3ea5684c84171f3bc8420c6947e3f6ff83e5880df1d6234184e"
+  },
+  {
+   "patient_id": "a267ce65-ec81-d6b4-288d-b1f35e000ff1",
+   "sha256": "b3e0b153f07e67c5bb84b918765a7eeb13568c5950327ac38750f2502a784099"
+  },
+  {
+   "patient_id": "a2a1585d-f6fd-c13c-293e-8043c0f376d5",
+   "sha256": "4cfc6be2619c3d1912794e4c851a518bfa27e0d38d41098b94d04ce0cae88f75"
+  },
+  {
+   "patient_id": "a394f0be-57e9-8b39-1d2d-a6ae44537720",
+   "sha256": "b8954e2229fc09c016db170993295faa93d1ab4fcc68c9353ce1dbb0411aed54"
+  },
+  {
+   "patient_id": "a537104c-d194-3da2-dc24-f7dd4b070fe5",
+   "sha256": "585017885e890573124d891e3f9c8b3ef8f405215e8c4403c6f9eadd7ebad3f4"
+  },
+  {
+   "patient_id": "a55ed865-81bc-3df1-f041-60c5257da4eb",
+   "sha256": "7d9e0cd7a74df89b396ed4c2776805e1578f688d202f21e32a258cf1b70568bb"
+  },
+  {
+   "patient_id": "a5d6f75c-91dc-7c40-05b1-e2ac0a06c14c",
+   "sha256": "62f0e69ef6f0dc5d8e326869cc048109a5b5ab867a99cb95a475e4223f52e792"
+  },
+  {
+   "patient_id": "a73a1e51-0a3c-74dd-ddfb-ce2750ec537d",
+   "sha256": "900008308f6d01781f92f5af25b691d2413fffe79b35811a59038a3b963a64f4"
+  },
+  {
+   "patient_id": "a76580da-3571-ae93-70b8-1f2eaa42f5dc",
+   "sha256": "e294f10d461dc1809c42700b3345f2587ac2f04073ffc1c0ab4a8dd984b56547"
+  },
+  {
+   "patient_id": "a7bfbcb0-1575-85de-7f30-ffa3fc791a68",
+   "sha256": "6844caf5a4b8c9ce327bb33b67a535a6441df3cc4627315c4381fe26da28a0aa"
+  },
+  {
+   "patient_id": "a9324762-5768-8281-f4f8-2196363621d9",
+   "sha256": "479dcc3347ffae091f072888baad070ee0fedbe8cfa076e639fbb2ca335263c5"
+  },
+  {
+   "patient_id": "a948a23e-4f16-4cbf-d0e7-323aa6fd7398",
+   "sha256": "4c9db1da56695b411288b7d8a1fb09dd381715978aa240373540921439e8fd87"
+  },
+  {
+   "patient_id": "a9852892-aac7-efac-eb4c-9a7f46581844",
+   "sha256": "a8f76ad727612fdee8111eb51a4ecc3d5575a19adb674c07fcba1ec31c46b40a"
+  },
+  {
+   "patient_id": "abafd439-6936-41e2-866c-35ebe8705229",
+   "sha256": "1c1493c468113d8c8b21b7ae8a96cd1db6465caac20eca6a39f147ffeef597a8"
+  },
+  {
+   "patient_id": "abcecd0f-885b-3340-a8bb-6233f583fa1f",
+   "sha256": "86f5831488e89656a939c621eb339c42531440e632ac7d940e2994e8e0032eee"
+  },
+  {
+   "patient_id": "abf84b2c-ed9e-837c-fd11-1f5037fd289d",
+   "sha256": "94d3eeefcdbd6b6324a91b78c63bb7a2df9fc6ace1dde1fc714604735bb39b38"
+  },
+  {
+   "patient_id": "acac0ae5-dc2b-12b1-ad73-aad7f750393b",
+   "sha256": "c3c2f71e09d3afb38d41a53a3198fbef390c1c503d70f5525abe5e4e92b9c60d"
+  },
+  {
+   "patient_id": "acc5f8d8-c1f4-51ab-b229-c699a8aa163e",
+   "sha256": "0bdaac1f02897a3b8c55a923b4f88a5ba4d8e9c5d5dd9dfd08f16ffc8d0e492f"
+  },
+  {
+   "patient_id": "ad2ec8bf-5d64-a033-cbd4-0d2e6fdd64b4",
+   "sha256": "db54140d76d201e4f42872c3b084462718b46cf80dafa1dc83eac847669a47e8"
+  },
+  {
+   "patient_id": "ae6903bd-7974-0a6e-07b5-d869cd3c2692",
+   "sha256": "e54664243ba0403a96d2bfb6af5949ff36b38c39d1c18aab5a8a510295f58e6a"
+  },
+  {
+   "patient_id": "af9b5cf9-ac35-f838-a830-2497255f28ae",
+   "sha256": "a34675c81500fc579204e327602f45d53d99eb9c913ae8cfca7f50a2e3dd18c2"
+  },
+  {
+   "patient_id": "b0453a54-4f56-3b3a-cc6a-16b76623b585",
+   "sha256": "f7575c0514be0f9ff88c419578ab1d14a35e9b657163219ee615e40e9dcc4b4c"
+  },
+  {
+   "patient_id": "b06e3eb9-f868-5cf4-ad17-344dd2350a5e",
+   "sha256": "8c6e8b812f4de4cfc3ee29f36d5673fbacd2169c19091daf36b15d2e891772e7"
+  },
+  {
+   "patient_id": "b072dd4e-a4d5-72b9-eca7-f78c3de7a634",
+   "sha256": "a5f374350bfbc20736f5102693e7f57402464523a65c5edcec3e6227f3fb48ab"
+  },
+  {
+   "patient_id": "b0eb7087-7205-3da1-840c-ed3861dd59db",
+   "sha256": "b0090577072467a6cc8de926f62453119af4a25b577a14928aaf7901a83b1907"
+  },
+  {
+   "patient_id": "b2646413-c21a-31a7-15ea-7cfd82df08a6",
+   "sha256": "562815b586f554b1e7a1c6203f31f89ae961bdf3f1e347a20d79c794b1a3ec9b"
+  },
+  {
+   "patient_id": "b3c50e4f-9753-d4f8-6be2-c0a541a2a92c",
+   "sha256": "c31c72c768213da239475b5a56b31e17a088dcf149b6403f0e182fed0379ae03"
+  },
+  {
+   "patient_id": "b41c2e59-f9b5-83dc-eab9-987eff14ab57",
+   "sha256": "93af9ee2babf5eca4978f8f5020cb05d0bddc432cd062aea09f41944e5725cf4"
+  },
+  {
+   "patient_id": "b51ee6fe-477f-6187-b589-843d0258b8bd",
+   "sha256": "380184dba9a8ce58e2d065be01a3099d7d735d5a7cfe4fe3ed68d1b78ba040aa"
+  },
+  {
+   "patient_id": "b5eec343-7b72-c126-a173-cfc0b3cabd7d",
+   "sha256": "a3125d5d292b6e3f1befba5128cfb978cb4828f97dc04238f34062f5abf87bcc"
+  },
+  {
+   "patient_id": "b6e2cab4-7050-6213-cf6b-54937fcbb32e",
+   "sha256": "3e6e471ef72952fb1daf1f93ec818df6d59ed62d050a60826869eea8fdf1560e"
+  },
+  {
+   "patient_id": "b7e12e46-c643-6fd0-0e51-169b64695cbd",
+   "sha256": "bebe5eb2197715747c961610039435130b73bde462f63d3993a21bfee09c1c6e"
+  },
+  {
+   "patient_id": "b92cb0c4-7071-5bb8-0826-343d36963ee9",
+   "sha256": "88e2cd3f35cc9d94d20cb5d03a50c04492de2feb50736ed768f24f39f6da6683"
+  },
+  {
+   "patient_id": "ba59d266-6edc-4b88-b423-5b329e47f296",
+   "sha256": "1133b92fdc5a48db45de3bd75860ae01fabc401523f8b391fc06056554b5e7ea"
+  },
+  {
+   "patient_id": "bb90c271-fe4f-4100-0a3e-b01f03673916",
+   "sha256": "8174b59e61b732d002fa406cfb86463be058f512302afbe8cafea699119f94ca"
+  },
+  {
+   "patient_id": "bbc803e7-01ef-23c3-4660-a326f8889849",
+   "sha256": "3d28692a44741cb393cdc9b0aa37bd09db6150838e84e4fb748e982ee19224a2"
+  },
+  {
+   "patient_id": "bccf6708-5ae4-21d9-be00-2bb09cf80133",
+   "sha256": "f8871415f197847b510c3befd3961d8b18783999d670b9ee5e8f9dd4761cafd2"
+  },
+  {
+   "patient_id": "bd0587f8-c2ca-216f-2b6b-c32c9e5d6770",
+   "sha256": "38578b8812f036d3906d809367c60380d3fb603e1f12caed37536364032d5f71"
+  },
+  {
+   "patient_id": "bd2633ce-a595-13a0-95c2-8ee49173e0c9",
+   "sha256": "af2f6e270bb52df3c66ab6bfc2298fc78a18355010e96438d4b8430e3b315ab8"
+  },
+  {
+   "patient_id": "bdef0416-6458-84c7-622c-6755aaeb9bc3",
+   "sha256": "5b2ea714feea044658ebab6ff86f4122903e4b1bc9223654b8d7bed2584f3cd0"
+  },
+  {
+   "patient_id": "bed5e49f-7fbf-16d7-84f4-edb0bbd9f73b",
+   "sha256": "30a12450cfd0875be8d6e7d8360ee027f4a5c84e08fff41d9b85ebeff4008a77"
+  },
+  {
+   "patient_id": "c007ae47-94fb-ce7d-1e8d-531e4b46cc5e",
+   "sha256": "14ead13ad8cb8486fde7a631b0e33d475ce1ea134bd920d2d8f8f284e085df79"
+  },
+  {
+   "patient_id": "c13db641-83eb-6d60-a0c8-fa574478bc26",
+   "sha256": "64ce5cb2f2f62363f1f85cdc6437a6594219a688b85fb09290ed4a904accddd0"
+  },
+  {
+   "patient_id": "c2205756-c2e9-91a0-068a-33c36bcf651d",
+   "sha256": "36aa5ccdc17e89d4d5aaab7558075060e70f77bed628814b947c5b7e8d8f305d"
+  },
+  {
+   "patient_id": "c234b6a8-8072-abb3-fd83-b94b1dd0de04",
+   "sha256": "8d15208154a35c27054168ffbe18a553de164e91024df8eac34df83e4a346465"
+  },
+  {
+   "patient_id": "c2efdc60-bfb3-773c-05f7-5d4a0e6254f7",
+   "sha256": "16416bd1ab80e11c8972719ce92857e97e4e4a88c64731892ea19cc774f65bc1"
+  },
+  {
+   "patient_id": "c31b70ef-07d2-70a0-324d-7db462dfce3c",
+   "sha256": "23a067d516ea50eda16a485709d0a130061bfb2604f44d6882a6edb5a741894f"
+  },
+  {
+   "patient_id": "c32c8447-78ee-5f8c-ee24-705673d168a7",
+   "sha256": "580df185b85606c7b58c27796f6d84fb264359cbc989b211b5a6d811cb2864a1"
+  },
+  {
+   "patient_id": "c44bada2-f7a1-1245-7adc-2b6aaa33f0ef",
+   "sha256": "a0cea9f6cd34a26c2c10423e76b62a94a79a52c40c326f8b70d4dc1c4682dec9"
+  },
+  {
+   "patient_id": "c4a88a0c-5d39-bf0f-1bc9-0a5987b01bc8",
+   "sha256": "f9870d3364b3f7853f19fb59b8330ea678a93bd6e494fd0817bf41968550556d"
+  },
+  {
+   "patient_id": "c609debe-d914-e04e-3a77-0d3295029500",
+   "sha256": "edf241c25b8c59c2a6f0914818223548445fd1631ffccd255f5f4280ec871d2e"
+  },
+  {
+   "patient_id": "c6694403-eae1-afac-c1d9-4e1ef9f0a692",
+   "sha256": "81a9bf3cdae3a23ffef05277f00db2afffb2b770d51731c4199f8da41ca4c131"
+  },
+  {
+   "patient_id": "c67024eb-bd39-1b13-bc23-219e0499875e",
+   "sha256": "be42aea7a01ca7f970b6446db7b7cb0be405b25ce33ada310f98dadf3d597fcd"
+  },
+  {
+   "patient_id": "c6e53048-ea1b-eeb2-c79e-d51b9d7e1d28",
+   "sha256": "f2590e606dcf2af3130d4084efc0264bd2da913dcc8c17b5fc7b4e1f59e8499e"
+  },
+  {
+   "patient_id": "c73f1d4f-7a16-99da-6dc2-076dab649da1",
+   "sha256": "15b49ba13854520a6d84056fce4b422e269d941de2a7f1d58ecfd5e4487e0334"
+  },
+  {
+   "patient_id": "c74a6b54-d3dc-638d-c1fb-d6992e70c5f2",
+   "sha256": "181d86627eac7a8bb967c7ff1a4039f91814c88f4be0da89720a470b3827af34"
+  },
+  {
+   "patient_id": "c7a7d64e-8515-866c-a073-e6b7591ffad6",
+   "sha256": "26a62f1f85160682e3b454e9794fa33287741f586f748ff95cfdc9c580d77b9d"
+  },
+  {
+   "patient_id": "c7b0b37c-7900-46cd-f77b-2dbf07ef13af",
+   "sha256": "92e68d75cf347f432a78a7c2b583b3543328175a2aa82b6040ecaa7546a36072"
+  },
+  {
+   "patient_id": "c921397e-7557-3e79-1242-3dcf998facc7",
+   "sha256": "32f523a1a79f23b4eb1ce2cf59133e07a2e16b0cc0d0d2c96b2b6351ba6e5bba"
+  },
+  {
+   "patient_id": "c921b699-08f7-a0aa-2afa-34c59481b225",
+   "sha256": "29e3369de0aeac050fc00280916da1dc15d40967794883ee18116899d25bb542"
+  },
+  {
+   "patient_id": "ca9f5240-da07-d570-a2e2-086a29521ac7",
+   "sha256": "a13e2d17cb17a297db5f8fea5b51be4a250aef03d61b5c1fef507f3ae6fd8d92"
+  },
+  {
+   "patient_id": "cad5a3ec-6190-b77c-4c64-eb24446ba644",
+   "sha256": "d7c764feb80d4b2c1eb9cb7b1bd7e34c691e89db430a83c352b62b75fd56b18f"
+  },
+  {
+   "patient_id": "caf5b5c1-5135-9910-6a60-fd9c44f30571",
+   "sha256": "e7dec1df058db182463708eaed2ddc23543488e1c4a516f108173829c9d62225"
+  },
+  {
+   "patient_id": "cb0fa483-2019-7af1-bd1f-87bf2cda4844",
+   "sha256": "2920b69cd7b5925034ce50e4c2ce78ac1a1a99d96734980ec564ecc2955b70cd"
+  },
+  {
+   "patient_id": "cb83b069-17e6-ca51-9098-22a9017115e6",
+   "sha256": "ed44719e82f986cf28a0d6caa343cb404785adf91266a709468f86f96d4c97e6"
+  },
+  {
+   "patient_id": "cc88a26a-4813-b1c8-4551-171bff6e2c10",
+   "sha256": "7feec4e3952987075300c45f6023508ee465f4fb587b783372924760799603d1"
+  },
+  {
+   "patient_id": "ce65dd74-1701-2b37-77f7-5c6ac97102f0",
+   "sha256": "b2917d39ccf4472c18b0fb09909e4c5d5210acb2c433c004870abadced41cf0b"
+  },
+  {
+   "patient_id": "cee2ecc1-e44b-febf-dded-a08e99f9e5f9",
+   "sha256": "642eac7a80cde14622b50b367ccda88fa4f71b33534bfbadce9d909de1d64f03"
+  },
+  {
+   "patient_id": "cf755c33-384f-025e-1778-f5846e8febd2",
+   "sha256": "176bd47f9bc388f7df1ad6536d061340f63a9d4f8ed93255cccb6beeb215a40a"
+  },
+  {
+   "patient_id": "d07aa93f-f78b-d123-3466-4b0d6eca7ca3",
+   "sha256": "b8957d860d59d4a0494b5fbd881d0f8427b96d0f7c564aee54a94f778d515696"
+  },
+  {
+   "patient_id": "d0beafff-9382-5ff2-b088-d18daf59b5ad",
+   "sha256": "52e866f12c81daaa909d7e4f6fd901ef5f520d1fac841e6c7bb6c89f89e95c83"
+  },
+  {
+   "patient_id": "d1212303-7c48-8068-c794-93081f8da756",
+   "sha256": "ef3649d0e5868ea788d6f7d1889c03408dab382823bbc59b29fd49ee027f711d"
+  },
+  {
+   "patient_id": "d16586c1-ac38-9d20-b343-27347f15f994",
+   "sha256": "70bf1bca9e2a9c569ac65bec1bf53aeb425aa718def814fc6058b54acca79039"
+  },
+  {
+   "patient_id": "d186f8d1-9823-8792-b3b1-05e1682acefb",
+   "sha256": "48120570787576e6ef52e079b6ee43d20b5781c34f2d0c4a352b67878533a5ba"
+  },
+  {
+   "patient_id": "d21f3dc4-ca16-116c-5407-1708a25ab6d4",
+   "sha256": "3b23644d7beae04bea27f068d70bf4415f4359171e434426245349e770ea7d6c"
+  },
+  {
+   "patient_id": "d291be3d-9759-b5d7-50dd-5097f2cbfa4e",
+   "sha256": "e2bb0be309b016125c5a9dc09af2eec8a9500bb7cc3912e5545bc7636ccda592"
+  },
+  {
+   "patient_id": "d2c9c3bd-23a2-b87e-5233-0f6255546e7a",
+   "sha256": "2bc382537f56200d1d02709e17725681946ae201d200190700a84ea701d5feca"
+  },
+  {
+   "patient_id": "d3442d26-af77-1224-1476-602239f0672f",
+   "sha256": "839978f51cbbf7f05f16273019693b1316fc3812e345619dcd72ffc858706cc4"
+  },
+  {
+   "patient_id": "d349a941-0f20-3d63-b6fe-c372b4b51f24",
+   "sha256": "e2ac708a3bcbdf283a033988c3b3696a6965dc307cca7b7ac1274d2a92689b92"
+  },
+  {
+   "patient_id": "d42d20f6-0643-ad62-acfc-96fb367223b4",
+   "sha256": "eef903d8797a07464f1bd97ab6e4ddd2673c456107600595ee21939f24121d1c"
+  },
+  {
+   "patient_id": "d48172a9-0cc4-ef20-f255-7dc61d5b2bf3",
+   "sha256": "e05db1537325c1573085e7d3c076ed86484e2969a19d127c1a4cfb41245f59e3"
+  },
+  {
+   "patient_id": "d48e9185-fbce-9c54-b1e3-dbe38285dd42",
+   "sha256": "a2c865fbba8af432324f79f7ae6e52a924f1ea81c858454f063a6862de0f02da"
+  },
+  {
+   "patient_id": "d4db5d30-6439-7af5-0e7f-8a3c31815d41",
+   "sha256": "94b6891b05d2d5bf9f66913d2cc3ddbc1a5747330445487aa83a80ec0220bf52"
+  },
+  {
+   "patient_id": "d5dcb7c7-1606-b1cc-5180-cd3e99e0c928",
+   "sha256": "4cb327404a31640c82f43fced24284c13d0ac9e492ba2aa2fa406c2c370ea1ff"
+  },
+  {
+   "patient_id": "d69a6154-db0c-8e9f-75d9-e5903f9be40b",
+   "sha256": "babb7519cbc7812428df9a5a43d4386f96defe581c21fe8c780b8c7f331865fd"
+  },
+  {
+   "patient_id": "d704b3f8-2ebf-ab11-68bd-63a7ba6a4be9",
+   "sha256": "b50707141a4f02656035228414e4cea0febc262de0acf33e614e9764191027d9"
+  },
+  {
+   "patient_id": "d7aaf2c3-1b40-5f59-6207-d7e9c37399cc",
+   "sha256": "6e62cc43700dbf33b9322eda70a650bdc24837170a004181594e603d6259b211"
+  },
+  {
+   "patient_id": "d7ded600-b9a8-7988-4a22-81fd96492207",
+   "sha256": "6433a12bd43728f02c6295e14421320a027e563778b13fe7efd80758e715bd59"
+  },
+  {
+   "patient_id": "d849a070-c773-df65-a52b-72aba8390973",
+   "sha256": "b8200ce73296df45bca23bab2e38c003d9cb1a52f1ba0eae8474093308d6c75e"
+  },
+  {
+   "patient_id": "d89b444f-cfe6-1dd0-8050-3724127a22de",
+   "sha256": "9d99ef175409021ebe693a1e42c7c234f30ca889f36fbf684642b29ae22eb3a1"
+  },
+  {
+   "patient_id": "d9a3d71a-018b-4dcb-4e5f-1a7042cf6481",
+   "sha256": "85271fbce6df114a090362196bbcf75ce88b0f3a38e496b45f4dc8c3262e8b1c"
+  },
+  {
+   "patient_id": "daa2f7e1-01cc-e8e5-9f49-9f9431f93894",
+   "sha256": "66baa0d84e1f2a25d5ff5f448d67cd26db0463a34d24818ddc9de749f36f45ce"
+  },
+  {
+   "patient_id": "db13b580-d80b-8562-c0e9-922a9d4ecff0",
+   "sha256": "df13074c054d108ed1d4c4989e98dfe7e5ca017a23f4c079aa38246edcbae9d1"
+  },
+  {
+   "patient_id": "db5ec0c9-7725-5937-53bb-bd9db0c580a9",
+   "sha256": "a9790e1e38735944be5c98aa58eaa8761497babaeb60900ae28fbc8fd2ec8bea"
+  },
+  {
+   "patient_id": "dc12ac1f-9d31-0fdb-59f2-f532b18dc510",
+   "sha256": "7f660ba6030ea9a9625706143f38e70df72552cada2fe498b705f1edfd5f47da"
+  },
+  {
+   "patient_id": "dcda1387-beee-2310-9d3b-5773a7c0b638",
+   "sha256": "7a8d0ee98417e62a4c0038517965b8b961ddd1fb972387c033959e2a8e830832"
+  },
+  {
+   "patient_id": "dd1689fc-0de7-9835-a4c3-c2bb7ce128fd",
+   "sha256": "9d9581fc84c5f9874f46641328d1a86b18d831c7a0e795e6a930a627839bd8b5"
+  },
+  {
+   "patient_id": "dd34bcdb-6e6b-ac5f-d613-473039286b00",
+   "sha256": "a7973dff265c401f8432f50cfe5588f43b32f3a1100a47286a270312dcb91d00"
+  },
+  {
+   "patient_id": "dde8ceaf-36b8-12d9-c030-bbca5a17f057",
+   "sha256": "d1745711a6da3348b62088a9becb35efe56ddc2534a42e0f56e0ef81363a18f5"
+  },
+  {
+   "patient_id": "de44a68a-7792-d6b3-344f-e7339398c34e",
+   "sha256": "8c94987243cc249a04af442e412fe790fe6ab52a8521b326e279e62b5475c7be"
+  },
+  {
+   "patient_id": "df036814-8ed4-99d8-4941-079238e5540e",
+   "sha256": "383c765c9cc0b8c2e3ad132d57f869cd15ccfd88972525ae0b0374f796dd734d"
+  },
+  {
+   "patient_id": "df3a8903-8975-825a-6f9e-f6eb5e30e3b3",
+   "sha256": "44ec3f4fa39d016d77699ab02d20bcadcc67be7ba1612623a458236bb376a746"
+  },
+  {
+   "patient_id": "e037e447-5c3a-a7aa-a976-94fd915e95df",
+   "sha256": "de2d22a2fdb3b83b879a385c14f41a0d9d7329e8eff70c64049776ec4ef2f52f"
+  },
+  {
+   "patient_id": "e092d2ca-2690-6b6f-4529-92cbe1d294bb",
+   "sha256": "05a8ac0e9b77e4103a96eec98283e830e8347405b814e660872e077c5165c33a"
+  },
+  {
+   "patient_id": "e2825341-f251-a2e3-ef1c-3adefe23f0e0",
+   "sha256": "00795de694ff95eafafe8c659a3d2548006f549f914f6a304917494e61dfebb9"
+  },
+  {
+   "patient_id": "e5a18749-68f4-700f-c457-93dc7a70b437",
+   "sha256": "4a6a42791c505ef818de88554170c8f20c5bc33ba3e7aaf78fa8e24f202e1af5"
+  },
+  {
+   "patient_id": "e6971c2d-1d3c-0b3f-3f35-c1cd814c9fa2",
+   "sha256": "342451d4104ef3fd8ce1e95a3a3f9feaf6d3d468366af5d506b6364a254d2ead"
+  },
+  {
+   "patient_id": "e709bc76-5488-7b59-bb73-434fef748a3f",
+   "sha256": "1f9138de334f97a2b22da8732d9029374392b520f7b92908fe6d39bbfb8c02aa"
+  },
+  {
+   "patient_id": "e73a82b4-b84e-2b2a-475d-2fcd12f0e55d",
+   "sha256": "0345f8bc196682af87e3660f27b77fda8348b8848206e97d911eb9304815cbc5"
+  },
+  {
+   "patient_id": "e7f0556d-d985-3936-716f-94417a37be88",
+   "sha256": "3a4efbc84f7653342d708fb7389f2ce2d9b189a3823d0146c10ee3c142dd1891"
+  },
+  {
+   "patient_id": "e9a0e628-d8d1-566e-dcd5-94b7e153035b",
+   "sha256": "8844bde1f0d96b9a08117a8c338d0cfb6d4c56e32c624384e65198a0aa088855"
+  },
+  {
+   "patient_id": "e9b83a4d-a34a-ebfe-6d7f-223c52a5a1da",
+   "sha256": "10e44de4ad6dab145b49d712607465331479b5d25f76408470346a3d26eb5e76"
+  },
+  {
+   "patient_id": "ebf5156b-35d8-488f-6f14-0d22aba50e7f",
+   "sha256": "1bb4e31a6aad4a14fcd1252591bd9db7226cb1a2f68177b5e007ae6319f775ed"
+  },
+  {
+   "patient_id": "ec0dc4d3-2fe1-268b-bb5a-7104e52b5c8f",
+   "sha256": "9e5a2a67d09a30b320ec41a02350cb39f305a6b26b4bfe7b4226812116f3f76b"
+  },
+  {
+   "patient_id": "ec632f8a-5cc9-3a23-cd49-cdf827077731",
+   "sha256": "ac4176135a2ddd1f045f0ee28770916d284eeb188529f06fed4fcb2abe9380bb"
+  },
+  {
+   "patient_id": "ec7c3a87-555f-9a0f-1d4c-9e2e497ec1bd",
+   "sha256": "988ae5996082b7c065878351e9be2c091a4e1182835655965663b71c8ca4205b"
+  },
+  {
+   "patient_id": "ed880709-4bd5-f6d6-f7ba-073cfc8f084e",
+   "sha256": "207dd736c035d49fcd51c122abcb73367624c11596f712ca9c78963b8596b388"
+  },
+  {
+   "patient_id": "edc665ff-1dc8-4bc4-b90f-0ee8225ba5f9",
+   "sha256": "9ec770d893f5d24ecf178bc847bf8bdb5b357a9a98450e3a2394dd1d81b44e9c"
+  },
+  {
+   "patient_id": "ee0a4a29-0c55-af37-3a03-c9e2900626a2",
+   "sha256": "33afc665bdbea3e6a67cef51539f9e8c2023828821a383bc047aa72252784297"
+  },
+  {
+   "patient_id": "ef235326-ddf3-1960-8d6c-6a2d90c3c515",
+   "sha256": "539e52f25db61ce507e400712752e5b0364926417c0d8834880360bee03f7693"
+  },
+  {
+   "patient_id": "efa1c41e-3297-5d60-2521-f90b1b341864",
+   "sha256": "88ce70e6fbc51003e8407274c2aaaa3a8697cdc886480a171f38261bd19e5b89"
+  },
+  {
+   "patient_id": "f06984ee-3053-209e-6280-72271c80bb65",
+   "sha256": "e8edf865f2eedb45fde50681b1da48399f5e7055b313c102b8b250d14b53b87d"
+  },
+  {
+   "patient_id": "f0cf4f27-6746-fe7d-278a-84883d880a7e",
+   "sha256": "fc20ca3cbba13672770bfe7c383d192958aad1a04e133c03699e87783e4d4c9d"
+  },
+  {
+   "patient_id": "f140c071-4855-d4ff-39f0-f47cf421dc5c",
+   "sha256": "bcb1406f43cc6bfeb99ce80e0049f2038008a7fde95c019697e2c4c48c053066"
+  },
+  {
+   "patient_id": "f1dd0d01-e5e8-fa6e-7f2d-3220ee6cf516",
+   "sha256": "485b6f78d3de7444804bb978e1f9411532edba11d15d624f0ae09f756d832035"
+  },
+  {
+   "patient_id": "f2a78bab-534a-fca4-265f-b547a9fd7069",
+   "sha256": "6e4c61342d82de92672cc11c834bc3326969ff98f8f2cefe8f3afc2d0aa14fd3"
+  },
+  {
+   "patient_id": "f36a3e9c-ad66-32da-9120-5717a17a0452",
+   "sha256": "714d763ce6c8ee988db8b7b5fe583369199b2b4c41c64b239fe8b5f2d8177118"
+  },
+  {
+   "patient_id": "f3c0758f-a6c9-dcb3-8380-e665d03c3967",
+   "sha256": "47c407c6c45938fb4b2684739fc08c9522c36eda6a965c42a559b241f26d6df3"
+  },
+  {
+   "patient_id": "f3f76147-c62b-1de9-6a6f-5ec079cca965",
+   "sha256": "d1f1df1f5b3cfaa7a35a9f2460662304934a7f14f74841ab5f7f676664e2febb"
+  },
+  {
+   "patient_id": "f417ed29-de22-83b2-f2f6-ed8c293674f1",
+   "sha256": "ae9f5284e72f57b88fa396d9d8fc3c157c3062fee759dc4e2c9337183e8a940e"
+  },
+  {
+   "patient_id": "f4346136-eaa2-b9ad-fde1-a305b9332caf",
+   "sha256": "5d13acd12727f60d63c784ea601257c26be9993c6a3cf14579a8ecf8e932640f"
+  },
+  {
+   "patient_id": "f4c68fd4-754f-fb3d-2a7f-fc459e3dd56c",
+   "sha256": "295c1084aa8de0743b69ea3db79f738f48bcacd6015107bb176d3cfd4ece1d79"
+  },
+  {
+   "patient_id": "f4fb6c16-1b25-ab51-62ac-99a4cec9f94b",
+   "sha256": "8f13b0a4924d41cff9682ee58cb9b3b38f42e7de7a1eec6c8c9f8386262f3228"
+  },
+  {
+   "patient_id": "f5730dc0-dc29-c840-98af-cd78cf6d38fd",
+   "sha256": "b59868d03bff40a4ef9f1a83fd2d029b4b77946d1c98d1c2f08fcd6b6af61ecd"
+  },
+  {
+   "patient_id": "f604b719-d659-34d6-6ce7-4db50313f0d0",
+   "sha256": "71aedb2c6e39d177a155d767869abbcad75ab7cf6157edc71199f8b2722af2bd"
+  },
+  {
+   "patient_id": "f6c542a1-da62-4e91-05c2-4822a3a4699d",
+   "sha256": "6bebe593c360113980b567a53f4ce39fc1feb14d3a8442f9c22a60c40f8b9eee"
+  },
+  {
+   "patient_id": "f6d8c492-d1d0-1d3e-cc33-573b200022ea",
+   "sha256": "e5148bc8d0dad4831e1231c1fe3b9517bb7756b07997e05efb14473e7ab0b633"
+  },
+  {
+   "patient_id": "f6ea0b30-bbe2-45d4-4fb3-116680e40f2e",
+   "sha256": "602565bfad8481c3afbbb740c317ef1ea414a2e6c901c2daac004178513f06ea"
+  },
+  {
+   "patient_id": "f7874742-7a91-182a-fbd9-797a1c9f8c22",
+   "sha256": "ea332d6e797c7eee066661d0b13885102adb98221f91300ecc4090d2188005d9"
+  },
+  {
+   "patient_id": "f87c2595-087e-2f3f-d620-0c546ffdd97d",
+   "sha256": "d57426cbb378e224a11c9b88ebcc6f823fb915f3081653662619b87d9a41ce55"
+  },
+  {
+   "patient_id": "f893a226-8c1c-ca54-acf5-18dcc2e7b241",
+   "sha256": "cbc2fa75a46ec3727d5d107e9014335b0764feb1a5477b88b337c884e97fedf5"
+  },
+  {
+   "patient_id": "f89a9bac-b1ef-d7e5-1aad-3b0fbcd8f77d",
+   "sha256": "229d4740253f4a5b5c2ad1cc648ccf4ba68f8f28fa15dad33090b418d796a21b"
+  },
+  {
+   "patient_id": "f8fe5d41-4042-2a97-a466-6134b54b7693",
+   "sha256": "64656158e988eafc449890178b315e816bf5493bb0b3a26f6b7fa13e9a0940bd"
+  },
+  {
+   "patient_id": "f9bd5395-4175-699c-f565-447b161b0ff3",
+   "sha256": "bf1c1d7bb6baf50eaf19b69ed9f504315c0b0d2be7742987d8043dfb0443b6cc"
+  },
+  {
+   "patient_id": "f9d04a80-4ccb-febc-990f-c656ad776d40",
+   "sha256": "864beff07167d7d69788856712c2d7553b1e50f4866cde269d7470e4387c5a71"
+  },
+  {
+   "patient_id": "fa199a22-9b6f-5190-c0fd-12d4170a74ee",
+   "sha256": "a494c89bd38ed2999a9f7f95e52e4fb84405e8e21c93e722653e00d0292fb3c9"
+  },
+  {
+   "patient_id": "fa2d7499-8bb0-e359-eea4-c1e6390b281a",
+   "sha256": "59918b62cc0e49293ce68c0eaa6c991f748233a355818a7b64be43e1aaf474a7"
+  },
+  {
+   "patient_id": "fa774ee1-f358-3a8c-1e58-6d8d759cc62f",
+   "sha256": "f0332a776e9aa8463c54d228954d96bb7b1a33b0e69baf899807c9a6a073a09f"
+  },
+  {
+   "patient_id": "fa813243-e72b-d376-46a0-5f90b9d7fa11",
+   "sha256": "3861c39a2f2a3e5b6b6672b44f996de16c8781ef6a948c0e5a64615230470bf0"
+  },
+  {
+   "patient_id": "fbbf4d69-b3c7-5e6c-2b52-cc7f6ab06cf9",
+   "sha256": "33d17e83c9be4d51992dcbd605494349ab2640d5d8f3f5ceddb7a5b33e445b3d"
+  },
+  {
+   "patient_id": "fbdfb8b4-281e-09a5-d7a2-48cf96fd64f5",
+   "sha256": "7852204d7023280106c5132c949e50aecdba661af7498370f8e3e769b81c055a"
+  },
+  {
+   "patient_id": "fce0efe6-f7a6-8ca2-f4ef-670aed9f8d31",
+   "sha256": "ffd20e9e08d0ca0d1de3c324818664552e178b14bf430965e96b9ccb9e428571"
+  },
+  {
+   "patient_id": "fed52ef5-d5ad-3a4c-5a4e-40c915929390",
+   "sha256": "499aec6cf743ec4095495dc3fdc4019de7489cd2cca8d464fbfbbc395ae8c46c"
+  },
+  {
+   "patient_id": "ffc808d7-1c50-71c7-cf89-830da3666865",
+   "sha256": "3bf19c79953f025f785242c7833d677fca866939d62b3733d1e003be326cbc03"
+  }
+ ]
+}

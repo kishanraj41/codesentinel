@@ -120,8 +120,14 @@ LOINC_ICD10_MAP = {
     "3084-1": {"name": "Uric Acid", "thresholds": [
         {"op": ">", "value": 7.0, "icd10": "E79.0", "condition": "Hyperuricemia"},
     ]},
-    "2339-0": {"name": "Glucose (urine)", "thresholds": [
-        {"op": ">", "value": 0, "icd10": "R81", "condition": "Glycosuria"},
+    # 2339-0 is blood glucose, not urine glucose. It was mapped to glycosuria (> 0), so every
+    # blood glucose result raised R81. It now uses the random-glucose criterion of 2345-7, and
+    # glycosuria uses the urine test-strip LOINC above the usual 15 mg/dL reference limit.
+    "2339-0": {"name": "Glucose (blood)", "thresholds": [
+        {"op": ">=", "value": 200, "icd10": "E11.65", "condition": "Type 2 diabetes with hyperglycemia"},
+    ]},
+    "5792-7": {"name": "Glucose (urine, test strip)", "thresholds": [
+        {"op": ">=", "value": 15, "icd10": "R81", "condition": "Glycosuria"},
     ]},
     "5811-5": {"name": "Protein (urine)", "thresholds": [
         {"op": ">", "value": 30, "icd10": "R80.9", "condition": "Proteinuria"},
@@ -532,6 +538,10 @@ def run_gap_pipeline(
         if upgrade.get("icd10_code") not in present:
             deduped.append(upgrade)
             present.add(upgrade.get("icd10_code"))
+    # ICD-10-CM R73 Excludes1 diabetes mellitus (E08-E13): no prediabetes or abnormal-glucose
+    # code once diabetes is coded.
+    if any(str(code)[:3] in {"E08", "E09", "E10", "E11", "E13"} for code in all_coded):
+        deduped = [gap for gap in deduped if not str(gap.get("icd10_code") or "").startswith("R73")]
     log.info(f"After dedup: {len(deduped)} unique candidates")
 
     # ── HCC + RAF Scoring ──

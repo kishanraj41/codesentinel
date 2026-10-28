@@ -38,6 +38,13 @@ class CitationModel(BaseModel):
     source_label: str = ""
     section: str = ""
     page: Optional[int] = None
+    provenance: Literal["tavily_live", "curated_fallback", "fixture", ""] = ""
+    fiscal_year: str = ""
+    verified_verbatim: bool = False
+    verified_against: str = ""
+    pdf_sha256: str = ""
+    anchor_status: Literal["verified", "superseded", "unverified", "none", ""] = ""
+    supersedes: Optional[dict] = None
 
 
 class WorklistItem(BaseModel):
@@ -175,6 +182,7 @@ class AuditResponse(BaseModel):
     patient_name: str = ""
     mode: Literal["mock", "live", "degraded"]
     guideline_mode: Literal["live", "cache", "fixture", "anchor", "mixed", "none"]
+    guideline_provenance: dict = Field(default_factory=dict)
     degraded_reasons: list[str] = Field(default_factory=list)
     summary: AuditSummary
     worklist: list[WorklistItem]
