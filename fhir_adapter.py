@@ -17,6 +17,25 @@ from codesentinel.fhir_guard import GuardError, assert_same_host, validate_fhir_
 log = logging.getLogger("gapdetect.fhir")
 
 
+
+def _reason_texts(resource: dict) -> List[str]:
+    """Display text of reasonCode, reasonReference, and Encounter.diagnosis entries."""
+    texts: List[str] = []
+    for concept in resource.get("reasonCode") or []:
+        for coding in concept.get("coding") or []:
+            if coding.get("display"):
+                texts.append(str(coding["display"]))
+        if concept.get("text"):
+            texts.append(str(concept["text"]))
+    for ref in resource.get("reasonReference") or []:
+        if isinstance(ref, dict) and ref.get("display"):
+            texts.append(str(ref["display"]))
+    for diagnosis in resource.get("diagnosis") or []:
+        condition = (diagnosis or {}).get("condition") or {}
+        if isinstance(condition, dict) and condition.get("display"):
+            texts.append(str(condition["display"]))
+    return texts
+
 class FHIRClient:
     """Connects to any FHIR R4 server using SHARP context headers."""
 
@@ -312,6 +331,7 @@ class FHIRPatientExtractor:
             results.append({
                 "medication_id": med.get("id", ""),
                 "name": med_name,
+                "reasons": _reason_texts(med),
                 "code": med_code,
                 "status": med.get("status", ""),
                 "dosage": dosage_text,
@@ -378,6 +398,7 @@ class FHIRPatientExtractor:
             period = enc.get("period", {})
             results.append({
                 "encounter_id": enc.get("id", ""),
+                "reasons": _reason_texts(enc),
                 "type": enc_type,
                 "status": enc.get("status", ""),
                 "start_date": (period.get("start", "") or "")[:10],

@@ -21,6 +21,7 @@ from codesentinel.nemotron.mock_reasoner import (
     needs_escalation,
     needs_super,
     safe_physician_query,
+    triage_structured_lines,
 )
 from codesentinel.nemotron.schemas import (
     ADJUDICATION_SCHEMA,
@@ -311,7 +312,7 @@ def run_cascade(
         if triage.assertion_status == "medication_supported" and decision in {"accept", "reject"}:
             decision = "abstain"
             rationale = (
-                "An active medication list with a current refill supports human review, not an automatic add."
+                "An active medication that specifically treats this condition supports human review, not an automatic add."
             )
             query_needed = True
         elif triage.assertion_status == "lab_only" and decision in {"accept", "reject"}:
@@ -507,7 +508,9 @@ def _triage_one(client, model, gap, profile, notes, corpus) -> Completion:
                     "candidate": _public_gap(gap),
                     "notes": notes[:8000],
                     "mention_windows": windows,
-                    "structured_lines": list(corpus.structured_lines.values())[:40],
+                    "structured_lines": triage_structured_lines(
+                        gap, profile, list(corpus.structured_lines.values())
+                    ),
                 },
                 default=str,
             ),

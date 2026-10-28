@@ -56,12 +56,26 @@ class BundleFHIRClient:
         return found
 
 
-def load_rows(bench: Path, limit: int | None, seed: int) -> list[tuple[dict, dict]]:
+SPLIT_FILE = Path(__file__).resolve().parent / "split.json"
+
+
+def split_ids(split: str) -> set[str] | None:
+    """Patient ids for a split in eval/synthea/split.json. "all" returns None."""
+    if split == "all":
+        return None
+    data = json.loads(SPLIT_FILE.read_text(encoding="utf-8"))
+    return set(data[split])
+
+
+def load_rows(bench: Path, limit: int | None, seed: int, split: str = "all") -> list[tuple[dict, dict]]:
     import logging
     from fhir_adapter import FHIRPatientExtractor
 
     logging.getLogger("gapdetect.fhir").setLevel(logging.ERROR)
     labels = [json.loads(line) for line in (bench / "labels.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    keep = split_ids(split)
+    if keep is not None:
+        labels = [label for label in labels if label["patient_id"] in keep]
     if limit:
         labels = random.Random(seed).sample(labels, limit)
         labels.sort(key=lambda l: l["patient_id"])
@@ -257,6 +271,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=20261027)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--commit", default="")
+    ap.add_argument("--split", default="all", choices=["all", "dev", "held_out"])
     args = ap.parse_args()
     if args.mode == "live" and not (os.environ.get("NEBIUS_API_KEY") and os.environ.get("TAVILY_API_KEY")):
         raise SystemExit("live mode needs NEBIUS_API_KEY and TAVILY_API_KEY")
@@ -265,7 +280,7 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     manifest = json.loads((bench / "manifest.json").read_text(encoding="utf-8"))
-    rows = load_rows(bench, args.limit, args.seed)
+    rows = load_rows(bench, args.limit, args.seed, args.split)
     print(f"Synthea charts: {len(rows)}", flush=True)
     cache, errors = run_all(rows, args.mode, args.workers)
     per_config = eval_run._run_split(CachedAdapter(cache), rows, mode=args.mode)
@@ -287,6 +302,7 @@ def main() -> None:
             "remove_fraction": manifest["remove_fraction"],
             "charts": len(rows),
             "subset": f"seeded sample of {args.limit}" if args.limit else "all",
+            "split": args.split,
             "expected_gaps": sum(len(l["expected_gaps"]) for l in labels),
             "charts_with_gaps": sum(1 for l in labels if l["expected_gaps"]),
             "neutral_codes": sum(len(l["neutral_codes"]) for l in labels),

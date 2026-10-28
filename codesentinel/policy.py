@@ -91,6 +91,64 @@ _HIGH_SPECIFICITY_DRUGS: dict[str, tuple[str, ...]] = {
     "I10": ("lisinopril", "amlodipine", "losartan", "valsartan", "hydrochlorothiazide", "hctz"),
 }
 
+# Drugs that treat a whole ICD-10-CM category, used only as support for an already billed code.
+_FAMILY_DRUGS: dict[str, tuple[str, ...]] = {
+    "E11": ("metformin", "insulin", "glipizide", "glyburide", "glimepiride", "sitagliptin",
+            "liraglutide", "semaglutide", "empagliflozin", "canagliflozin", "dapagliflozin", "pioglitazone"),
+    "E78": ("atorvastatin", "rosuvastatin", "simvastatin", "pravastatin", "lovastatin",
+            "pitavastatin", "ezetimibe", "fenofibrate", "gemfibrozil"),
+    "E03": ("levothyroxine", "synthroid", "liothyronine"),
+    "I10": ("lisinopril", "amlodipine", "losartan", "valsartan", "hydrochlorothiazide", "hctz",
+            "chlorthalidone", "olmesartan", "irbesartan"),
+    "I12": ("lisinopril", "losartan", "valsartan", "irbesartan", "amlodipine"),
+    "I13": ("lisinopril", "losartan", "valsartan", "furosemide", "carvedilol"),
+    "I25": ("nitroglycerin", "isosorbide", "clopidogrel", "ranolazine"),
+    "I48": ("warfarin", "apixaban", "rivaroxaban", "dabigatran", "edoxaban", "digoxin"),
+    "I50": ("sacubitril", "spironolactone", "eplerenone", "furosemide", "carvedilol"),
+    "J44": ("tiotropium", "umeclidinium", "spiriva", "fluticasone / salmeterol", "budesonide / formoterol"),
+    "J45": ("albuterol", "fluticasone", "montelukast", "budesonide"),
+    "G30": ("donepezil", "memantine", "galantamine", "rivastigmine"),
+    "G40": ("levetiracetam", "lamotrigine", "phenytoin", "carbamazepine", "valproate"),
+    "M81": ("alendronate", "risedronate", "ibandronate", "denosumab", "zoledronic"),
+}
+
+# Words that are not specific enough to tie a sentence to a condition on their own.
+_GENERIC_WORDS = frozenset({
+    "acute", "chronic", "disease", "disorder", "finding", "situation", "unspecified", "other",
+    "without", "with", "complications", "complication", "type", "stage", "mellitus", "single",
+    "episode", "primary", "secondary", "essential", "history", "syndrome", "body", "mass", "index",
+    "site", "left", "right", "bilateral", "unilateral", "the", "and", "of", "or", "in", "to", "due",
+})
+
+
+def _display_terms(display: str) -> tuple[str, ...]:
+    """Phrases from the Condition display text, for codes the term list does not cover."""
+    low = re.sub(r"\((disorder|finding|situation|procedure)\)", " ", (display or "").lower())
+    terms: list[str] = []
+    for chunk in re.split(r"[,;:()\[\]]|\s-\s|\bwith\b|\bwithout\b|\bdue to\b", low):
+        words = [w for w in re.findall(r"[a-z0-9']+", chunk)]
+        content = [w for w in words if w not in _GENERIC_WORDS]
+        if not content:
+            continue
+        phrase = " ".join(words).strip()
+        if len(content) == 1 and len(content[0]) < 6:
+            continue
+        if len(phrase) >= 6:
+            terms.append(phrase)
+    return tuple(dict.fromkeys(terms))
+
+
+def _structured_link(profile: dict, terms: tuple[str, ...]) -> bool:
+    """A medication or encounter in the chart whose FHIR reason names this condition."""
+    if not terms:
+        return False
+    for row in list(profile.get("medications") or []) + list(profile.get("encounters") or []):
+        for reason in row.get("reasons") or []:
+            if _sentence_matches(str(reason), terms):
+                return True
+    return False
+
+
 _HEADER_RE = re.compile(
     r"(?im)^(history of present illness|hpi|problem list|past medical history|"
     r"assessment and plan|assessment|medications|laboratory|physical exam)\s*:?\s*$"
@@ -124,7 +182,7 @@ def unsupported_existing_items(profile: dict) -> list[UnsupportedExisting]:
         code = (cond.get("icd10_code") or "").upper()
         if not code:
             continue
-        terms = _terms_for(code)
+        terms = _terms_for(code) + _display_terms(cond.get("display") or "")
         matched = [(sentence, section) for sentence, section in sentences if terms and _sentence_matches(sentence, terms)]
         contradicted = None
         affirmed = False
@@ -146,8 +204,13 @@ def unsupported_existing_items(profile: dict) -> list[UnsupportedExisting]:
             continue
         if matched or affirmed:
             continue
-        # No mention. Unsupported only when the chart also lacks a supporting drug and lab.
-        high = _HIGH_SPECIFICITY_DRUGS.get(code, ())
+        # No mention. Unsupported only when the chart also lacks structured evidence: a
+        # medication or encounter whose FHIR reason names the condition, a drug that treats
+        # it, or a lab past the code's threshold. The Condition row itself is the claim under
+        # audit, so it is not counted as its own support.
+        if _structured_link(profile, terms):
+            continue
+        high = _HIGH_SPECIFICITY_DRUGS.get(code, ()) + _FAMILY_DRUGS.get(code.split(".")[0], ())
         if any(drug in meds for drug in high):
             continue
         if _lab_supports(code, profile):
@@ -230,4 +293,6 @@ def _lab_supports(code: str, profile: dict) -> bool:
             return True
         if code.startswith("D64") and loinc == "718-7" and value < 12:
             return True
-    return False
+    from codesentinel.nemotron.mock_reasoner import supporting_lab_observation
+
+    return supporting_lab_observation(code, profile.get("observations") or []) is not None

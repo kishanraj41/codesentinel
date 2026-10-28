@@ -111,5 +111,22 @@ class Runner(unittest.TestCase):
         self.assertEqual(out[0]["emitted_code"], "N18.3")
 
 
+class SplitTests(unittest.TestCase):
+    def test_split_is_seeded_disjoint_and_complete(self):
+        import json
+        import random
+
+        from eval.synthea.run import SPLIT_FILE, split_ids
+
+        data = json.loads(SPLIT_FILE.read_text(encoding="utf-8"))
+        dev, held = split_ids("dev"), split_ids("held_out")
+        self.assertEqual((len(dev), len(held)), (100, 300))
+        self.assertFalse(dev & held)
+        ids = sorted(dev | held)
+        random.Random(data["seed"]).shuffle(ids)
+        self.assertEqual(set(ids[:100]), dev)
+        self.assertIsNone(split_ids("all"))
+
+
 if __name__ == "__main__":
     unittest.main()
