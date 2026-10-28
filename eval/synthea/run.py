@@ -174,6 +174,13 @@ def _gold_fate(cache: dict, rows, config: str) -> dict[str, int]:
     return dict(sorted(fate.items()))
 
 
+def _caught(c: dict) -> str:
+    u = c.get("unsupported_existing") or {}
+    if u.get("tp") is None:
+        return "—"
+    return f"{u.get('tp')}/{(u.get('tp') or 0) + (u.get('fn') or 0)}"
+
+
 def _fmt(value, digits=3):
     return eval_run._fmt(value, digits)
 
@@ -209,7 +216,7 @@ def markdown(summary: dict) -> str:
         f"{d['neutral_codes']} removed codes with no support in the chart are neutral. "
         f"{d['unsupported_existing']} charts carry one billed code Synthea says the patient does not have.",
         "",
-        "| Config | Precision | Recall | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Info rows / chart | Charts past C1 | $ / chart | P50 / P95 s |",
+        "| Config | Precision | Recall | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Planted unsupported caught | Charts past C1 | $ / chart | P50 / P95 s |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for c in summary["configs"]:
@@ -220,12 +227,11 @@ def markdown(summary: dict) -> str:
         lines.append(
             f"| {c['id']} {c['label']} | {_fmt(c.get('precision'))} | {_fmt(c.get('recall'))} | {_fmt(c.get('f1'))} | "
             f"{_fmt(c.get('review_burden_per_chart'), 2)} | {_fmt(c.get('gap_rows_per_chart'), 2)} | {c.get('fp')} | "
-            f"{_fmt(c.get('info_rows_per_chart'), 2)} | {esc_text} | {cost} | {lat} |"
+            f"{_caught(c)} | {esc_text} | {cost} | {lat} |"
         )
     lines += [
         "",
         "Review items count every row sent to a coder, including unsupported-existing flags on billed codes. Gap rows count only proposed additions. "
-        "Info rows are billed codes with no evidence on charts whose notes name no condition: shown for context, not review work, not scored. "
         "Charts past C1 is the share of charts where Super, Tavily or Ultra ran (C2-C4 always; C4a only when a combination or specificity candidate survived triage).",
         "",
         "## 95% intervals (Wilson)",
@@ -259,13 +265,9 @@ def markdown(summary: dict) -> str:
         if c["id"] not in {"C4", "C4a"}:
             continue
         u = c.get("unsupported_existing") or {}
-        info_note = ""
-        if u.get("planted_shown_as_info") is not None:
-            info_note = f" (of which shown as info rows: {u.get('planted_shown_as_info')})"
         lines.append(
             f"- {c['id']}: planted {d['unsupported_existing']}. Flagged and planted: {u.get('tp')}. "
-            f"Flagged on a billed code Synthea does have: {u.get('fp')}. Missed: {u.get('fn')}{info_note}. "
-            f"Info rows: {c.get('info_rows', 0)}."
+            f"Flagged on a billed code Synthea does have: {u.get('fp')}. Missed: {u.get('fn')}."
         )
     lines += [
         "",

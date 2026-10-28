@@ -20,11 +20,6 @@ TEMPLATE_NOTE = (
     "# Assessment and Plan\nPatient is presenting with medication review due (situation)."
 )
 
-# The same template with one audited condition named in the assessment. A chart whose
-# notes name a condition keeps unsupported-existing flags as review work; the
-# TEMPLATE_NOTE alone names none, so its flags are informational (see test_info_gate.py).
-MENTION_NOTE = TEMPLATE_NOTE + "\nPatient is presenting with hyperlipidemia (disorder)."
-
 
 def _triage(status="copied_forward_unclear"):
     return TriageResult(assertion_status=status, supporting_quotes=[], section="unknown", confidence=0.4)
@@ -159,7 +154,7 @@ class UnsupportedExistingTests(unittest.TestCase):
         for drug in ("Carvedilol 25 MG Oral Tablet", "Furosemide 40 MG Oral Tablet"):
             with self.subTest(drug=drug):
                 profile = self._profile(
-                    MENTION_NOTE,
+                    TEMPLATE_NOTE,
                     [{"icd10_code": "I50.9", "display": "Heart failure, unspecified"}],
                     medications=[{"name": drug}],
                 )
@@ -172,7 +167,7 @@ class UnsupportedExistingTests(unittest.TestCase):
         for drug in ("Carvedilol 25 MG Oral Tablet", "Furosemide 40 MG Oral Tablet"):
             with self.subTest(drug=drug):
                 profile = self._profile(
-                    MENTION_NOTE,
+                    TEMPLATE_NOTE,
                     [{"icd10_code": "I13.0", "display": "Hypertensive heart and chronic kidney disease with heart failure"}],
                     medications=[{"name": drug}],
                 )
@@ -207,7 +202,7 @@ class UnsupportedExistingTests(unittest.TestCase):
 
     def test_code_without_any_evidence_is_still_flagged(self):
         profile = self._profile(
-            MENTION_NOTE,
+            TEMPLATE_NOTE,
             [{"icd10_code": "J44.9", "display": "Chronic obstructive pulmonary disease, unspecified"}],
             medications=[{"name": "Simvastatin 20 MG", "reasons": ["Hyperlipidemia"]}],
             observations=[{"loinc": "2947-0", "value": 140}],

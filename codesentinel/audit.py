@@ -50,7 +50,6 @@ def apply_verification(
         "timeline": audit["timeline"],
         "receipt": audit["receipt"],
         "citations": audit["citations"],
-        "info": audit["info"],
         "depth": audit["depth"],
     }
 
@@ -83,10 +82,8 @@ def _audit_dict(profile, demographics, snapshot, cascade) -> dict:
             "specificity_upgrades": sum(1 for item in worklist if item["gap_type"] == "specificity_upgrade"),
             "combination_codes": sum(1 for item in worklist if item["gap_type"] == "combination"),
             "dropped_count": len(dropped),
-            "info_count": len(cascade.get("info") or []),
         },
         "worklist": worklist,
-        "info": list(cascade.get("info") or []),
         "depth": cascade.get("depth"),
         "dropped": dropped,
         "timeline": cascade["timeline"],

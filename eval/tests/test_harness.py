@@ -350,4 +350,3 @@ class AdaptiveConfigTests(unittest.TestCase):
         self.assertEqual(c4a["summary"]["escalated_charts"], depths.count("C4"))
         self.assertEqual(per_config["C1"]["summary"]["escalated_fraction"], 0)
         self.assertEqual(per_config["C4"]["summary"]["escalated_fraction"], 1)
-        self.assertIn("info_rows_per_chart", c4a["summary"])

@@ -175,67 +175,11 @@ class UnsupportedExisting:
     stage: str = "triage"
 
 
-# Decision for a billed code with no evidence on a chart whose notes name no condition.
-# It is shown to the coder as context, but it is not review work and is not scored.
-INFO_DECISION = "info"
-INFO_DROP_REASON = "no_condition_mentions"
-
-
-def _lexicon_terms() -> tuple[str, ...]:
-    terms: list[str] = []
-    for values in _CODE_TERMS.values():
-        terms.extend(values)
-    return tuple(dict.fromkeys(terms))
-
-
-def condition_mentions(profile: dict) -> list[str]:
-    """Note sentences that name a condition this check can recognize.
-
-    A sentence is a condition mention when it contains a term for any code in the
-    code lexicon (`_CODE_TERMS`, the conditions CodeSentinel audits) or a term for any
-    code on the chart's own condition list (lexicon terms for that code plus phrases
-    from its Condition display text). Negated, family-history and historical sentences
-    still count: a note that says "denies diabetes" is discussing conditions. Section
-    headers ("Assessment and Plan") on their own do not count.
-    """
-    sentences = _sentences(_note_text(profile))
-    terms = list(_lexicon_terms())
-    for cond in profile.get("conditions") or []:
-        code = (cond.get("icd10_code") or "").upper()
-        if code:
-            terms.extend(_terms_for(code))
-        terms.extend(_display_terms(cond.get("display") or ""))
-    terms_t = tuple(dict.fromkeys(t for t in terms if t))
-    if not terms_t:
-        return []
-    return [sentence for sentence, _section in sentences if _sentence_matches(sentence, terms_t)]
-
-
-def notes_mention_conditions(profile: dict) -> bool:
-    """False only when the chart window's notes name no recognizable condition at all.
-
-    This is the gate for unsupported-existing flags. It is deliberately conservative:
-    one mention of any audited or billed condition anywhere in any note keeps the
-    normal review behavior for every billed code on the chart. A chart with no note
-    text has no condition mentions.
-    """
-    return bool(condition_mentions(profile))
-
-
 def unsupported_existing_items(profile: dict) -> list[UnsupportedExisting]:
-    """Coded conditions the note contradicts, or that have no MEAT at all.
-
-    A billed code with no evidence is a review item when the notes discuss conditions
-    (the clinician documented the problem list and this code is absent from it). When
-    the notes name no condition at all (`notes_mention_conditions` is False), silence
-    about one code is not evidence against it, so the row is informational: decision
-    `info`, not shown as review work, not counted in review items or scoring.
-    Contradicted codes always need a mention, so they are never informational.
-    """
+    """Coded conditions the note contradicts, or that have no MEAT at all."""
     text = _note_text(profile)
     sentences = _sentences(text)
     items: list[UnsupportedExisting] = []
-    silent_notes: bool | None = None
     meds = " ".join(_med_names(profile))
     for cond in profile.get("conditions") or []:
         code = (cond.get("icd10_code") or "").upper()
@@ -275,19 +219,6 @@ def unsupported_existing_items(profile: dict) -> list[UnsupportedExisting]:
         if _lab_supports(code, profile):
             continue
         if not text.strip() and not profile.get("medications") and not profile.get("observations"):
-            continue
-        if silent_notes is None:
-            silent_notes = not notes_mention_conditions(profile)
-        if silent_notes:
-            items.append(UnsupportedExisting(
-                code=code,
-                condition_name=cond.get("display") or code,
-                assertion_status="unsupported_existing",
-                quote="No mention, medication, or supporting lab in this chart; the notes name no condition",
-                decision=INFO_DECISION,
-                drop_reason=INFO_DROP_REASON,
-                shown_to_coder=False,
-            ))
             continue
         items.append(UnsupportedExisting(
             code=code,

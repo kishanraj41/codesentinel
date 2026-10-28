@@ -328,8 +328,6 @@ def _audit_to_eval(audit: dict, mode: str, config: str = "C4") -> dict[str, Any]
     items = []
     for row in audit.get("worklist") or []:
         items.append(_eval_item(row, shown=True))
-    for row in audit.get("info") or []:
-        items.append(_eval_item(row, shown=False))
     for row in audit.get("dropped") or []:
         items.append(_eval_item(row, shown=False))
     depth = audit.get("depth") or {}
@@ -387,8 +385,6 @@ def _eval_item(row: dict, *, shown: bool) -> dict[str, Any]:
     if reason == "unsupported":
         reason = "unsupported_claim"
     decision = row.get("decision") or ("reject" if not shown else "review")
-    if decision == "info":
-        reason = reason or "info_no_condition_mentions"
     return {
         "code": (row.get("icd10_code") or "").upper(),
         "condition_name": row.get("code_display") or "",

@@ -157,7 +157,7 @@ class AdaptiveReportTests(unittest.TestCase):
         from eval.synthea.run import markdown
 
         text = markdown(self._summary())
-        self.assertIn("Info rows / chart", text)
+        self.assertIn("Planted unsupported caught", text)
         self.assertIn("Charts past C1", text)
         self.assertIn("| C4a", text)
         self.assertIn("25%", text)

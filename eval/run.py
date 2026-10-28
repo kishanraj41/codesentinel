@@ -118,7 +118,6 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
                 "shown_codes": scored["shown_codes"],
                 "gold_codes": scored["gold_codes"],
                 "review_items": scored["review_items"],
-                "info_rows": scored.get("info_rows", 0),
                 "depth_used": depth_used,
                 "latency_s": scored["latency_s"],
                 "cost_usd": scored["cost_usd"],
@@ -263,13 +262,13 @@ def _fmt(value: Any, digits: int = 3) -> str:
 def _config_table(configs: list[dict]) -> list[str]:
     fmt = _fmt
     lines = [
-        "| Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart | Info rows / chart | Charts past C1 |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart | Charts past C1 |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for cfg in configs:
         hard = (cfg.get("hard_negative_pass_rate") or {}).get("overall")
         lines.append(
-            "| {id} | {p} | {r} | {f} | {tp} | {fp} | {fn} | {rev} | {fpc} | {hard} | {abs_} | {p50} | {p95} | {cost} | {tav} | {info} | {esc} |".format(
+            "| {id} | {p} | {r} | {f} | {tp} | {fp} | {fn} | {rev} | {fpc} | {hard} | {abs_} | {p50} | {p95} | {cost} | {tav} | {esc} |".format(
                 id=cfg["id"],
                 p=fmt(cfg["precision"]),
                 r=fmt(cfg["recall"]),
@@ -283,7 +282,6 @@ def _config_table(configs: list[dict]) -> list[str]:
                 p95=fmt(cfg["latency_p95_s"], 4),
                 cost=fmt(cfg["cost_per_chart_usd"], 5),
                 tav=fmt(cfg["tavily_credits_per_chart"], 2),
-                info=fmt(cfg.get("info_rows_per_chart"), 2),
                 esc=fmt(cfg.get("escalated_fraction"), 2),
             )
         )
