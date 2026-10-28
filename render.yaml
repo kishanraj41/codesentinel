@@ -5,7 +5,7 @@ services:
     name: codesentinel
     runtime: docker
     plan: free
-    branch: feat/live-fixes
+    branch: main
     dockerfilePath: ./Dockerfile.web
     dockerContext: .
     healthCheckPath: /health
@@ -17,7 +17,7 @@ services:
       - key: MAX_DAILY_USD
         value: "3"
       - key: LIVE_RATE_PER_HOUR
-        value: "10"
+        value: "40"
       - key: LIVE_MAX_CONCURRENT
         value: "3"
       - key: TRUSTED_PROXY_HOPS
