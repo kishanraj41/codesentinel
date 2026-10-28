@@ -40,7 +40,11 @@ Every scenario has at least two test charts. The published file is the test spli
 
 Labels are in `eval/gold/gold_b.jsonl` (no note text). Bundles are in `eval/gold/bundles/`. `eval/gold/manifest.json` carries `label_sha256`.
 
-Gold-A is the ten synthetic patients `pt-001` through `pt-010` from `test_dataset.py`, labeled in `eval/gold/gold_a.json`. `review_status` is `pending_coder_signoff`. Gold-A is the headline benchmark in the README, with the caveat that it is ten charts and the labels are pending certified-coder sign-off. Its summary is `gold_a_summary.json` in the same results folder. Gold-B is a hard-negative and regression suite built by the same author as the policy, not a benchmark.
+Gold-A is the ten synthetic patients `pt-001` through `pt-010` from `test_dataset.py`, labeled in `eval/gold/gold_a.json`. `review_status` is `pending_coder_signoff`. The README leads with the Synthea benchmark (outside generator, see below), then Gold-A, which is ten charts with labels pending certified-coder sign-off. Its summary is `gold_a_summary.json` in the same results folder. Gold-B is a hard-negative and regression suite built by the same author as the policy, not a benchmark.
+
+## Synthea benchmark
+
+400 Synthea v4.0.0 patients with labels derived from Synthea's own conditions. Method, sources and reproduction commands: [eval/synthea/README.md](../eval/synthea/README.md). Runner: `python -m eval.synthea.run`. Output: `eval/results/synthea/` (`summary.json`, `RESULTS.md`, `charts.json`, `labels.jsonl`, `manifest.json`). Scoring reuses `eval/score.py`; a shown dotted parent code counts as its label child (`N18.3` for `N18.30`), and removed codes the chart cannot support are neutral.
 
 Label change: Gold-A pt-002's expected heart-failure code is I50.22, not I50.9, because the note documents HFrEF (reduced ejection fraction).
 

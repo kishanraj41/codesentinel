@@ -41,18 +41,28 @@ This is clinical coding integrity, not software security: the "code" is a diagno
 
 ## Results
 
-Live run on Nebius Token Factory, commit `9409d3b`, 2026-10-27, with FY 2027 guideline citations retrieved live through Tavily. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md). C0+ is the rules queue a coder sees today (approved plus review). C4 is the full cascade.
+Three evaluation sets, all run live on Nebius Token Factory on 2026-10-27, with FY 2027 guideline citations retrieved through Tavily. C0+ is the rules queue a coder sees today (approved plus review). C4 is the full cascade.
 
 | Set | Charts | Config | Precision | Recall | F1 | Review items / chart | $ / chart | P50 / P95 s |
 |---|---:|---|---:|---:|---:|---:|---:|---:|
-| **Gold-A** (headline, hand-labeled) | 10 | C0+ rules | 0.755 | 1.000 | 0.860 | 4.90 | 0 | — |
-| | | **C4 cascade** | **0.872** | **0.919** | **0.895** | **4.20** | 0.0060 | 12.6 / 94.9 |
+| **Synthea** (outside generator, 75 gold gaps) | 400 | C0+ rules | 0.051 | 0.840 | 0.096 | 3.09 | 0 | — |
+| | | C4 cascade | 0.041 | 0.027 | 0.032 | 5.11 (0.12 gap rows) | 0.0011 | 4.1 / 31.6 |
+| **Gold-A** (hand-labeled) | 10 | C0+ rules | 0.755 | 1.000 | 0.860 | 4.90 | 0 | — |
+| | | C4 cascade | 0.872 | 0.919 | 0.895 | 4.20 | 0.0060 | 12.6 / 94.9 |
 | Gold-B (hard-negative and regression suite) | 66 | C0+ rules | 0.598 | 1.000 | 0.749 | 2.00 | 0 | — |
-| | | **C4 cascade** | **1.000** | **1.000** | **1.000** | **1.24** | 0.0014 | 2.05 / 14.51 |
+| | | C4 cascade | 1.000 | 1.000 | 1.000 | 1.24 | 0.0014 | 2.05 / 14.51 |
 
-**Gold-A is the benchmark.** Ten outpatient charts labeled by hand. The labels are pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)), and ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.79–0.97). C4 raises precision from 0.755 to 0.872 and cuts the queue from 4.9 to 4.2 items per chart, at the cost of three missed codes (`D64.9` and `I12.9` on pt-001, `I50.9` on pt-004). The Gold-A P95 comes from one slow chart (pt-002, 150 s end to end); the other nine finished in 27 s or less.
+**Synthea is the outside benchmark.** The 400 patients come from [Synthea](https://github.com/synthetichealth/synthea) v4.0.0 (seed `20261027`, Texas, ages 45–90), so neither the charts nor the labels were written by the author. Each patient's active Synthea conditions are mapped to ICD-10-CM with the NLM SNOMED CT to ICD-10-CM map and the FY 2027 combination-code rules. A seeded 30% of the billed codes CodeSentinel covers are then removed from the chart, and the removed codes that the 12-month chart still supports (a note, a linked medication, or a lab meeting a published criterion) become the gold gaps. Method and reproduction: [eval/synthea/README.md](eval/synthea/README.md). Full results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
 
-**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 37.9% against C0+ (2.00 to 1.24) at $0.00143 per chart. Two live C4 passes agreed on 64 of 66 charts (0.970). No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF (24 on Gold-B C4, 11 on Gold-A C4).
+The result is a weakness, and it is reported as one. Synthea notes are template text that rarely name chronic conditions, so most gold gaps (E78.5 with a statin, I10 with an antihypertensive) rest on the medication list alone. The rules find 63 of 75 gaps but bury them in 1,173 false candidates, led by urine-glucose `R81` rows (292), heart-failure rows inferred from beta-blockers and diuretics (175), GAD-7 screening lines read as anxiety (158), and unstaged `N18.9` from kidney labs (133). The cascade removes almost all of those false candidates (gap rows drop from 3.09 to 0.12 per chart), but Lightning triage labels 56 of the 75 medication-only gaps `copied_forward_unclear`, a status that drops the row instead of sending it to review, so C4 recall falls to 0.027. The two-way check also flags almost every billed code that the sparse notes never mention: 1,962 flags on codes Synthea does have, against 34 of 34 planted unsupported codes found. That is why total review items rise to 5.11 per chart.
+
+<p align="center">
+  <img src="docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 400 Synthea charts, with recall for each configuration." width="760">
+</p>
+
+**Gold-A** is ten outpatient charts labeled by hand, with labels pending certified-coder sign-off (`review_status` in [eval/gold/gold_a.json](eval/gold/gold_a.json)). Ten charts give wide intervals (C4 precision 95% CI 0.73–0.94, recall 0.79–0.97). C4 raises precision from 0.755 to 0.872 and cuts the queue from 4.9 to 4.2 items per chart, at the cost of three missed codes (`D64.9` and `I12.9` on pt-001, `I50.9` on pt-004). The P95 comes from one slow chart (pt-002, 150 s end to end); the other nine finished in 27 s or less. Source: [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md), commit `9409d3b`.
+
+**Gold-B is a regression suite, not a benchmark.** The charts were built by the same author as the rules, around known traps. It answers one question: does the cascade still clear the hard negatives? On this run C4 passed all 11 categories (negation, family history, screening, medication-only, hypothetical plan, resolved, copied-forward, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity), flagged 3/3 unsupported existing codes, and cut review burden 37.9% against C0+ (2.00 to 1.24) at $0.00143 per chart. Two live C4 passes agreed on 64 of 66 charts (0.970). No chart was degraded, and every C3/C4 guideline citation was retrieved live and verified in the FY 2027 PDF.
 
 Cost is reported Token Factory usage times the public catalog price. `eval/results/mock/` holds offline regression output from the recorded client; those numbers are not model quality. The schema is in [docs/eval.md](docs/eval.md).
 
@@ -191,7 +201,7 @@ Tests (run with the keys unset so nothing calls the network):
 
 ```bash
 python -m unittest discover -s tests
-python -m unittest eval.tests.test_harness
+python -m unittest eval.tests.test_harness eval.tests.test_synthea
 python -m pytest web/tests -q
 python run_tests.py
 ```
@@ -209,6 +219,8 @@ codesentinel/policy.py   Production checks. The server does not import eval/
 eval/                    Gold sets, harness, and mock or live runner
 eval/results/live/       Published live run: summary, RESULTS.md, recorded completions
 eval/results/mock/       Offline regression output
+eval/synthea/            Synthea benchmark: generator command, SNOMED to ICD-10-CM map, builder, runner
+eval/results/synthea/    Published Synthea run: summary, RESULTS.md, labels, chart hashes
 web/                     Judge demo (Audit and Eval tabs)
 docs/api.md              Audit contract 1.0.0
 docs/eval.md             Metrics schema
@@ -234,6 +246,7 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 - English, outpatient-style notes. The regex tiers miss paraphrases the recorded client will not invent.
 - No claim of HIPAA compliance. A production deployment would need Zero Data Retention, a dedicated endpoint, and the right agreements.
 - `MAX_DAILY_USD` is documented in [.env.example](.env.example) and is not enforced on the audit service yet.
+- On the Synthea benchmark the cascade drops most medication-only gaps (C4 recall 0.027) and the two-way check flags billed codes the notes never mention; see Results. Synthea labels are derived by code, not reviewed by a coder.
 - Gold-A is 10 charts pending coder sign-off. Gold-B was built around the same phenomena as the rules, so it is a regression suite rather than an independent benchmark.
 
 <details>
