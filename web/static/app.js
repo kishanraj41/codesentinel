@@ -349,11 +349,39 @@ function renderWorklist(payload) {
       el("h3", { text: "Nothing to sign." }),
       el("p", { text: "Nemotron dropped every candidate. Open the drawer to see why. That is the audit." })
     ));
-    return;
   }
   rows.forEach(function (item) {
     box.append(renderRow(payload, item));
   });
+  renderDepth(box, audit.depth);
+  renderInfo(box, audit.info || []);
+}
+
+// Which cascade depth ran. C4a stays at Lightning triage unless a combination or
+// specificity candidate survived; then it runs Super, Tavily and Ultra.
+function renderDepth(box, depth) {
+  if (!depth || !depth.config) return;
+  const text = depth.adaptive
+    ? "Adaptive cascade: ran " + depth.depth_used + (depth.escalated ? " (" + depth.reason + ")." : ". " + (depth.reason || "") + ", so Super, Tavily and Ultra were skipped.")
+    : "Cascade depth " + depth.config + ".";
+  box.append(el("p", { class: "depth-note", text: text }));
+}
+
+// Informational rows: billed codes with no evidence on a chart whose notes name no
+// condition. Shown for context; not counted as review work.
+function renderInfo(box, rows) {
+  if (!rows.length) return;
+  const section = el("section", { class: "info-rows", "aria-label": "Informational rows" });
+  section.append(
+    el("h3", { text: "For context, not review work (" + rows.length + ")" }),
+    el("p", { class: "subhead", text: "These billed codes have no mention, medication or supporting lab, but the notes in this window name no condition at all, so the silence is not evidence against them." })
+  );
+  const list = el("ul", {});
+  rows.forEach(function (item) {
+    list.append(el("li", { text: (item.icd10_code || "") + " · " + (item.code_display || "") }));
+  });
+  section.append(list);
+  box.append(section);
 }
 
 function renderRow(payload, item) {

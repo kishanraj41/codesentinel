@@ -194,7 +194,8 @@ def markdown(summary: dict) -> str:
     lines = [
         "# CodeSentinel eval results: Synthea gap benchmark",
         "",
-        f"Run: {summary['mode']}, commit `{summary.get('commit', '')}`, finished {summary['generated_local']}. "
+        f"Run: {summary['mode']}{(' (' + summary['run_label'] + ')') if summary.get('run_label') else ''}, "
+        f"commit `{summary.get('commit', '')}`, finished {summary['generated_local']}. "
         "Raw numbers: [summary.json](summary.json).",
         "",
         *([f"Split: `{d['split']}` from `eval/synthea/split.json` (seed 20261028; 100 dev, 300 held-out). "
@@ -208,19 +209,24 @@ def markdown(summary: dict) -> str:
         f"{d['neutral_codes']} removed codes with no support in the chart are neutral. "
         f"{d['unsupported_existing']} charts carry one billed code Synthea says the patient does not have.",
         "",
-        "| Config | Precision | Recall | F1 | Review items / chart | Gap rows / chart | $ / chart | P50 / P95 s |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Config | Precision | Recall | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Info rows / chart | Charts past C1 | $ / chart | P50 / P95 s |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for c in summary["configs"]:
         cost = "0" if c["id"] in {"C0", "C0+"} else _fmt(c.get("cost_per_chart_usd"), 5)
         lat = "—" if c["id"] in {"C0", "C0+"} else f"{_fmt(c.get('latency_p50_s'), 1)} / {_fmt(c.get('latency_p95_s'), 1)}"
+        esc = c.get("escalated_fraction")
+        esc_text = "—" if esc is None else f"{esc * 100:.0f}%"
         lines.append(
             f"| {c['id']} {c['label']} | {_fmt(c.get('precision'))} | {_fmt(c.get('recall'))} | {_fmt(c.get('f1'))} | "
-            f"{_fmt(c.get('review_burden_per_chart'), 2)} | {_fmt(c.get('gap_rows_per_chart'), 2)} | {cost} | {lat} |"
+            f"{_fmt(c.get('review_burden_per_chart'), 2)} | {_fmt(c.get('gap_rows_per_chart'), 2)} | {c.get('fp')} | "
+            f"{_fmt(c.get('info_rows_per_chart'), 2)} | {esc_text} | {cost} | {lat} |"
         )
     lines += [
         "",
-        "Review items count every row sent to a coder, including unsupported-existing flags on billed codes. Gap rows count only proposed additions.",
+        "Review items count every row sent to a coder, including unsupported-existing flags on billed codes. Gap rows count only proposed additions. "
+        "Info rows are billed codes with no evidence on charts whose notes name no condition: shown for context, not review work, not scored. "
+        "Charts past C1 is the share of charts where Super, Tavily or Ultra ran (C2-C4 always; C4a only when a combination or specificity candidate survived triage).",
         "",
         "## 95% intervals (Wilson)",
         "",
@@ -231,23 +237,37 @@ def markdown(summary: dict) -> str:
         pci = c.get("precision_ci95") or [None, None]
         rci = c.get("recall_ci95") or [None, None]
         lines.append(f"| {c['id']} | {_fmt(pci[0])}–{_fmt(pci[1])} | {_fmt(rci[0])}–{_fmt(rci[1])} | {c['tp']} / {c['fp']} / {c['fn']} |")
-    lines += ["", "## Per code (C0+ rules vs C4 cascade)", "", "| Code | Gold gaps | C0+ TP / FP | C4 TP / FP |", "|---|---:|---:|---:|"]
     pc0, pc4 = summary["per_code"]["C0+"], summary["per_code"]["C4"]
+    pc4a = summary["per_code"].get("C4a")
     gold = summary["gold_by_code"]
-    for code in sorted(set(pc0) | set(pc4) | set(gold)):
+    if pc4a is None:
+        lines += ["", "## Per code (C0+ rules vs C4 cascade)", "", "| Code | Gold gaps | C0+ TP / FP | C4 TP / FP |", "|---|---:|---:|---:|"]
+    else:
+        lines += ["", "## Per code (C0+ rules vs C4 and C4a cascade)", "", "| Code | Gold gaps | C0+ TP / FP | C4 TP / FP | C4a TP / FP |", "|---|---:|---:|---:|---:|"]
+    for code in sorted(set(pc0) | set(pc4) | set(pc4a or {}) | set(gold)):
         a, b = pc0.get(code, {}), pc4.get(code, {})
-        lines.append(f"| {code} | {gold.get(code, 0)} | {a.get('tp', 0)} / {a.get('fp', 0)} | {b.get('tp', 0)} / {b.get('fp', 0)} |")
+        row = f"| {code} | {gold.get(code, 0)} | {a.get('tp', 0)} / {a.get('fp', 0)} | {b.get('tp', 0)} / {b.get('fp', 0)} |"
+        if pc4a is not None:
+            c = pc4a.get(code, {})
+            row += f" {c.get('tp', 0)} / {c.get('fp', 0)} |"
+        lines.append(row)
     lines += ["", "## What happened to the gold gaps", "", "| Config | Outcome counts |", "|---|---|"]
     for cid, fate in summary.get("gold_gap_fate", {}).items():
         lines.append(f"| {cid} | " + ", ".join(f"{k} {v}" for k, v in fate.items()) + " |")
-    c4 = [c for c in summary["configs"] if c["id"] == "C4"][0]
-    u = c4.get("unsupported_existing") or {}
+    lines += ["", "## Unsupported existing codes", ""]
+    for c in summary["configs"]:
+        if c["id"] not in {"C4", "C4a"}:
+            continue
+        u = c.get("unsupported_existing") or {}
+        info_note = ""
+        if u.get("planted_shown_as_info") is not None:
+            info_note = f" (of which shown as info rows: {u.get('planted_shown_as_info')})"
+        lines.append(
+            f"- {c['id']}: planted {d['unsupported_existing']}. Flagged and planted: {u.get('tp')}. "
+            f"Flagged on a billed code Synthea does have: {u.get('fp')}. Missed: {u.get('fn')}{info_note}. "
+            f"Info rows: {c.get('info_rows', 0)}."
+        )
     lines += [
-        "",
-        "## Unsupported existing codes (C4)",
-        "",
-        f"Planted: {d['unsupported_existing']}. Flagged and planted: {u.get('tp')}. "
-        f"Flagged on a billed code Synthea does have: {u.get('fp')}. Missed: {u.get('fn')}.",
         "",
         "## How the labels are made",
         "",
@@ -276,6 +296,7 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--commit", default="")
     ap.add_argument("--split", default="all", choices=["all", "dev", "held_out"])
+    ap.add_argument("--run-label", default="", help="free-text run name recorded in summary.json, e.g. 'held-out v2'")
     args = ap.parse_args()
     if args.mode == "live" and not (os.environ.get("NEBIUS_API_KEY") and os.environ.get("TAVILY_API_KEY")):
         raise SystemExit("live mode needs NEBIUS_API_KEY and TAVILY_API_KEY")
@@ -314,12 +335,13 @@ def main() -> None:
             "in_scope": manifest["in_scope"],
         },
         "mode": args.mode,
+        "run_label": args.run_label,
         "commit": args.commit,
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "generated_local": datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z"),
         "configs": configs,
         "gold_by_code": dict(sorted(gold_by_code.items())),
-        "per_code": {cid: _per_code(per_config, cid) for cid in ("C0+", "C1", "C2", "C3", "C4")},
+        "per_code": {cid: _per_code(per_config, cid) for cid in ("C0+", "C1", "C2", "C3", "C4", "C4a") if cid in per_config},
         "gold_gap_fate": {cid: _gold_fate(cache, rows, cid) for cid in CONFIGS},
         "degraded_reasons": eval_run.degraded_report(per_config),
         "live_errors": errors,

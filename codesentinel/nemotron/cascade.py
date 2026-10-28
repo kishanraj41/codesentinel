@@ -61,6 +61,30 @@ _DROP_DETAIL = {
 # review evidence, not negations, even when Lightning tagged them as dropped.
 _KEEP_ASSERTIONS = {"present", "medication_supported", "lab_only"}
 
+# Fixed-depth configs, and the adaptive one. C4a runs C1 (triage + verifier) and goes
+# on to the full C4 path (Super, Tavily, Ultra) only for a chart where at least one
+# combination or specificity candidate survives triage and the quote verifier.
+FIXED_CONFIGS = ("C1", "C2", "C3", "C4")
+ADAPTIVE_CONFIG = "C4a"
+CASCADE_CONFIGS = FIXED_CONFIGS + (ADAPTIVE_CONFIG,)
+# What the service (POST /audit, the web demo, the MCP tools) runs by default.
+DEFAULT_SERVICE_CONFIG = ADAPTIVE_CONFIG
+_DEEP_GAP_TYPES = frozenset({"combination", "specificity_upgrade"})
+
+
+def needs_deep_cascade(survivors: list[dict]) -> list[str]:
+    """Codes of surviving combination or specificity candidates.
+
+    Uses the rules pipeline's own tiers (COMBINATION_CODE, SPECIFICITY_UPGRADE via
+    gap_type_of): E11.2x and I12/I13 combinations, E11.65 and N18 stage or I50 type
+    upgrades. An empty list means the adaptive config stops at C1.
+    """
+    return sorted({
+        str(row["gap"].get("icd10_code") or "")
+        for row in survivors
+        if gap_type_of(row["gap"]) in _DEEP_GAP_TYPES
+    })
+
 
 def run_cascade(
     profile: dict,
@@ -73,9 +97,12 @@ def run_cascade(
     """config selects how far the same cascade runs.
 
     C1 stops after triage and the quote verifier. C2 adds Super. C3 adds
-    guideline lookup. C4 adds Ultra. C0 is not handled here.
+    guideline lookup. C4 adds Ultra. C4a (adaptive) stops at C1 unless a
+    combination or specificity candidate survives triage, and then runs C4.
+    C0 is not handled here. The result's `depth` block records what ran.
     """
-    depth = config if config in {"C1", "C2", "C3", "C4"} else "C4"
+    depth = config if config in CASCADE_CONFIGS else "C4"
+    adaptive = depth == ADAPTIVE_CONFIG
     use_super = depth in {"C2", "C3", "C4"}
     use_guidelines = depth in {"C3", "C4"}
     use_ultra = depth == "C4"
@@ -193,6 +220,24 @@ def run_cascade(
     )
     timeline_latency["verifier"] = int((time.perf_counter() - started) * 1000)
 
+    deep_codes = needs_deep_cascade(survivors)
+    if adaptive:
+        escalate = bool(deep_codes)
+        use_super = use_guidelines = use_ultra = escalate
+        depth_used = "C4" if escalate else "C1"
+        depth_reason = (
+            "combination or specificity candidate survived triage: " + ", ".join(deep_codes)
+            if escalate
+            else "no combination or specificity candidate survived triage"
+        )
+    else:
+        depth_used = depth
+        depth_reason = "fixed depth"
+    stop_note = (
+        "adaptive: no combination or specificity candidate survived triage"
+        if adaptive and depth_used == "C1" else None
+    )
+
     started = time.perf_counter()
     credits_used = 0.0
     cache_hits = 0
@@ -200,7 +245,7 @@ def run_cascade(
         for row in survivors:
             row["citations"] = []
         timeline_status["guidelines"] = "skipped"
-        timeline_detail["guidelines"] = "this config stops before guideline lookup"
+        timeline_detail["guidelines"] = stop_note or "this config stops before guideline lookup"
     else:
         groups: dict[tuple[str, str], list[dict]] = {}
         for row in survivors:
@@ -281,7 +326,12 @@ def run_cascade(
             query_needed = False
             if needs_super(triage.confidence, gap_type):
                 decision = "review"
-                rationale = "Triage held this candidate. This config stops before Super adjudication."
+                rationale = (
+                    "Triage held this candidate. The adaptive cascade stopped at triage because no "
+                    "combination or specificity candidate survived."
+                    if stop_note else
+                    "Triage held this candidate. This config stops before Super adjudication."
+                )
                 query_needed = gap_type in {"specificity_upgrade", "combination"}
 
         final_by = decided_by
@@ -375,7 +425,7 @@ def run_cascade(
 
     if not use_super:
         timeline_status["adjudication"] = "skipped"
-        timeline_detail["adjudication"] = "this config stops before Super adjudication"
+        timeline_detail["adjudication"] = stop_note or "this config stops before Super adjudication"
     elif adjudicated:
         timeline_status["adjudication"] = "ok"
         timeline_detail["adjudication"] = f"{adjudicated} calls on {SUPER}"
@@ -386,7 +436,7 @@ def run_cascade(
 
     if not use_ultra:
         timeline_status["escalation"] = "skipped"
-        timeline_detail["escalation"] = "this config stops before Ultra escalation"
+        timeline_detail["escalation"] = stop_note or "this config stops before Ultra escalation"
     elif escalation_calls:
         timeline_status["escalation"] = "ok"
         timeline_detail["escalation"] = f"{len(escalation_calls)} calls on {ULTRA}"
@@ -470,6 +520,14 @@ def run_cascade(
     return {
         "worklist": worklist,
         "info": info,
+        "depth": {
+            "config": depth,
+            "adaptive": adaptive,
+            "depth_used": depth_used,
+            "escalated": depth_used != "C1",
+            "reason": depth_reason,
+            "deep_candidates": deep_codes,
+        },
         "dropped": dropped,
         "timeline": timeline,
         "receipt": receipt,
