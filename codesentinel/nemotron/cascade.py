@@ -33,7 +33,7 @@ from codesentinel.nemotron.schemas import (
     limit_words,
 )
 from codesentinel.nemotron.verifier import build_corpus, verified_quotes
-from codesentinel.policy import unsupported_existing_items
+from codesentinel.policy import INFO_DECISION, unsupported_existing_items
 from codesentinel.tavily.client import GuidelineClient
 
 _TIMELINE = (
@@ -419,7 +419,11 @@ def run_cascade(
         legacy_review = [gap for gap in legacy_review if gap.get("icd10_code") not in dropped_codes]
         for item in sibling_dropped:
             legacy_rejected.append({"icd10_code": item["icd10_code"], "condition_name": item["code_display"], "decision": "reject"})
+    info: list[dict] = []
     for row in _unsupported_existing_rows(profile):
+        if row["decision"] == INFO_DECISION:
+            info.append(row)
+            continue
         worklist.append(row)
         legacy_review.append({
             "icd10_code": row["icd10_code"],
@@ -465,6 +469,7 @@ def run_cascade(
         mode = "live"
     return {
         "worklist": worklist,
+        "info": info,
         "dropped": dropped,
         "timeline": timeline,
         "receipt": receipt,
@@ -803,8 +808,15 @@ def _unsupported_existing_rows(profile: dict) -> list[dict]:
     patient = str(profile.get("fhir_patient_id") or "chart")
     for item in unsupported_existing_items(profile):
         quote = item.quote or "No mention, medication, or supporting lab in this chart"
+        informational = item.decision == INFO_DECISION
         if item.assertion_status == "negated":
             rationale = "This coded condition is contradicted by the chart and should be reviewed for removal."
+        elif informational:
+            rationale = (
+                "No mention, medication, or supporting lab supports this coded condition, but the notes in this "
+                "window name no condition at all, so the silence is not evidence against it. Shown for context; "
+                "not review work."
+            )
         else:
             rationale = "No mention, medication, or supporting lab supports this coded condition."
         rows.append({
@@ -813,7 +825,7 @@ def _unsupported_existing_rows(profile: dict) -> list[dict]:
             "code_display": item.condition_name or item.code,
             "gap_type": "unsupported_existing",
             "upgrade_from": None,
-            "decision": "review",
+            "decision": INFO_DECISION if informational else "review",
             "confidence": 0.86 if item.assertion_status == "negated" else 0.7,
             "assertion_status": item.assertion_status if item.assertion_status in {
                 "negated", "unsupported_existing",

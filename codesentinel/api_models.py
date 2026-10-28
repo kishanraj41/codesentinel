@@ -85,6 +85,17 @@ class WorklistItem(BaseModel):
     evidence_sources: list[str] = Field(default_factory=list)
 
 
+class InfoItem(WorklistItem):
+    """A billed code with no evidence on a chart whose notes name no condition.
+
+    Shown for context. Not review work: it is outside worklist_count and the eval's
+    review-item and precision/recall counts.
+    """
+
+    gap_type: Literal["unsupported_existing"] = "unsupported_existing"
+    decision: Literal["info"] = "info"
+
+
 class DroppedItem(BaseModel):
     id: str
     icd10_code: str
@@ -173,6 +184,7 @@ class AuditSummary(BaseModel):
     specificity_upgrades: int
     combination_codes: int
     dropped_count: int
+    info_count: int = 0
 
 
 class AuditResponse(BaseModel):
@@ -186,6 +198,7 @@ class AuditResponse(BaseModel):
     degraded_reasons: list[str] = Field(default_factory=list)
     summary: AuditSummary
     worklist: list[WorklistItem]
+    info: list[InfoItem] = Field(default_factory=list)
     dropped: list[DroppedItem]
     timeline: list[TimelineStep]
     receipt: Receipt

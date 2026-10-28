@@ -3,6 +3,9 @@
 A gap item is (patient, ICD-10 code). Unsupported-existing flags are a separate
 task and do not enter precision or recall. Review burden counts every item the
 config sends to a human, including unsupported-existing flags and abstentions.
+Informational rows (decision "info": a billed code with no evidence on a chart
+whose notes name no condition) are not shown as review work, so they are outside
+review items and precision/recall. They are counted separately as info rows.
 """
 
 from __future__ import annotations
@@ -81,6 +84,11 @@ def score_chart(label: dict, items: list[dict]) -> dict[str, Any]:
         })
 
     abstain = sum(1 for it in items if it.get("decision") == "abstain")
+    info_codes = {
+        (it.get("code") or "").upper()
+        for it in items
+        if it.get("decision") == "info" and it.get("gap_type") == "unsupported_existing"
+    }
     unsupported_drops = sum(1 for it in items if it.get("drop_reason") == "unsupported_claim")
     considered = len(items)
 
@@ -103,6 +111,8 @@ def score_chart(label: dict, items: list[dict]) -> dict[str, Any]:
         "unsupported_tp": sorted(unsupported_shown & unsupported_gold),
         "unsupported_fp": sorted(unsupported_shown - unsupported_gold),
         "unsupported_fn": sorted(unsupported_gold - unsupported_shown),
+        "info_rows": len(info_codes),
+        "unsupported_info": sorted(info_codes & unsupported_gold),
         "abstain_count": abstain,
         "candidates_considered": considered,
         "unsupported_claim_drops": unsupported_drops,
@@ -143,6 +153,8 @@ def aggregate(chart_scores: list[dict], *, costs: list[float], latencies: list[f
     u_tp = sum(len(c["unsupported_tp"]) for c in chart_scores)
     u_fp = sum(len(c["unsupported_fp"]) for c in chart_scores)
     u_fn = sum(len(c["unsupported_fn"]) for c in chart_scores)
+    info_rows = sum(c.get("info_rows", 0) for c in chart_scores)
+    u_info = sum(len(c.get("unsupported_info") or []) for c in chart_scores)
     abstain = sum(c["abstain_count"] for c in chart_scores)
     considered = sum(c["candidates_considered"] for c in chart_scores)
 
@@ -161,6 +173,8 @@ def aggregate(chart_scores: list[dict], *, costs: list[float], latencies: list[f
         "f1": f1(precision_out, recall),
         "review_items": review_items,
         "review_burden_per_chart": review_items / n,
+        "info_rows": info_rows,
+        "info_rows_per_chart": info_rows / n,
         "false_positives_per_chart": fp / n,
         "hard_negative_pass_rate": {
             "overall": (hard_pass / hard_total) if hard_total else None,
@@ -172,6 +186,7 @@ def aggregate(chart_scores: list[dict], *, costs: list[float], latencies: list[f
             "tp": u_tp,
             "fp": u_fp,
             "fn": u_fn,
+            "planted_shown_as_info": u_info,
             "precision": (u_tp / (u_tp + u_fp)) if (u_tp + u_fp) else None,
             "recall": (u_tp / (u_tp + u_fn)) if (u_tp + u_fn) else None,
         },
