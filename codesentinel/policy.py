@@ -188,22 +188,6 @@ def _lexicon_terms() -> tuple[str, ...]:
     return tuple(dict.fromkeys(terms))
 
 
-# A clause that names a procedure, an order or a screening instrument is not a condition
-# mention even when it contains a condition word: "diabetic retinal eye exam (procedure)",
-# "sleep apnea assessment (procedure)", "generalized anxiety disorder 7 item (gad-7)".
-_NON_CONDITION_CLAUSE = re.compile(
-    r"\((?:procedure|regime/therapy)\)|\bquestionnaire\b|\b\d+[- ]item\b|\b(?:gad|phq)-?\d+\b",
-    re.IGNORECASE,
-)
-
-
-def _clause_mentions(sentence: str, terms: tuple[str, ...]) -> bool:
-    for clause in re.split(r"[,;]", sentence):
-        if _sentence_matches(clause, terms) and not _NON_CONDITION_CLAUSE.search(clause):
-            return True
-    return False
-
-
 def condition_mentions(profile: dict) -> list[str]:
     """Note sentences that name a condition this check can recognize.
 
@@ -212,10 +196,7 @@ def condition_mentions(profile: dict) -> list[str]:
     code on the chart's own condition list (lexicon terms for that code plus phrases
     from its Condition display text). Negated, family-history and historical sentences
     still count: a note that says "denies diabetes" is discussing conditions. Section
-    headers ("Assessment and Plan") on their own do not count, and neither does a
-    comma- or semicolon-separated clause that names a procedure, order or screening
-    instrument (tagged "(procedure)" or "(regime/therapy)", a questionnaire, an
-    "N item" scale, GAD-n or PHQ-n).
+    headers ("Assessment and Plan") on their own do not count.
     """
     sentences = _sentences(_note_text(profile))
     terms = list(_lexicon_terms())
@@ -227,7 +208,7 @@ def condition_mentions(profile: dict) -> list[str]:
     terms_t = tuple(dict.fromkeys(t for t in terms if t))
     if not terms_t:
         return []
-    return [sentence for sentence, _section in sentences if _clause_mentions(sentence, terms_t)]
+    return [sentence for sentence, _section in sentences if _sentence_matches(sentence, terms_t)]
 
 
 def notes_mention_conditions(profile: dict) -> bool:
