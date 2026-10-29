@@ -1,15 +1,12 @@
-"""Gold-B frontier charts from eval/results/live/summary.json.
+"""Cascade frontier (v9), the README image docs/assets/cascade-frontier.{svg,png}.
 
-Two views of the same live run (needs matplotlib, not a runtime dependency):
+Left: Gold-B review rows and false positives per chart by cascade depth (C0+, C1, C2, C3 and
+the shipped adaptive default C4a; fixed C4 is in the full tables). Right: Synthea held-out cost
+per chart, full cascade C4 against adaptive C4a. Every plotted value is read from the two
+summary files. Needs matplotlib (not a runtime dependency).
 
-  # README image: review rows and false positives per chart vs Token Factory cost,
-  # C0+ to C3 plotted, C4 (+ Ultra) in the stats box.
-  python -m eval.frontier_goldb eval/results/live/summary.json docs/assets/cascade-frontier
-
-  # Precision vs review rows per chart for C0, C0+ and C1..C4.
-  python -m eval.frontier_goldb eval/results/live/summary.json docs/assets/goldb-frontier --precision
-
-Same style as eval/synthea/frontier.py. Every plotted value is read from summary.json.
+  python -m eval.frontier_goldb eval/results/live-v9/summary.json \
+      eval/results/synthea/heldout-v9/summary.json docs/assets/cascade-frontier
 """
 
 from __future__ import annotations
@@ -24,171 +21,99 @@ PAPER = "#f6f1e6"
 MUTED = "#6b7f78"
 RED = "#b23a2a"
 
-PRECISION_ORDER = ("C0", "C0+", "C1", "C2", "C3", "C4")
+
+def load(path: str) -> dict:
+    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    return {c["id"]: c for c in d["configs"]} | {"_dataset": d.get("dataset", {})}
 
 
-def cascade(summary_path: str, out_stem: str) -> None:
-    """Review rows and false positives per chart vs cost, C0+ to C3; C4 in the stats box."""
+def main(goldb_path: str, synthea_path: str, out_stem: str) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.gridspec import GridSpec
 
-    summary = json.loads(Path(summary_path).read_text(encoding="utf-8"))
-    by_id = {c["id"]: c for c in summary["configs"]}
-    # Plot the steps that change the queue; C4 (Ultra: conflicts and physician queries) is
-    # reported in the stats box so the line does not end in a flat cost-only segment.
-    order = ["C0+", "C1", "C2", "C3"]
-    cfgs = [by_id[c] for c in order if c in by_id]
-    c4 = by_id.get("C4")
-
-    xs = [c["cost_per_chart_usd"] * 1000 for c in cfgs]
-    fp = [c["false_positives_per_chart"] for c in cfgs]
-    rows = [c["review_burden_per_chart"] for c in cfgs]
-    prec = [c["precision"] for c in cfgs]
-    hn = [c["hard_negative_pass_rate"]["overall"] for c in cfgs]
+    gb = load(goldb_path)
+    sy = load(synthea_path)
 
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
-    fig, ax = plt.subplots(figsize=(8.4, 4.8), dpi=150)
+    fig = plt.figure(figsize=(11.5, 4.9), dpi=150)
     fig.patch.set_facecolor(PAPER)
-    ax.set_facecolor(PAPER)
+    gs = GridSpec(1, 2, width_ratios=[2.4, 1], wspace=0.30, left=0.06, right=0.975, top=0.84, bottom=0.14)
+    ax = fig.add_subplot(gs[0])
+    bx = fig.add_subplot(gs[1])
+    for a in (ax, bx):
+        a.set_facecolor(PAPER)
+        for spine in ("top", "right"):
+            a.spines[spine].set_visible(False)
+        for spine in ("left", "bottom"):
+            a.spines[spine].set_color(INK)
+        a.tick_params(colors=INK)
+
+    ids = ["C0+", "C1", "C2", "C3", "C4a"]
+    cfgs = [gb[c] for c in ids]
+    xs = list(range(len(ids)))
+    rows = [c["review_burden_per_chart"] for c in cfgs]
+    fp = [c["false_positives_per_chart"] for c in cfgs]
+    ticks = ["Rules only\n(C0+)", "+ Lightning triage\n+ quote verifier (C1)", "+ Super\n(C2)", "+ Tavily\nguidelines (C3)", "+ Ultra, adaptive\n(C4a, default)"]
 
     ax.plot(xs, rows, color=INK, linewidth=1.6, zorder=2)
-    ax.scatter(xs, rows, s=95, color=INK, zorder=3, label="Rows a coder reviews per chart")
+    ax.scatter(xs[:-1], rows[:-1], s=90, color=INK, zorder=3, label="Rows a coder reviews per chart")
     ax.plot(xs, fp, color=RED, linewidth=1.4, linestyle="--", zorder=2)
-    ax.scatter(xs, fp, s=95, color=LIME, edgecolor=RED, linewidth=1.4, zorder=3, label="False positives per chart")
+    ax.scatter(xs[:-1], fp[:-1], s=90, color=LIME, edgecolor=RED, linewidth=1.4, zorder=3, label="False positives per chart")
+    a = gb["C4a"]
+    ax.scatter([xs[-1]], [rows[-1]], s=300, marker="*", color=LIME, edgecolor=INK, linewidth=1.6, zorder=4, label="Shipped default")
+    ax.scatter([xs[-1]], [fp[-1]], s=170, marker="*", color=LIME, edgecolor=RED, linewidth=1.4, zorder=4)
 
-    labels = {
-        "C0+": "Rules only",
-        "C1": "Lightning triage\n+ quote verifier",
-        "C2": "+ Super",
-        "C3": "+ Tavily guidelines",
-        "C4": "+ Ultra escalation",
-    }
-    offsets = {"C0+": (10, 6), "C1": (-6, -34), "C2": (-6, 12), "C3": (10, 12), "C4": (-10, 10)}
-    ha = {"C0+": "left", "C1": "left", "C2": "right", "C3": "left", "C4": "right"}
-    for c, x, y, p in zip(cfgs, xs, rows, prec):
-        cid = c["id"]
-        ax.annotate(
-            f"{cid}  {labels[cid]}\nprecision {p:.3f}",
-            (x, y), textcoords="offset points", xytext=offsets[cid], ha=ha[cid],
-            color=INK, fontsize=8.5, fontweight="bold", linespacing=1.15,
-        )
+    for x, y, c in zip(xs, rows, cfgs):
+        ax.annotate(f"{y:.2f}\nP {c['precision']:.3f}", (x, y), textcoords="offset points", xytext=(0, 14), ha="center",
+                    color=INK, fontsize=8.8, fontweight="bold", linespacing=1.15)
+    for x, y in zip(xs, fp):
+        ax.annotate(f"{y:.2f}", (x, y), textcoords="offset points", xytext=(0, -16), ha="center", color=RED, fontsize=8.5)
 
-    base = cfgs[0]
-    full = c4 or cfgs[-1]
-    cut = 100 * (1 - full["review_burden_per_chart"] / base["review_burden_per_chart"])
-    bh, fh = base["hard_negative_pass_rate"], full["hard_negative_pass_rate"]
+    base = gb["C0+"]
+    cut = 100 * (1 - a["review_burden_per_chart"] / base["review_burden_per_chart"])
+    hn = a["hard_negative_pass_rate"]
+    ue = a["unsupported_existing"]
     ax.text(
-        0.99, 0.97,
-        f"{base['id']} -> {full['id']}\n"
-        f"Review queue {base['review_burden_per_chart']:.3f} -> {full['review_burden_per_chart']:.3f} rows/chart  ({cut:.1f}% less)\n"
-        f"False positives {base['false_positives_per_chart']:.3f} -> {full['false_positives_per_chart']:.3f} per chart\n"
-        f"Hard negatives passed {bh['pass']}/{bh['total']} -> {fh['pass']}/{fh['total']}   recall {full['recall']:.3f}\n"
-        f"Full cascade C4 (+ Ultra for conflicts, physician queries): ${full['cost_per_chart_usd']:.5f}/chart",
-        transform=ax.transAxes, va="top", ha="right", fontsize=9, color=INK,
-        family="DejaVu Sans Mono",
+        0.99, 0.985,
+        f"Review queue {base['review_burden_per_chart']:.2f} -> {a['review_burden_per_chart']:.2f} rows/chart ({cut:.1f}% less)\n"
+        f"False positives {base['false_positives_per_chart']:.2f} -> {a['false_positives_per_chart']:.2f} per chart\n"
+        f"Hard negatives {hn['pass']}/{hn['total']} passed, unsupported codes {ue['tp']}/{ue['tp']+ue['fn']} caught\n"
+        f"Default escalates {a['escalated_fraction']*100:.0f}% of charts; ${a['cost_per_chart_usd']:.5f}/chart",
+        transform=ax.transAxes, va="top", ha="right", fontsize=8.6, color=INK, family="DejaVu Sans Mono",
         bbox={"facecolor": PAPER, "edgecolor": INK, "linewidth": 0.6, "boxstyle": "round,pad=0.4"},
     )
-
-    ax.set_xlim(-0.03, max(xs) * 1.35)
-    ax.set_ylim(-0.06, max(rows) * 1.3)
-    ax.set_xlabel("Nebius Token Factory cost per chart (USD x 1,000)", color=INK)
+    ax.set_xticks(xs)
+    ax.set_xticklabels(ticks, fontsize=8.6, color=INK)
+    ax.set_xlim(-0.4, len(ids) - 0.6)
+    ax.set_ylim(-0.32, max(rows) * 1.5)
     ax.set_ylabel("Per chart", color=INK)
-    d = summary["dataset"]
-    ax.set_title(
-        f"Each Nemotron step lowers the coder's queue ({d['n_charts']} charts, live on Token Factory)",
-        color=INK, fontsize=11.5, fontweight="bold", loc="left",
-    )
-    for spine in ("top", "right"):
-        ax.spines[spine].set_visible(False)
-    for spine in ("left", "bottom"):
-        ax.spines[spine].set_color(INK)
-    ax.tick_params(colors=INK)
-    ax.legend(frameon=False, fontsize=9, loc="lower left", labelcolor=INK)
-    fig.tight_layout()
+    n = gb["_dataset"].get("n_charts")
+    ax.set_title(f"Coder's queue and false positives by cascade depth ({n} hard-negative charts, live)", color=INK,
+                 fontsize=10.5, fontweight="bold", loc="left")
+    ax.legend(frameon=False, fontsize=8.5, loc="center", bbox_to_anchor=(0.72, 0.27), labelcolor=INK)
+
+    full = sy["C4"]
+    adap = sy["C4a"]
+    costs = [full["cost_per_chart_usd"] * 1000, adap["cost_per_chart_usd"] * 1000]
+    bars = bx.bar(["C4 full cascade", "C4a adaptive"], costs, color=[MUTED, LIME], edgecolor=INK, linewidth=1.2, width=0.58)
+    saving = 100 * (1 - adap["cost_per_chart_usd"] / full["cost_per_chart_usd"])
+    for b, v in zip(bars, costs):
+        bx.text(b.get_x() + b.get_width() / 2, v + max(costs) * 0.03, f"${v/1000:.5f}", ha="center", va="bottom",
+                color=INK, fontsize=9, family="DejaVu Sans Mono")
+    bx.text(0.5, 0.97, f"{saving:.0f}% cheaper\nescalates {adap['escalated_fraction']*100:.0f}% of charts\nP {adap['precision']:.3f} vs {full['precision']:.3f}\nR {adap['recall']:.3f} vs {full['recall']:.3f}",
+            transform=bx.transAxes, ha="center", va="top", color=INK, fontsize=9, fontweight="bold", linespacing=1.3)
+    bx.set_ylim(0, max(costs) * 1.55)
+    bx.set_ylabel("Cost per chart (USD x 1,000)", color=INK)
+    ns = sy["_dataset"].get("charts") or sy["_dataset"].get("n_charts")
+    bx.set_title(f"Adaptive depth,\n{ns} Synthea held-out charts", color=INK, fontsize=10.5, fontweight="bold", loc="left")
+
     for ext in ("svg", "png"):
         fig.savefig(f"{out_stem}.{ext}", facecolor=PAPER, metadata={"Date": None} if ext == "svg" else None)
     print(f"Wrote {out_stem}.svg and {out_stem}.png")
-
-
-
-def precision(summary_path: str, out_stem: str) -> None:
-    """Precision vs review rows per chart for C0, C0+ and C1..C4 (docs/assets/goldb-frontier)."""
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    summary = json.loads(Path(summary_path).read_text(encoding="utf-8"))
-    by_id = {c["id"]: c for c in summary["configs"]}
-    configs = [by_id[c] for c in PRECISION_ORDER if c in by_id]
-    rules = [c for c in configs if c["id"] in ("C0", "C0+")]
-    cascade = [c for c in configs if c["id"] not in ("C0", "C0+")]
-
-    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
-    fig, ax = plt.subplots(figsize=(8, 4.6), dpi=150)
-    fig.patch.set_facecolor(PAPER)
-    ax.set_facecolor(PAPER)
-
-    def xy(cs):
-        return [c["review_burden_per_chart"] for c in cs], [c["precision"] for c in cs]
-
-    rx, ry = xy(rules)
-    ax.scatter(rx, ry, s=90, color=PAPER, edgecolor=MUTED, linewidth=1.4, zorder=3, label="Rules only (no model)")
-    cx, cy = xy(cascade)
-    ax.plot(cx, cy, color=INK, linewidth=1.6, zorder=2)
-    ax.scatter(cx, cy, s=90, color=LIME, edgecolor=INK, linewidth=1.4, zorder=3, label="Nemotron cascade")
-
-    # Points that share a position get one label ("C3 / C4").
-    groups: dict[tuple[float, float], list[str]] = {}
-    for c in configs:
-        key = (round(c["review_burden_per_chart"], 6), round(c["precision"], 6))
-        groups.setdefault(key, []).append(c["id"])
-    offsets = {"C0": (8, -4), "C0+": (-26, 10), "C1": (6, -16), "C2": (-22, -18), "C3": (-38, 8), "C4": (-38, 8)}
-    for (x, y), ids in groups.items():
-        color = MUTED if ids[0] in ("C0", "C0+") else INK
-        ax.annotate(" / ".join(ids), (x, y), textcoords="offset points", xytext=offsets.get(ids[0], (8, 8)),
-                    color=color, fontsize=10, fontweight="bold")
-
-    def hn(c):
-        h = c.get("hard_negative_pass_rate") or {}
-        return h.get("overall") or 0.0
-
-    table = "\n".join(
-        f"{c['id']:<4} P {c['precision']:.3f}  review {c['review_burden_per_chart']:.3f}  hard-neg {hn(c):.3f}  ${c['cost_per_chart_usd']:.5f}/chart"
-        for c in configs
-    )
-    ax.text(0.02, 0.04, table, transform=ax.transAxes, va="bottom", ha="left", fontsize=8.5, color=INK,
-            family="DejaVu Sans Mono", bbox={"facecolor": PAPER, "edgecolor": INK, "linewidth": 0.6, "boxstyle": "round,pad=0.4"})
-
-    ax.set_xlabel("Rows a coder reviews per chart", color=INK)
-    ax.set_ylabel("Precision", color=INK)
-    d = summary["dataset"]
-    ax.set_title(f"Review rows vs precision on {d['n_charts']} hard-negative charts", color=INK, fontsize=13,
-                 fontweight="bold", loc="left")
-    for spine in ("top", "right"):
-        ax.spines[spine].set_visible(False)
-    for spine in ("left", "bottom"):
-        ax.spines[spine].set_color(INK)
-    ax.tick_params(colors=INK)
-    xs = rx + cx
-    ax.set_xlim(min(xs) - 0.15, max(xs) + 0.15)
-    ax.set_ylim(min(ry + cy) - 0.33, 1.04)
-    ax.legend(frameon=False, fontsize=9, loc="upper right", labelcolor=INK)
-    fig.tight_layout()
-    for ext in ("svg", "png"):
-        fig.savefig(f"{out_stem}.{ext}", facecolor=PAPER, metadata={"Date": None} if ext == "svg" else None)
-    print(f"Wrote {out_stem}.svg and {out_stem}.png")
-
-
-
-def main(argv: list[str]) -> None:
-    args = [a for a in argv if not a.startswith("--")]
-    if len(args) != 2:
-        raise SystemExit(__doc__)
-    (precision if "--precision" in argv else cascade)(args[0], args[1])
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
