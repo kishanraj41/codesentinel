@@ -688,7 +688,7 @@ document.getElementById("paste-form").addEventListener("submit", function (event
   event.preventDefault();
   const text = document.getElementById("paste").value.trim();
   if (!text) {
-    showProblem("Paste a synthetic note first.");
+    showProblem("Paste a de-identified note first.");
     return;
   }
   runAudit({
@@ -696,7 +696,7 @@ document.getElementById("paste-form").addEventListener("submit", function (event
     pace_ms: 0,
     profile: {
       fhir_patient_id: "pasted-note",
-      demographics: { full_name: "Synthetic paste", found: true },
+      demographics: { full_name: "Pasted note", found: true },
       clinical_notes: [{ text: text }],
       observations: [],
       medications: [],

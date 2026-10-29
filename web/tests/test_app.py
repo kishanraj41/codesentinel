@@ -307,7 +307,8 @@ def test_eval_tab_reads_summary_json():
 def test_pages_name_the_judge_path():
     html = (WEB / "static" / "index.html").read_text(encoding="utf-8")
     script = (WEB / "static" / "app.js").read_text(encoding="utf-8")
-    assert "Synthetic data only. Do not paste PHI." in html
+    assert "Synthetic data only" not in html
+    assert "Do not paste PHI." in html
     for card in CARDS:
         assert f'data-audit="{card["id"]}"' in html
         assert card["name"] in html
