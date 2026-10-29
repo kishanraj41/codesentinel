@@ -342,7 +342,7 @@ def finish(
 
 MARGARET_NOTE = """PROGRESS NOTE — Margaret Whitmore
 Date: 2026-03-12 | Provider: Dr. Helen Cho, MD
-Synthetic chart for the CodeSentinel demo.
+Demo chart for CodeSentinel.
 
 CHIEF COMPLAINT:
 Diabetes follow-up. Shortness of breath on one flight of stairs.
