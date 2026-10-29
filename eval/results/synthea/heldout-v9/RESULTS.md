@@ -2,7 +2,7 @@
 
 Run: live (held-out v9: two changes after v7, one reverted; single held-out run on final code), commit `8ab01be`, finished 2026-10-28 01:33 CDT. Raw numbers: [summary.json](summary.json).
 
-Split: `held_out` from `eval/synthea/split.json` (seed 20261028; 100 dev, 300 held-out). Fixes were made on dev only; held-out was run once after they were committed.
+Split: `held_out` from `eval/synthea/split.json` (seed 20261028; 100 dev, 300 held-out). Fixes were made on dev only. This is the third held-out run, one per code version: v1 on v7 (`b623d53`), v2 on v8 (`def9241`, whose info gate was then reverted) and this v9 run on the final code (`8ab01be`). Every run is kept unedited; the history is in [eval/synthea/README.md](../../../synthea/README.md).
 
 300 Synthea patients (Synthea v4.0.0, seed 20261027, Texas, ages 45-90, reference date 2026-10-27). Conditions are Synthea's, mapped to ICD-10-CM with the NLM SNOMED CT to ICD-10-CM map and the FY 2027 combination-code guidelines. A seeded 30% of the in-scope billed codes were removed from each chart's condition list; the removed codes the 12-month chart still supports are the gold gaps (60 gaps on 57 charts). 103 removed codes with no support in the chart are neutral. 20 charts carry one billed code Synthea says the patient does not have.
 
