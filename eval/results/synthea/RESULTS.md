@@ -1,5 +1,27 @@
 # CodeSentinel eval results: Synthea gap benchmark
 
+> **Second held-out run (v2), 2026-10-28.** The 300 held-out charts were run a second time after two
+> dev-only fixes (info gate for unsupported-existing flags, adaptive config C4a). Results:
+> [heldout-v2/RESULTS.md](heldout-v2/RESULTS.md). This file is the first run (v1) and is unchanged below this note.
+> Protocol: [eval/synthea/README.md](../../synthea/README.md#later-held-out-runs-v8-gate--adaptive-gate-reverted-and-v9).
+>
+> **Third held-out run (v9).** The info gate was reverted because it cost 13 of the 20 planted codes. v9 (commit `8ab01be`)
+> flags 20/20 planted codes again. C4 P/R is 0.183 / 0.667 and C4a is 0.182 / 0.683, with 6% of charts past C1 and $0.00118 per chart against $0.00170 for C4.
+> Results: [heldout-v9/RESULTS.md](heldout-v9/RESULTS.md).
+>
+> | Config | Run | P | R | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Info rows / chart | $ / chart | Charts past C1 |
+> |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+> | C0+ | v1 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | — | 0 | 0% |
+> | C0+ | v2 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0.00 | 0 | 0% |
+> | C1 | v1 | 0.187 | 0.667 | 0.292 | 3.82 | 0.71 | 174 | — | 0.00085 | 0% |
+> | C1 | v2 | 0.183 | 0.667 | 0.288 | 2.03 | 0.73 | 178 | 1.81 | 0.00082 | 0% |
+> | C4 | v1 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | — | 0.00175 | 100% |
+> | C4 | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 1.81 | 0.00173 | 100% |
+> | C4a (adaptive, new) | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 1.81 | 0.00087 | 2% |
+>
+> Unsupported existing codes (C4 and C4a identical): v1 flagged 19 of 20 planted codes and 912 billed codes Synthea does have; v2 flags 7 of 20 planted and 383 billed codes Synthea has. **Planted unsupported codes flagged fell from 19/20 (v1) to 7/20 (v2), because the info gate turned 13 of them into info rows** (they sit on charts whose notes name no condition, so the gate treats silence as no evidence either way). The v1 C4 figures differ slightly from the v1 C1 figures because each config is a separate live pass.
+
+
 Run: live, commit `b623d53`, finished 2026-10-27 20:39 CDT. Raw numbers: [summary.json](summary.json).
 
 Split: `held_out` from `eval/synthea/split.json` (seed 20261028; 100 dev, 300 held-out). Fixes were made on dev only; held-out was run once after they were committed.

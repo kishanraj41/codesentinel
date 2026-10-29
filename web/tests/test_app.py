@@ -88,6 +88,9 @@ def test_cached_audit_and_pages():
         "rules", "triage", "verifier", "guidelines", "adjudication", "escalation", "physician_query",
     ]
     assert isinstance(body["audit"]["worklist"], list)
+    # The demo runs the adaptive cascade (C4a) and says which depth ran.
+    assert body["audit"]["depth"]["config"] == "C4a"
+    assert body["audit"]["depth"]["depth_used"] in {"C1", "C4"}
     assert "She denies chest pain." in body["chart"]["note"]
     explicit = client.post("/api/audit", json={"patient_id": "pt-005", "mode": "cached"})
     assert explicit.json()["delivery"]["source"] == "cache"

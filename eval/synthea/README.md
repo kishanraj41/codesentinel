@@ -70,7 +70,9 @@ used, so a rebuilt benchmark can be checked chart by chart.
 
 ## Dev / held-out protocol
 
-From the project README (moved here verbatim):
+This section describes the first held-out run (v1), which ran on the v7 code. The later runs (v2 on the v8 code, then v9) are below.
+
+From the project README (moved here verbatim; these are the v1 figures):
 
 The first run on all 400 charts was poor: C4 recall 0.027. It showed three bugs. Triage dropped medication-supported gaps as `copied_forward_unclear` (56 of 75) instead of sending them to review, because the rescue for medication evidence only fired on empty notes and Synthea notes are template text. Triage saw only the first 40 structured lines, which hid the medication list on 103 charts. And the unsupported-existing check flagged 1,962 billed codes Synthea does have, because it only knew terms for a short code list and ignored linked medications and labs. The 400 patients were then split by seed into 100 dev and 300 held-out charts, and the split was committed before any fix. The fixes, plus a blood-glucose LOINC that had been mapped to glycosuria and an R73 Excludes1 rule, were made and checked on dev only (dev C4 recall 0.067 to 0.933). The held-out charts were run once afterwards.
 
@@ -85,8 +87,8 @@ fixed under a split fixed in advance, so the published number is on charts the f
 2. **Fix on dev only.** Bugs were diagnosed from dev charts and from the dev rows of the first
    run. Held-out per-chart outcomes were not opened while fixing. The live iteration runs were
    `--split dev` only.
-3. **One held-out run.** After the fixes were committed, the 300 held-out charts were run once
-   with every configuration (`--split held_out`). No change was made after that run.
+3. **One held-out run per code version.** After the fixes were committed, the 300 held-out charts were run once
+   with every configuration (`--split held_out`). Later code versions each got one more held-out run (below).
 4. **Benchmark unchanged.** `labels.jsonl` and the chart bundles are the ones from the first
    run (manifest SHA-256s unchanged). No label was edited.
 
@@ -95,18 +97,76 @@ charts (which can include held-out patients) had been read while writing up the 
 No fix was designed from a specific held-out chart.
 
 Post-run fix: carvedilol and furosemide were removed from the heart-failure (`I50`) drug list in
-`codesentinel/policy.py`, because they excused a planted unsupported `I50.9`. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
+`codesentinel/policy.py`, because they excused a planted unsupported `I50.9`. Found on held-out after the v1 held-out run; fixed afterward. The v1 held-out numbers are from before this fix; the v9 rerun below includes it.
 The same two drugs were then removed from the `I13` (hypertensive heart and chronic kidney disease) list,
-so they no longer excuse an `I13` code on their own either; also not rerun.
+so they no longer excuse an `I13` code on their own either (also before v9).
 
 ```bash
 python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
 python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held_out
 ```
 
+## Later held-out runs: v8 (gate + adaptive, gate reverted) and v9
+
+The 300 held-out charts have been run three times, once per code version. Each run is kept; none
+was edited afterward. Labels and chart bundles are the v1 ones throughout.
+
+| Held-out run | Code | Results |
+|---|---|---|
+| v1 | v7 (`b623d53`) | [eval/results/synthea/](../results/synthea/RESULTS.md) |
+| v2 | v8: info gate + adaptive C4a (`def9241`) | [heldout-v2/](../results/synthea/heldout-v2/RESULTS.md), `docs/assets/synthea-frontier-v2.{svg,png}` |
+| v9 | v9: gate reverted, C4a always escalates combination/specificity (`8ab01be`) | [heldout-v9/](../results/synthea/heldout-v9/RESULTS.md), `docs/assets/synthea-frontier-v9.{svg,png}` |
+
+**v7 (held-out v1).** The aggregate showed about 3 unsupported-existing flags per chart (912 in total)
+on billed codes Synthea does have, because thin template charts carry no mention of most chronic codes;
+and C1 to C4 nearly identical, because Synthea has almost no combination or specificity gaps.
+
+**v8 (held-out v2).** Two fixes designed from that aggregate (no held-out chart opened) and tuned on
+the 100 dev charts only ([dev-v2/](../results/synthea/dev-v2/README.md), two live rounds):
+
+1. *Info gate.* When no note sentence in the chart window named a condition, a billed code with no
+   evidence became an informational row (`decision: info`), outside review items and P/R.
+2. *Adaptive depth (C4a).* C1, escalating to the full C4 path only when a combination or specificity
+   candidate survived triage.
+
+Held-out v2 cut C4 review items per chart from 3.83 to 2.02 with gap P/R unchanged, but **planted
+unsupported codes flagged fell from 19/20 (v1) to 7/20 (v2), because the info gate demoted 13 of the 20
+planted codes to info rows.** Catching a billed code with no support is the point of that check, so the
+gate was **reverted** (`4d13c16`, `fdf174c`, normal revert commits). The unsupported-existing check is
+again exactly the v7 one (`codesentinel/policy.py` matches `main`).
+
+**v9 (held-out v9).** v8 minus the gate, plus one routing change to C4a, which stays the service
+default: a chart goes past C1 when the rules pipeline proposes **any** combination or specificity
+candidate, whatever triage said or how confident it was, and every such candidate goes to Super, the
+Tavily gate and Ultra as in C4. If triage would have dropped it and the models accept it anyway, it is
+held as review. The routing change was checked only on mock dev; nothing was tuned on held-out.
+Held-out was then run once with every config on the shipped commit `8ab01be`.
+
+| Config | Run | P | R | F1 | Review items / chart | Gap rows / chart | Gap-row FP | Planted unsupported caught | $ / chart | Charts past C1 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| C0+ | v1 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0/20 | 0 | 0% |
+| C0+ | v9 | 0.070 | 0.817 | 0.128 | 2.35 | 2.35 | 656 | 0/20 | 0 | 0% |
+| C1 | v1 | 0.187 | 0.667 | 0.292 | 3.82 | 0.71 | 174 | 19/20 | 0.00085 | 0% |
+| C1 | v2 | 0.183 | 0.667 | 0.288 | 2.03 | 0.73 | 178 | 7/20 | 0.00082 | 0% |
+| C1 | v9 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | 20/20 | 0.00081 | 0% |
+| C3 | v9 | 0.184 | 0.667 | 0.289 | 3.83 | 0.72 | 177 | 20/20 | 0.00120 | 100% |
+| C4 | v1 | 0.183 | 0.667 | 0.288 | 3.83 | 0.73 | 178 | 19/20 | 0.00175 | 100% |
+| C4 | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 7/20 | 0.00173 | 100% |
+| C4 | v9 | 0.183 | 0.667 | 0.287 | 3.84 | 0.73 | 179 | 20/20 | 0.00170 | 100% |
+| C4a | v2 | 0.184 | 0.667 | 0.289 | 2.02 | 0.72 | 177 | 7/20 | 0.00087 | 2% |
+| C4a | v9 | 0.182 | 0.683 | 0.288 | 3.86 | 0.75 | 184 | 20/20 | 0.00118 | 6% |
+
+In v9 the unsupported check flags all 20 planted codes, and again 912 billed codes Synthea does have
+(the v1 figure; review items per chart are back to about 3.8). The 20th planted code (19/20 in v1) is the `I50.9` that carvedilol and furosemide used to excuse; the post-v1 drug-list fix above caught it. C4a v9 finds one more gold gap than C4
+(recall 0.683 vs 0.667) and shows 7 more false-positive gap rows (184 vs 177–179). It costs about
+70% of C4 per chart, with 6% of charts past C1 (2% in v2, because candidates dropped at triage now
+escalate too). Each config is a separate live pass, so small differences between configs and runs
+include live variance.
+
+
 ## Limits
 
-- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counted as a heart-failure drug even though the triage policy treats it as nonspecific. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
+- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counted as a heart-failure drug even though the triage policy treats it as nonspecific. Found on held-out after the v1 held-out run; fixed afterward. The v9 held-out rerun includes the fix and catches it (20/20).
 
 - Synthea notes are template text. They rarely name the chronic conditions, so evidence is mostly
   medications and labs.

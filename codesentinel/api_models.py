@@ -85,6 +85,17 @@ class WorklistItem(BaseModel):
     evidence_sources: list[str] = Field(default_factory=list)
 
 
+class DepthModel(BaseModel):
+    """Which cascade depth ran for this chart."""
+
+    config: str
+    adaptive: bool = False
+    depth_used: str
+    escalated: bool = False
+    reason: str = ""
+    deep_candidates: list[str] = Field(default_factory=list)
+
+
 class DroppedItem(BaseModel):
     id: str
     icd10_code: str
@@ -186,6 +197,7 @@ class AuditResponse(BaseModel):
     degraded_reasons: list[str] = Field(default_factory=list)
     summary: AuditSummary
     worklist: list[WorklistItem]
+    depth: Optional[DepthModel] = None
     dropped: list[DroppedItem]
     timeline: list[TimelineStep]
     receipt: Receipt

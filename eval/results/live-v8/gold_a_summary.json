@@ -1,0 +1,732 @@
+{
+  "schema": "codesentinel.eval.summary.v1",
+  "dataset": {
+    "name": "gold-a",
+    "split": "gold-a",
+    "n_charts": 10
+  },
+  "configs": [
+    {
+      "n_charts": 10,
+      "tp": 17,
+      "fp": 6,
+      "fn": 20,
+      "precision": 0.73913,
+      "precision_ci95": [
+        0.535296,
+        0.874516
+      ],
+      "recall": 0.459459,
+      "recall_ci95": [
+        0.310383,
+        0.616162
+      ],
+      "f1": 0.566667,
+      "review_items": 23,
+      "review_burden_per_chart": 2.3,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.6,
+      "hard_negative_pass_rate": {
+        "overall": 0.761905,
+        "pass": 16,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "medication_only": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 0,
+            "total": 2,
+            "rate": 0.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "planted_shown_as_info": 0,
+        "precision": null,
+        "recall": 0.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 0,
+      "abstain_rate": 0.0,
+      "candidates_considered": 49,
+      "latency_p50_s": 0.000773,
+      "latency_p95_s": 0.002525,
+      "cost_per_chart_usd": 0.0,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C0",
+      "label": "Rules only, approved bucket",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C0": 10
+      },
+      "escalated_charts": 0,
+      "escalated_fraction": 0.0,
+      "latency_scope": "local_offline",
+      "cost_basis": "none"
+    },
+    {
+      "n_charts": 10,
+      "tp": 37,
+      "fp": 12,
+      "fn": 0,
+      "precision": 0.755102,
+      "precision_ci95": [
+        0.619134,
+        0.853978
+      ],
+      "recall": 1.0,
+      "recall_ci95": [
+        0.905939,
+        1.0
+      ],
+      "f1": 0.860465,
+      "review_items": 49,
+      "review_burden_per_chart": 4.9,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 1.2,
+      "hard_negative_pass_rate": {
+        "overall": 0.571429,
+        "pass": 12,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 2,
+            "total": 3,
+            "rate": 0.666667
+          },
+          "medication_only": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 0,
+            "total": 2,
+            "rate": 0.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "planted_shown_as_info": 0,
+        "precision": null,
+        "recall": 0.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 0,
+      "abstain_rate": 0.0,
+      "candidates_considered": 49,
+      "latency_p50_s": 4e-06,
+      "latency_p95_s": 8e-06,
+      "cost_per_chart_usd": 0.0,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C0+",
+      "label": "Rules only, approved + review",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C0+": 10
+      },
+      "escalated_charts": 0,
+      "escalated_fraction": 0.0,
+      "latency_scope": "local_offline",
+      "cost_basis": "none"
+    },
+    {
+      "n_charts": 10,
+      "tp": 36,
+      "fp": 6,
+      "fn": 1,
+      "precision": 0.857143,
+      "precision_ci95": [
+        0.721586,
+        0.932841
+      ],
+      "recall": 0.972973,
+      "recall_ci95": [
+        0.861756,
+        0.995213
+      ],
+      "f1": 0.911392,
+      "review_items": 45,
+      "review_burden_per_chart": 4.5,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.6,
+      "hard_negative_pass_rate": {
+        "overall": 0.857143,
+        "pass": 18,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "medication_only": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "planted_shown_as_info": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 0,
+      "abstain_rate": 0.0,
+      "candidates_considered": 52,
+      "latency_p50_s": 2.078319,
+      "latency_p95_s": 4.524151,
+      "cost_per_chart_usd": 0.00058,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C1",
+      "label": "Rules + Lightning triage + quote verifier",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C1": 10
+      },
+      "escalated_charts": 0,
+      "escalated_fraction": 0.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price"
+    },
+    {
+      "n_charts": 10,
+      "tp": 36,
+      "fp": 6,
+      "fn": 1,
+      "precision": 0.857143,
+      "precision_ci95": [
+        0.721586,
+        0.932841
+      ],
+      "recall": 0.972973,
+      "recall_ci95": [
+        0.861756,
+        0.995213
+      ],
+      "f1": 0.911392,
+      "review_items": 45,
+      "review_burden_per_chart": 4.5,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.6,
+      "hard_negative_pass_rate": {
+        "overall": 0.857143,
+        "pass": 18,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "medication_only": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "planted_shown_as_info": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 9,
+      "abstain_rate": 0.173077,
+      "candidates_considered": 52,
+      "latency_p50_s": 7.969739,
+      "latency_p95_s": 21.687615,
+      "cost_per_chart_usd": 0.001605,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C2",
+      "label": "C1 + Super adjudication, no Tavily",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C2": 10
+      },
+      "escalated_charts": 10,
+      "escalated_fraction": 1.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price"
+    },
+    {
+      "n_charts": 10,
+      "tp": 34,
+      "fp": 5,
+      "fn": 3,
+      "precision": 0.871795,
+      "precision_ci95": [
+        0.73294,
+        0.943973
+      ],
+      "recall": 0.918919,
+      "recall_ci95": [
+        0.78699,
+        0.97204
+      ],
+      "f1": 0.894737,
+      "review_items": 42,
+      "review_burden_per_chart": 4.2,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.5,
+      "hard_negative_pass_rate": {
+        "overall": 0.857143,
+        "pass": 18,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "medication_only": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "planted_shown_as_info": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 10,
+      "abstain_rate": 0.192308,
+      "candidates_considered": 52,
+      "latency_p50_s": 6.977122,
+      "latency_p95_s": 12.647391,
+      "cost_per_chart_usd": 0.001716,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 1.1,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C3",
+      "label": "C2 + Tavily guideline grounding",
+      "citation_provenance": {
+        "tavily_live": 11
+      },
+      "depth_counts": {
+        "C3": 10
+      },
+      "escalated_charts": 10,
+      "escalated_fraction": 1.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price"
+    },
+    {
+      "n_charts": 10,
+      "tp": 34,
+      "fp": 5,
+      "fn": 3,
+      "precision": 0.871795,
+      "precision_ci95": [
+        0.73294,
+        0.943973
+      ],
+      "recall": 0.918919,
+      "recall_ci95": [
+        0.78699,
+        0.97204
+      ],
+      "f1": 0.894737,
+      "review_items": 42,
+      "review_burden_per_chart": 4.2,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.5,
+      "hard_negative_pass_rate": {
+        "overall": 0.857143,
+        "pass": 18,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "medication_only": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "planted_shown_as_info": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 9,
+      "abstain_rate": 0.173077,
+      "candidates_considered": 52,
+      "latency_p50_s": 14.095017,
+      "latency_p95_s": 187.495421,
+      "cost_per_chart_usd": 0.007538,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 1.1,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C4",
+      "label": "C3 + Ultra escalation (full cascade)",
+      "citation_provenance": {
+        "tavily_live": 10
+      },
+      "depth_counts": {
+        "C4": 10
+      },
+      "escalated_charts": 10,
+      "escalated_fraction": 1.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price"
+    },
+    {
+      "n_charts": 10,
+      "tp": 34,
+      "fp": 5,
+      "fn": 3,
+      "precision": 0.871795,
+      "precision_ci95": [
+        0.73294,
+        0.943973
+      ],
+      "recall": 0.918919,
+      "recall_ci95": [
+        0.78699,
+        0.97204
+      ],
+      "f1": 0.894737,
+      "review_items": 42,
+      "review_burden_per_chart": 4.2,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.5,
+      "hard_negative_pass_rate": {
+        "overall": 0.857143,
+        "pass": 18,
+        "total": 21,
+        "by_category": {
+          "family_history": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "hypothetical_plan": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "medication_only": {
+            "pass": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "negation": {
+            "pass": 7,
+            "total": 7,
+            "rate": 1.0
+          },
+          "screening": {
+            "pass": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "unspecified_sibling": {
+            "pass": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "wrong_specificity": {
+            "pass": 0,
+            "total": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "unsupported_existing": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "planted_shown_as_info": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 5,
+      "abstain_rate": 0.096154,
+      "candidates_considered": 52,
+      "latency_p50_s": 4.534073,
+      "latency_p95_s": 22.486796,
+      "cost_per_chart_usd": 0.004769,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 1.2,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C4a",
+      "label": "Adaptive: C1, full C4 only if a combination/specificity candidate survives triage",
+      "citation_provenance": {
+        "tavily_live": 11
+      },
+      "depth_counts": {
+        "C1": 5,
+        "C4": 5
+      },
+      "escalated_charts": 5,
+      "escalated_fraction": 0.5,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price"
+    }
+  ],
+  "chart_series": [
+    {
+      "config": "C0",
+      "recall": 0.459459,
+      "precision": 0.73913,
+      "review_burden_per_chart": 2.3,
+      "cost_per_chart_usd": 0.0
+    },
+    {
+      "config": "C0+",
+      "recall": 1.0,
+      "precision": 0.755102,
+      "review_burden_per_chart": 4.9,
+      "cost_per_chart_usd": 0.0
+    },
+    {
+      "config": "C1",
+      "recall": 0.972973,
+      "precision": 0.857143,
+      "review_burden_per_chart": 4.5,
+      "cost_per_chart_usd": 0.00058
+    },
+    {
+      "config": "C2",
+      "recall": 0.972973,
+      "precision": 0.857143,
+      "review_burden_per_chart": 4.5,
+      "cost_per_chart_usd": 0.001605
+    },
+    {
+      "config": "C3",
+      "recall": 0.918919,
+      "precision": 0.871795,
+      "review_burden_per_chart": 4.2,
+      "cost_per_chart_usd": 0.001716
+    },
+    {
+      "config": "C4",
+      "recall": 0.918919,
+      "precision": 0.871795,
+      "review_burden_per_chart": 4.2,
+      "cost_per_chart_usd": 0.007538
+    },
+    {
+      "config": "C4a",
+      "recall": 0.918919,
+      "precision": 0.871795,
+      "review_burden_per_chart": 4.2,
+      "cost_per_chart_usd": 0.004769
+    }
+  ],
+  "degraded_reasons": {
+    "charts": 0,
+    "reasons": [],
+    "by_config": {
+      "C0": 0,
+      "C0+": 0,
+      "C1": 0,
+      "C2": 0,
+      "C3": 0,
+      "C4": 0,
+      "C4a": 0
+    }
+  }
+}

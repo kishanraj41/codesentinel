@@ -353,11 +353,21 @@ function renderWorklist(payload) {
       el("h3", { text: "Nothing to sign." }),
       el("p", { text: "Nemotron dropped every candidate. Open the drawer to see why. That is the audit." })
     ));
-    return;
   }
   rows.forEach(function (item) {
     box.append(renderRow(payload, item));
   });
+  renderDepth(box, audit.depth);
+}
+
+// Which cascade depth ran. C4a stays at Lightning triage unless the chart has a combination or
+// specificity candidate; then it runs Super, Tavily and Ultra on it.
+function renderDepth(box, depth) {
+  if (!depth || !depth.config) return;
+  const text = depth.adaptive
+    ? "Adaptive cascade: ran " + depth.depth_used + (depth.escalated ? " (" + depth.reason + ")." : ". " + (depth.reason || "") + ", so Super, Tavily and Ultra were skipped.")
+    : "Cascade depth " + depth.config + ".";
+  box.append(el("p", { class: "depth-note", text: text }));
 }
 
 function renderRow(payload, item) {

@@ -244,10 +244,10 @@ class AuditAdapter:
                 self.live_errors.append(f"{profile.get('fhir_patient_id')} {config}: backend {exc}")
         started = time.perf_counter()
         chosen = _select_mode(mode)
-        if chosen == "live" and config in {"C1", "C2", "C3", "C4"}:
+        if chosen == "live" and config in {"C1", "C2", "C3", "C4", "C4a"}:
             payload = self._cascade(profile, "live", config)
-        elif config == "C4":
-            payload = self._cascade(profile, "mock", "C4")
+        elif config in {"C4", "C4a"}:
+            payload = self._cascade(profile, "mock", config)
         else:
             rules = self.rules_for(profile)
             if config in {"C0", "C0+"}:
@@ -330,13 +330,14 @@ def _audit_to_eval(audit: dict, mode: str, config: str = "C4") -> dict[str, Any]
         items.append(_eval_item(row, shown=True))
     for row in audit.get("dropped") or []:
         items.append(_eval_item(row, shown=False))
+    depth = audit.get("depth") or {}
     receipt = audit.get("receipt") or {}
     totals = receipt.get("totals") or {}
     changes = 0
     # C1 and C2 never call Tavily. The gate still stamps "Guideline evidence was
     # missing" onto combination and specificity rationales, but that is not a
     # decision the guideline step changed.
-    if config in {"C3", "C4"}:
+    if config in {"C3", "C4"} or (config == "C4a" and depth.get("escalated")):
         for row in audit.get("worklist") or []:
             rationale = row.get("rationale") or ""
             if row.get("gap_type") in {"combination", "specificity_upgrade"} and "Guideline evidence was missing" in rationale:
@@ -353,6 +354,8 @@ def _audit_to_eval(audit: dict, mode: str, config: str = "C4") -> dict[str, Any]
         "tokens_out": int(totals.get("output_tokens") or 0),
         "mode": mode,
         "degraded_reasons": [str(item) for item in (audit.get("degraded_reasons") or []) if str(item).strip()],
+        "depth_used": depth.get("depth_used") or config,
+        "depth_reason": depth.get("reason") or "",
     }
 
 
