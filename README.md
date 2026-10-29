@@ -30,7 +30,7 @@
 </p>
 
 <p align="center">
-  <em>Live on Nebius Token Factory (the wait while the cascade runs is sped up). The worklist is what a coder would sign.</em>
+  <em>Live on Nebius Token Factory (the wait while the cascade runs is sped up). The worklist a coder signs: each row carries the chart quote and the Nemotron decision, and combination and specificity rows carry the guideline citation.</em>
 </p>
 
 CodeSentinel audits outpatient clinical charts for ICD-10-CM and HCC coding gaps. Deterministic rules propose missed or under-specified codes. A three-model NVIDIA Nemotron cascade on Nebius Token Factory cross-examines each one. A verifier outside the model drops any quote that is not in the chart. Tavily retrieves the passage of the current ICD-10-CM Official Guidelines (FY 2027, in force since 2026-10-01) for each combination-code and specificity decision, and the passage is cited only if it matches the official CMS PDF verbatim. Those decisions stay in review until a guideline citation is attached.
@@ -41,25 +41,39 @@ This is clinical coding integrity, not software security: the "code" is a diagno
 
 ## Results
 
-<!-- RESULTS:BEGIN. Every number in this block is from eval/results/live/ (Gold v7, commit b623d53) and eval/results/synthea/ (held-out). Swap the whole block when a newer run is published. -->
+<!-- RESULTS:BEGIN. Every number in this block is from eval/results/live-v9/ (summary.json for Gold-B, gold_a_summary.json for Gold-A) and eval/results/synthea/heldout-v9/summary.json, all run live on commit 8ab01be on 2026-10-28. Swap the whole block when a newer run is published. -->
 
-**The cascade cuts the gap rows a coder reviews from 2.35 to 0.73 per chart on 300 independently generated patients, and on the hard-negative suite it cuts the review queue 38.6% at precision 1.000.**
+**CodeSentinel cuts a risk-adjustment coder's review queue 39.4% at 1.000 precision on hard negatives, and sends only the charts that need it to Super and Ultra.**
 
-Three live evaluations on Nebius Token Factory, FY2027 guideline citations retrieved through Tavily and verified verbatim against the CMS PDF.
+All three evaluations ran live on Nebius Token Factory on 2026-10-28, on the shipped commit `8ab01be`. Each compares C4a, the adaptive cascade the service runs by default, with C0+, the rules queue a coder sees today (approved plus review).
 
-| Set | Charts | What it measures | Result |
+| Set | Charts | What it measures | Result, C4a vs the rules queue |
 |---|---:|---|---|
-| Hard-negative suite | 66 | The 11 ways a chart fools a coder: negation, family history, screening, medication-only, copied-forward, hypothetical plan, resolved, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity | Precision 0.598 to 1.000, review queue −38.6% (2.000 to 1.227 rows/chart), 11/11 categories, 3/3 unsupported billed codes caught, $0.00136/chart |
-| Hand-labeled charts | 10 | Outpatient notes labeled by hand | Precision 0.755 to 0.868 over the rules queue, queue 4.9 to 4.1 rows/chart |
-| Synthea, 300 patients | 300 | Independently generated records (MITRE Synthea v4.0.0); the author wrote no chart or label | False positives −72.9% (656 to 178), gap rows per chart 2.35 to 0.73, 19/20 planted unsupported codes caught |
-
-Comparisons are the full cascade (C4) against the rules queue a coder sees today (C0+, approved plus review). Full tables, confidence intervals, per-code breakdowns and the dev/held-out protocol: [eval/results/](eval/results/). Synthea method and results: [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
+| Hard-negative suite | 66 | The 11 ways a chart fools a coder: negation, family history, screening, medication-only, copied-forward, hypothetical plan, resolved, cross-sentence negation, acute-not-chronic, unspecified sibling, wrong specificity | Precision 0.598 → 1.000 at recall 0.975, review queue −39.4% (2.00 → 1.21 rows/chart), 11/11 categories, 3/3 unsupported billed codes caught, $0.0014/chart |
+| Hand-labeled charts | 10 | Outpatient notes labeled by hand | Precision 0.755 → 0.897 at recall 0.946, queue 4.9 → 4.2 rows/chart |
+| Synthea held-out | 300 | Independently generated records (MITRE Synthea v4.0.0); the author wrote no chart or label | Gap-row false positives −72% (656 → 184), gap rows per chart 2.35 → 0.75, 20/20 planted unsupported codes caught, 31% cheaper per chart than the full cascade |
 
 <p align="center">
-  <img src="docs/assets/cascade-frontier.svg" alt="Review rows and false positives per chart against Token Factory cost for the rules queue and cascade depths C1 to C3 on the 66-chart hard-negative suite, with the full cascade C4 in the stats box." width="760">
+  <img src="docs/assets/cascade-frontier.svg" alt="Left: review rows and false positives per chart on the 66-chart hard-negative suite for the rules queue, C1, C2, C3 and the adaptive default C4a. Right: cost per chart on 300 Synthea held-out charts, full cascade C4 against C4a." width="1000">
 </p>
 
-Most of the gain comes at the first step: Lightning triage plus the quote verifier (C1) removes 51 of the rules' 53 false positives on the hard-negative suite. Precision reaches 1.000 at C3, the depth that adds Super adjudication and the Tavily guideline gate (false positives 2 to 0). C4 adds Ultra for conflicts and the physician query at the same precision and queue. Two live C4 passes agreed on 65 of 66 charts, and every C3/C4 citation was retrieved live and verified in the FY 2027 PDF.
+Most of the gain comes at the first step: Lightning triage plus the quote verifier (C1) removes 96% of the rules' false positives on the hard-negative suite (53 → 2). Super alone (C2) holds precision at 0.975; with the retrieved guideline passage in its prompt (C3), precision reaches 1.000. Ultra settles disagreements and high-value upgrades and drafts the physician query. Adaptive depth sends a chart up the cascade only when the rules propose a combination or specificity code: 23% of hard-negative charts, 50% of hand-labeled charts and 6% of Synthea charts went past Lightning. C4a matched or beat the full cascade C4 on both hand-built sets, and on Synthea it found one more gold gap with five more false-positive rows (precision 0.182 vs 0.183, recall 0.683 vs 0.667) at 31% lower cost ($0.00170 → $0.00118 per chart). Every guideline citation in these runs is a Tavily-retrieved FY 2027 passage verified verbatim in the CMS PDF.
+
+Synthea fixes were designed on a committed 100-chart dev split. Held-out has been run once per code version and this is the run on the final code; the earlier held-out runs are kept, with the history in [eval/synthea/README.md](eval/synthea/README.md). Results: [eval/results/synthea/heldout-v9/RESULTS.md](eval/results/synthea/heldout-v9/RESULTS.md).
+
+Full tables for every config (C0 to C4 and C4a), confidence intervals, hard-negative categories and known misses: [eval/results/live-v9/RESULTS.md](eval/results/live-v9/RESULTS.md).
+
+<details>
+<summary>What these numbers do not show</summary>
+
+- Each config is a separate live pass, so small differences between depths include live-model variance. Two live C4 passes agreed on 63 of 66 hard-negative charts.
+- Fixed C4 slipped on one hard negative in this run (gb-0051 shows I50.9; precision 0.987). C4a passed it. C4a's two misses are the I12.9 on gb-0042 and the J44.1 on gb-0063; C4 misses the I12.9 on gb-0041 and gb-0042.
+- On the hard-negative suite C4a costs about the same as C4 ($0.00139 vs $0.00136 per chart); the adaptive saving shows on Synthea. On the hand-labeled set it is $0.00613 vs $0.00657.
+- The Tavily gate rule itself overrode no decision in these runs; its job is that no combination or specificity row is accepted without a verified citation. v9 served the Tavily search results from the on-disk result cache (0 new credits); each passage was re-verified against the PDF.
+- On Synthea the rules queue has higher recall (0.817 vs 0.683), and the unsupported-billed-code check adds about three flags per chart on codes Synthea does have (912 in total), because the thin template charts never mention them. Total review items are 3.86 per chart against 2.35 for the rules queue.
+- Gold-A is ten charts whose labels await certified-coder sign-off. Gold-B charts and labels are author-constructed around known traps, so it is a regression suite, not an independent benchmark.
+
+</details>
 
 <!-- RESULTS:END -->
 
@@ -72,6 +86,8 @@ Risk-adjustment coding pays on the conditions the chart actually supports. An un
 ## How it works
 
 `gap_pipeline.py` proposes candidates. `codesentinel.nemotron.cascade` decides what is shown. C1 stops after triage and the quote verifier. C2 adds Super. C3 adds the guideline lookup. C4 adds Ultra.
+
+C4a, the service default, picks the depth per chart from the rules candidates, before triage runs. If the rules propose any combination or specificity code, the whole chart runs the full C4 path, and every such candidate goes to Super and the Tavily guideline lookup, then to Ultra on a disagreement or an upgrade worth RAF 0.3 or more, whatever triage said and however confident it was. A candidate that triage would have dropped still needs a verbatim chart quote, and if the models accept it the row is held as review, never accepted. A chart with no such candidate stops after triage and the verifier: rows triage keeps at confidence 0.8 or higher are accepted, lower-confidence rows are held as review, and rows triage drops (negated, family history, screening and the like) are not shown.
 
 ```mermaid
 flowchart TD
@@ -133,14 +149,14 @@ nvidia/Nemotron-3.5-Super-VL
   <img src="docs/assets/review-and-eval.gif" alt="Accept and dismiss on a worklist, then the eval dashboard." width="1000">
 </p>
 
-<p align="center"><em>The coder accepts or dismisses. Nothing is submitted. The Eval tab reads <code>eval/results/live/summary.json</code>.</em></p>
+<p align="center"><em>The coder accepts or dismisses. Nothing is submitted. The Eval tab reads <code>eval/results/live-v9/summary.json</code>.</em></p>
 
 </details>
 
 ## Features
 
 - Four rule tiers: lab thresholds, phenotype patterns, note patterns with a negation and screening window, then specificity upgrades and combination codes.
-- Nemotron cascade with a depth switch: C1 triage, C2 Super, C3 guidelines, C4 Ultra.
+- Nemotron cascade with a depth switch: C1 triage, C2 Super, C3 guidelines, C4 Ultra, and C4a, the default, which runs the full C4 path only on charts with a combination or specificity candidate.
 - Quote verifier that the model cannot override.
 - Guideline gate: combination and specificity rows stay in `review` until a citation is attached.
 - Source tier on every citation: `Official guidelines` or `Secondary source`. Mislabeled code lists are dropped.
@@ -194,6 +210,7 @@ Eval:
 ```bash
 python -m eval.run --split test --mode mock    # writes eval/results/mock/
 python -m eval.run --split test --mode live    # writes eval/results/live/, requires both API keys
+# The published v9 run: EVAL_OUT_DIR=eval/results/live-v9 python -m eval.run --split test --mode live
 ```
 
 Tests (run with the keys unset so nothing calls the network):
@@ -216,14 +233,15 @@ codesentinel/tavily/     Guideline search, extract, and citation checks
 codesentinel/guidelines/ Guideline editions, PDF verifier, curated sections
 codesentinel/policy.py   Production checks. The server does not import eval/
 eval/                    Gold sets, harness, and mock or live runner
-eval/results/live/       Published live run: summary, RESULTS.md, recorded completions
+eval/results/live-v9/    Published live run (v9, commit 8ab01be): summaries and RESULTS.md
+eval/results/live/       Earlier live run (v7) with recorded completions; v8 is in live-v8/
 eval/results/mock/       Offline regression output
 eval/synthea/            Synthea benchmark: generator command, SNOMED to ICD-10-CM map, builder, runner
-eval/results/synthea/    Synthea held-out run (headline), dev/ and pre-fix baseline-v0/, labels, chart hashes
+eval/results/synthea/    Synthea runs: heldout-v9/ (headline), earlier held-out v1 and heldout-v2/, dev/, dev-v2/, pre-fix baseline-v0/, labels, chart hashes
 web/                     Judge demo (Audit and Eval tabs)
 docs/api.md              Audit contract 1.0.0
 docs/eval.md             Metrics schema
-docs/assets/             Logo, banner, and demo GIFs
+docs/assets/             Logo, banner, demo GIFs, and the frontier charts
 ```
 
 </details>
@@ -239,7 +257,7 @@ Dollar fields are RAF times a base rate: a relative-weight illustration, not a b
 ## Safety and limitations
 
 - Data: demo and evaluation charts are generated test records, not real patients. CodeSentinel is a reviewer aid, not medical advice.
-- Evaluation sets are small or generated; per-set caveats, confidence intervals and known misses are in [eval/results/live/RESULTS.md](eval/results/live/RESULTS.md) and [eval/results/synthea/RESULTS.md](eval/results/synthea/RESULTS.md).
+- Evaluation sets are small or generated; per-set caveats, confidence intervals and known misses are in [eval/results/live-v9/RESULTS.md](eval/results/live-v9/RESULTS.md) and [eval/results/synthea/heldout-v9/RESULTS.md](eval/results/synthea/heldout-v9/RESULTS.md).
 - `POST /audit` refuses SSN-like, MRN-like, email, and US phone patterns.
 - A person decides. Accept and dismiss stay on the coder. This does not submit a claim.
 - Combination and specificity rows without a guideline citation stay in review.
@@ -266,4 +284,4 @@ NVIDIA Nemotron on Nebius Token Factory for triage, adjudication, and escalation
 
 ## Project history
 
-Rebuilt from a May 2026 prototype (Ctrl+Alt+Heal). New during the hackathon window: Nemotron cascade, quote verifier, Tavily FY2027 guideline gate, API contract, eval harness, Synthea benchmark. Details: [docs/changes.md](docs/changes.md).
+Rebuilt from a May 2026 prototype (Ctrl+Alt+Heal). New during the hackathon window: Nemotron cascade with adaptive depth (C4a), quote verifier, Tavily FY2027 guideline gate, API contract, eval harness, Synthea benchmark. Details: [docs/changes.md](docs/changes.md).

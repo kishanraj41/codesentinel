@@ -22,4 +22,5 @@ combination/specificity candidate to Super, Tavily and Ultra. v7 is in [../live/
 52/53: gb-0051 (wrong_specificity) shows I50.9. C4 stability is 63/66 (v7 65/66, v8 64/66). The fixed-C4 code
 path is the same as in v7 for these charts (no Gold chart had an info row, and the routing change applies only to
 C4a), so this is live-model variance. It is reported as is. C4a passes gb-0051 and all 53 hard negatives. Its
-missed gold codes include the I12.9 on gb-0041 (combo_forbid), as in v8.
+two missed gold codes (from `C4a.json`) are the I12.9 on gb-0042 (combo_forbid) and the J44.1 on gb-0063
+(resolved_hf); fixed C4 misses the I12.9 on gb-0041 and gb-0042.
