@@ -688,7 +688,7 @@ document.getElementById("paste-form").addEventListener("submit", function (event
   event.preventDefault();
   const text = document.getElementById("paste").value.trim();
   if (!text) {
-    showProblem("Paste a de-identified note first.");
+    showProblem("Paste a demo chart first (no PHI).");
     return;
   }
   runAudit({
