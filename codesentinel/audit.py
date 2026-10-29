@@ -7,7 +7,7 @@ import uuid
 
 from codesentinel import CONTRACT_VERSION
 from codesentinel.api_models import AuditResponse
-from codesentinel.nemotron.cascade import run_cascade
+from codesentinel.nemotron.cascade import DEFAULT_SERVICE_CONFIG, run_cascade
 
 
 def apply_verification(
@@ -16,7 +16,7 @@ def apply_verification(
     rules,
     nemotron_client=None,
     guideline_client=None,
-    cascade_config: str = "C4",
+    cascade_config: str = DEFAULT_SERVICE_CONFIG,
 ) -> dict:
     snapshot = {
         "approved": copy.deepcopy(rules.get("approved") or []),
@@ -50,6 +50,7 @@ def apply_verification(
         "timeline": audit["timeline"],
         "receipt": audit["receipt"],
         "citations": audit["citations"],
+        "depth": audit["depth"],
     }
 
 
@@ -83,6 +84,7 @@ def _audit_dict(profile, demographics, snapshot, cascade) -> dict:
             "dropped_count": len(dropped),
         },
         "worklist": worklist,
+        "depth": cascade.get("depth"),
         "dropped": dropped,
         "timeline": cascade["timeline"],
         "receipt": cascade["receipt"],

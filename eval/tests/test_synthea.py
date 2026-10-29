@@ -130,3 +130,43 @@ class SplitTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdaptiveReportTests(unittest.TestCase):
+    """The Synthea report carries the adaptive config, info rows and escalation share."""
+
+    def _summary(self):
+        cfg = lambda cid, esc: {
+            "id": cid, "label": cid, "precision": 0.5, "recall": 0.5, "f1": 0.5, "tp": 1, "fp": 1, "fn": 1,
+            "review_burden_per_chart": 1.0, "gap_rows_per_chart": 0.5, "info_rows_per_chart": 0.25, "info_rows": 1,
+            "escalated_fraction": esc, "cost_per_chart_usd": 0.001, "latency_p50_s": 1, "latency_p95_s": 2,
+            "precision_ci95": [0.1, 0.9], "recall_ci95": [0.1, 0.9],
+            "unsupported_existing": {"tp": 1, "fp": 0, "fn": 0, "planted_shown_as_info": 0},
+        }
+        return {
+            "dataset": {"split": "dev", "charts": 4, "synthea_version": "v4.0.0", "seed": 1, "state": "Texas",
+                        "ages": "45-90", "reference_date": "2026-10-27", "remove_fraction": 0.3, "expected_gaps": 1,
+                        "charts_with_gaps": 1, "neutral_codes": 0, "unsupported_existing": 1},
+            "mode": "mock", "run_label": "dev round 1", "commit": "abc", "generated_local": "now",
+            "configs": [cfg("C0", 0), cfg("C0+", 0), cfg("C1", 0), cfg("C4", 1), cfg("C4a", 0.25)],
+            "per_code": {"C0+": {}, "C4": {}, "C4a": {"I10": {"tp": 1}}}, "gold_by_code": {"I10": 1},
+            "gold_gap_fate": {}, "caveats": [],
+        }
+
+    def test_markdown_has_new_columns_and_c4a(self):
+        from eval.synthea.run import markdown
+
+        text = markdown(self._summary())
+        self.assertIn("Planted unsupported caught", text)
+        self.assertIn("Charts past C1", text)
+        self.assertIn("| C4a", text)
+        self.assertIn("25%", text)
+        self.assertIn("dev round 1", text)
+        self.assertIn("C4a TP / FP", text)
+
+    def test_configs_include_adaptive(self):
+        from eval.lexicon import CONFIG_LABELS, CONFIGS
+
+        self.assertEqual(CONFIGS[:6], ("C0", "C0+", "C1", "C2", "C3", "C4"))
+        self.assertIn("C4a", CONFIGS)
+        self.assertIn("C4a", CONFIG_LABELS)

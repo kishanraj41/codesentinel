@@ -335,3 +335,18 @@ class ApplyPolicyDirectTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdaptiveConfigTests(unittest.TestCase):
+    def test_mock_c4a_records_depth_per_chart(self):
+        from eval.charts import iter_gold_b
+        from eval.run import _run_split
+
+        rows = iter_gold_b("test")[:8]
+        per_config = _run_split(AuditAdapter(), rows, mode="mock")
+        c4a = per_config["C4a"]
+        depths = [chart["depth_used"] for chart in c4a["charts"]]
+        self.assertTrue(set(depths) <= {"C1", "C4"})
+        self.assertEqual(c4a["summary"]["escalated_charts"], depths.count("C4"))
+        self.assertEqual(per_config["C1"]["summary"]["escalated_fraction"], 0)
+        self.assertEqual(per_config["C4"]["summary"]["escalated_fraction"], 1)

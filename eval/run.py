@@ -87,6 +87,7 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
         credits, hits, uncached = [], [], []
         changes = 0
         modes = []
+        depths = []
         details = []
         provenance: dict[str, int] = {}
         for label, profile in rows:
@@ -106,6 +107,8 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
             for name, count in (audit.get("citation_provenance") or {}).items():
                 provenance[name] = provenance.get(name, 0) + int(count)
             modes.append(audit.get("mode"))
+            depth_used = audit.get("depth_used") or config
+            depths.append(depth_used)
             details.append({
                 "patient_id": scored["patient_id"],
                 "scenario": scored["scenario"],
@@ -115,6 +118,7 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
                 "shown_codes": scored["shown_codes"],
                 "gold_codes": scored["gold_codes"],
                 "review_items": scored["review_items"],
+                "depth_used": depth_used,
                 "latency_s": scored["latency_s"],
                 "cost_usd": scored["cost_usd"],
                 "mode": scored["mode"],
@@ -132,6 +136,12 @@ def _run_split(adapter: AuditAdapter, rows: list[tuple[dict, dict]], *, mode: st
         summary["id"] = config
         summary["label"] = CONFIG_LABELS[config]
         summary["citation_provenance"] = dict(sorted(provenance.items()))
+        # Share of charts whose cascade ran past C1 (Super, Tavily or Ultra). C0/C0+ and
+        # C1 are 0 by construction, C2-C4 are 1; C4a is the adaptive measurement.
+        escalated = sum(1 for d in depths if d not in {"C0", "C0+", "C1"})
+        summary["depth_counts"] = {d: depths.count(d) for d in sorted(set(depths))}
+        summary["escalated_charts"] = escalated
+        summary["escalated_fraction"] = escalated / (len(depths) or 1)
         summary["latency_scope"] = "local_offline" if set(modes) <= {"mock", "rules"} else "mixed"
         summary["cost_basis"] = (
             "none"
@@ -221,7 +231,9 @@ def _comparisons(configs: list[dict]) -> dict[str, Any]:
     by_id = {c["id"]: c for c in configs}
     base = by_id["C0+"]
     out = {}
-    for cid in ("C1", "C2", "C3", "C4"):
+    for cid in ("C1", "C2", "C3", "C4", "C4a"):
+        if cid not in by_id:
+            continue
         cur = by_id[cid]
         base_burden = base["review_burden_per_chart"] or 0
         reduction = None
@@ -250,13 +262,13 @@ def _fmt(value: Any, digits: int = 3) -> str:
 def _config_table(configs: list[dict]) -> list[str]:
     fmt = _fmt
     lines = [
-        "| Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Config | Precision | Recall | F1 | TP | FP | FN | Review items / chart | FP / chart | Hard-negative pass | Abstain rate | P50 s | P95 s | $ / chart | Tavily credits / chart | Charts past C1 |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for cfg in configs:
         hard = (cfg.get("hard_negative_pass_rate") or {}).get("overall")
         lines.append(
-            "| {id} | {p} | {r} | {f} | {tp} | {fp} | {fn} | {rev} | {fpc} | {hard} | {abs_} | {p50} | {p95} | {cost} | {tav} |".format(
+            "| {id} | {p} | {r} | {f} | {tp} | {fp} | {fn} | {rev} | {fpc} | {hard} | {abs_} | {p50} | {p95} | {cost} | {tav} | {esc} |".format(
                 id=cfg["id"],
                 p=fmt(cfg["precision"]),
                 r=fmt(cfg["recall"]),
@@ -270,6 +282,7 @@ def _config_table(configs: list[dict]) -> list[str]:
                 p95=fmt(cfg["latency_p95_s"], 4),
                 cost=fmt(cfg["cost_per_chart_usd"], 5),
                 tav=fmt(cfg["tavily_credits_per_chart"], 2),
+                esc=fmt(cfg.get("escalated_fraction"), 2),
             )
         )
     return lines

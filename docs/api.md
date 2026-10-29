@@ -163,6 +163,14 @@ Redirects and FHIR bundle `next` links must stay on the same host.
     "dropped_count": 3
   },
   "worklist": [],
+  "depth": {
+    "config": "C4a",
+    "adaptive": true,
+    "depth_used": "C1",
+    "escalated": false,
+    "reason": "no combination or specificity candidate",
+    "deep_candidates": []
+  },
   "dropped": [],
   "timeline": [],
   "receipt": {},
@@ -198,6 +206,10 @@ Redirects and FHIR bundle `next` links must stay on the same host.
 - `worklist_count` — `accept` + `review` + `abstain`.
 - `specificity_upgrades` / `combination_codes` — counts on the worklist, not on dropped rows.
 - `dropped_count` — length of `dropped`.
+
+### depth
+
+Which cascade depth ran for this chart. `config` is the requested config (`C1`–`C4`, or the adaptive `C4a`). `depth_used` is `C1` or `C4` for `C4a`, and equals `config` otherwise. `deep_candidates` lists the combination or specificity codes the rules pipeline proposed for the chart (before triage); any one of them sends the chart past C1. The service default is `C4a`; set `CODESENTINEL_CASCADE_CONFIG` to override.
 
 ### worklist[]
 
@@ -393,6 +405,8 @@ Advanced search is counted as 2 credits when the provider does not return a usag
 6. **Guideline gate.** Combination or specificity with `decision: accept` and zero citations is rewritten to `review`.
 7. **Escalation.** Ultra when triage and Super disagree, or the row is a high-value HCC upgrade (`raf_value` ≥ 0.3 and gap type is `specificity_upgrade` or `combination`). Thin or conflicting evidence becomes `abstain`, which stays on the worklist for a human.
 8. **Physician query.** Ultra drafts a non-leading query when `physician_query_needed` is true. Queries that tell the clinician to add a code are discarded and replaced with the standard non-leading template.
+
+**Adaptive depth (`C4a`, the service default).** Steps 1–3 always run. If the rules pipeline proposes no candidate with gap type `combination` or `specificity_upgrade` (rules tiers `COMBINATION_CODE`, `SPECIFICITY_UPGRADE`), the chart stops after step 3, as `C1` would: steps 4, 5, 7 and 8's Ultra draft are skipped and their timeline entries say so. If it proposes one, the whole chart runs steps 4–8 as `C4`, whatever triage said or how confident it was. Every such candidate goes to Super: one that step 3 would have dropped (a non-keep assertion status, or no verified triage quote) is still sent on, using any verbatim quote from triage or the rules evidence. If Super (and Ultra, when it runs) accept it anyway, the row is held as `review`, not `accept`. If no verbatim quote exists anywhere, the verifier still drops it as `unsupported`. Fixed `C4` keeps the original step-3 drops. `depth` records the outcome.
 
 Every run fills `timeline` and `receipt`, including mock runs.
 

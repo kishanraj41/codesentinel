@@ -160,7 +160,7 @@ MODEL_BY_STAGE: dict[str, str] = {
     "escalate": "nvidia/Nemotron-3-Ultra-550b-a55b",
 }
 
-CONFIGS: tuple[str, ...] = ("C0", "C0+", "C1", "C2", "C3", "C4")
+CONFIGS: tuple[str, ...] = ("C0", "C0+", "C1", "C2", "C3", "C4", "C4a")
 
 CONFIG_LABELS: dict[str, str] = {
     "C0": "Rules only, approved bucket",
@@ -169,4 +169,5 @@ CONFIG_LABELS: dict[str, str] = {
     "C2": "C1 + Super adjudication, no Tavily",
     "C3": "C2 + Tavily guideline grounding",
     "C4": "C3 + Ultra escalation (full cascade)",
+    "C4a": "Adaptive: C1, full C4 when the chart has a combination/specificity candidate",
 }

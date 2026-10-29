@@ -471,3 +471,5 @@ table.bench th, table.bench td { border: 1px solid var(--line); padding: 0.4rem 
   html { scroll-behavior: auto; }
   .step.is-active .dot { animation: none; }
 }
+
+.depth-note { color: var(--muted, #6b7f78); font-size: 0.9rem; margin: 0.75rem 0 0; }

@@ -482,12 +482,16 @@ def run_gap_pipeline(
     verify: Optional[bool] = None,
     nemotron_client=None,
     guideline_client=None,
-    cascade_config: str = "C4",
+    cascade_config: Optional[str] = None,
 ) -> Dict:
     """Run rules, then the Nemotron verification cascade.
 
     Approved and review candidates both go to Nemotron. Set verify=False, or
     CODESENTINEL_VERIFY=0, to return the rules buckets only.
+
+    cascade_config defaults to the adaptive config C4a (C1, escalating to the full
+    C4 cascade only when a combination or specificity candidate survives triage).
+    CODESENTINEL_CASCADE_CONFIG overrides the default; the eval passes it explicitly.
     """
     patient_id = profile.get("fhir_patient_id", "")
     log.info(f"Pipeline start for patient {patient_id}")
@@ -603,6 +607,12 @@ def run_gap_pipeline(
         result["verification_applied"] = False
         return result
     from codesentinel.audit import apply_verification
+    from codesentinel.nemotron.cascade import CASCADE_CONFIGS, DEFAULT_SERVICE_CONFIG
+
+    if not cascade_config:
+        cascade_config = os.environ.get("CODESENTINEL_CASCADE_CONFIG", "").strip() or DEFAULT_SERVICE_CONFIG
+    if cascade_config not in CASCADE_CONFIGS:
+        cascade_config = DEFAULT_SERVICE_CONFIG
 
     return apply_verification(
         profile,

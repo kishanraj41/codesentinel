@@ -1,0 +1,756 @@
+{
+  "dataset": {
+    "name": "synthea",
+    "synthea_version": "v4.0.0",
+    "seed": 20261027,
+    "state": "Texas",
+    "ages": "45-90",
+    "reference_date": "2026-10-27",
+    "remove_fraction": 0.3,
+    "charts": 100,
+    "subset": "all",
+    "split": "dev",
+    "expected_gaps": 15,
+    "charts_with_gaps": 15,
+    "neutral_codes": 36,
+    "unsupported_existing": 14,
+    "in_scope": [
+      "D64.9",
+      "E11.22",
+      "E11.65",
+      "E11.9",
+      "E78.1",
+      "E78.5",
+      "F32.9",
+      "I10",
+      "I12.9",
+      "I50.9",
+      "N18.30",
+      "N18.4"
+    ]
+  },
+  "mode": "live",
+  "run_label": "dev v2 round 2",
+  "commit": "24ba20d",
+  "generated_utc": "2026-10-28T04:16:07+00:00",
+  "generated_local": "2026-10-27 23:16 CDT",
+  "configs": [
+    {
+      "n_charts": 100,
+      "tp": 8,
+      "fp": 54,
+      "fn": 7,
+      "precision": 0.129032,
+      "precision_ci95": [
+        0.066858,
+        0.234496
+      ],
+      "recall": 0.533333,
+      "recall_ci95": [
+        0.301166,
+        0.751908
+      ],
+      "f1": 0.207792,
+      "review_items": 62,
+      "review_burden_per_chart": 0.62,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 0.54,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 14,
+        "planted_shown_as_info": 0,
+        "precision": null,
+        "recall": 0.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 0,
+      "abstain_rate": 0.0,
+      "candidates_considered": 224,
+      "latency_p50_s": 0.027859,
+      "latency_p95_s": 0.089521,
+      "cost_per_chart_usd": 0.0,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C0",
+      "label": "Rules only, approved bucket",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C0": 100
+      },
+      "escalated_charts": 0,
+      "escalated_fraction": 0.0,
+      "latency_scope": "local_offline",
+      "cost_basis": "none",
+      "gap_rows_per_chart": 0.62
+    },
+    {
+      "n_charts": 100,
+      "tp": 14,
+      "fp": 210,
+      "fn": 1,
+      "precision": 0.0625,
+      "precision_ci95": [
+        0.037591,
+        0.102162
+      ],
+      "recall": 0.933333,
+      "recall_ci95": [
+        0.701829,
+        0.988133
+      ],
+      "f1": 0.117155,
+      "review_items": 224,
+      "review_burden_per_chart": 2.24,
+      "info_rows": 0,
+      "info_rows_per_chart": 0.0,
+      "false_positives_per_chart": 2.1,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 14,
+        "planted_shown_as_info": 0,
+        "precision": null,
+        "recall": 0.0
+      },
+      "unsupported_claim_drops": 0,
+      "abstain_count": 0,
+      "abstain_rate": 0.0,
+      "candidates_considered": 224,
+      "latency_p50_s": 4e-06,
+      "latency_p95_s": 1.5e-05,
+      "cost_per_chart_usd": 0.0,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C0+",
+      "label": "Rules only, approved + review",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C0+": 100
+      },
+      "escalated_charts": 0,
+      "escalated_fraction": 0.0,
+      "latency_scope": "local_offline",
+      "cost_basis": "none",
+      "gap_rows_per_chart": 2.24
+    },
+    {
+      "n_charts": 100,
+      "tp": 14,
+      "fp": 51,
+      "fn": 1,
+      "precision": 0.215385,
+      "precision_ci95": [
+        0.132866,
+        0.329668
+      ],
+      "recall": 0.933333,
+      "recall_ci95": [
+        0.701829,
+        0.988133
+      ],
+      "f1": 0.35,
+      "review_items": 212,
+      "review_burden_per_chart": 2.12,
+      "info_rows": 142,
+      "info_rows_per_chart": 1.42,
+      "false_positives_per_chart": 0.51,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 7,
+        "fp": 140,
+        "fn": 7,
+        "planted_shown_as_info": 7,
+        "precision": 0.047619,
+        "recall": 0.5
+      },
+      "unsupported_claim_drops": 3,
+      "abstain_count": 0,
+      "abstain_rate": 0.0,
+      "candidates_considered": 513,
+      "latency_p50_s": 2.417672,
+      "latency_p95_s": 16.606559,
+      "cost_per_chart_usd": 0.000928,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C1",
+      "label": "Rules + Lightning triage + quote verifier",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C1": 100
+      },
+      "escalated_charts": 0,
+      "escalated_fraction": 0.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price",
+      "gap_rows_per_chart": 0.65
+    },
+    {
+      "n_charts": 100,
+      "tp": 14,
+      "fp": 52,
+      "fn": 1,
+      "precision": 0.212121,
+      "precision_ci95": [
+        0.130779,
+        0.325133
+      ],
+      "recall": 0.933333,
+      "recall_ci95": [
+        0.701829,
+        0.988133
+      ],
+      "f1": 0.345679,
+      "review_items": 213,
+      "review_burden_per_chart": 2.13,
+      "info_rows": 142,
+      "info_rows_per_chart": 1.42,
+      "false_positives_per_chart": 0.52,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 7,
+        "fp": 140,
+        "fn": 7,
+        "planted_shown_as_info": 7,
+        "precision": 0.047619,
+        "recall": 0.5
+      },
+      "unsupported_claim_drops": 1,
+      "abstain_count": 49,
+      "abstain_rate": 0.095517,
+      "candidates_considered": 513,
+      "latency_p50_s": 3.538627,
+      "latency_p95_s": 15.876332,
+      "cost_per_chart_usd": 0.001145,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.0,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C2",
+      "label": "C1 + Super adjudication, no Tavily",
+      "citation_provenance": {},
+      "depth_counts": {
+        "C2": 100
+      },
+      "escalated_charts": 100,
+      "escalated_fraction": 1.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price",
+      "gap_rows_per_chart": 0.66
+    },
+    {
+      "n_charts": 100,
+      "tp": 14,
+      "fp": 53,
+      "fn": 1,
+      "precision": 0.208955,
+      "precision_ci95": [
+        0.128756,
+        0.32072
+      ],
+      "recall": 0.933333,
+      "recall_ci95": [
+        0.701829,
+        0.988133
+      ],
+      "f1": 0.341463,
+      "review_items": 214,
+      "review_burden_per_chart": 2.14,
+      "info_rows": 142,
+      "info_rows_per_chart": 1.42,
+      "false_positives_per_chart": 0.53,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 7,
+        "fp": 140,
+        "fn": 7,
+        "planted_shown_as_info": 7,
+        "precision": 0.047619,
+        "recall": 0.5
+      },
+      "unsupported_claim_drops": 2,
+      "abstain_count": 51,
+      "abstain_rate": 0.099415,
+      "candidates_considered": 513,
+      "latency_p50_s": 3.722836,
+      "latency_p95_s": 11.99603,
+      "cost_per_chart_usd": 0.001142,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.04,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C3",
+      "label": "C2 + Tavily guideline grounding",
+      "citation_provenance": {
+        "tavily_live": 4
+      },
+      "depth_counts": {
+        "C3": 100
+      },
+      "escalated_charts": 100,
+      "escalated_fraction": 1.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price",
+      "gap_rows_per_chart": 0.67
+    },
+    {
+      "n_charts": 100,
+      "tp": 14,
+      "fp": 52,
+      "fn": 1,
+      "precision": 0.212121,
+      "precision_ci95": [
+        0.130779,
+        0.325133
+      ],
+      "recall": 0.933333,
+      "recall_ci95": [
+        0.701829,
+        0.988133
+      ],
+      "f1": 0.345679,
+      "review_items": 213,
+      "review_burden_per_chart": 2.13,
+      "info_rows": 142,
+      "info_rows_per_chart": 1.42,
+      "false_positives_per_chart": 0.52,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 7,
+        "fp": 140,
+        "fn": 7,
+        "planted_shown_as_info": 7,
+        "precision": 0.047619,
+        "recall": 0.5
+      },
+      "unsupported_claim_drops": 3,
+      "abstain_count": 54,
+      "abstain_rate": 0.105263,
+      "candidates_considered": 513,
+      "latency_p50_s": 4.585042,
+      "latency_p95_s": 15.720693,
+      "cost_per_chart_usd": 0.001643,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.03,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C4",
+      "label": "C3 + Ultra escalation (full cascade)",
+      "citation_provenance": {
+        "tavily_live": 3
+      },
+      "depth_counts": {
+        "C4": 100
+      },
+      "escalated_charts": 100,
+      "escalated_fraction": 1.0,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price",
+      "gap_rows_per_chart": 0.66
+    },
+    {
+      "n_charts": 100,
+      "tp": 14,
+      "fp": 52,
+      "fn": 1,
+      "precision": 0.212121,
+      "precision_ci95": [
+        0.130779,
+        0.325133
+      ],
+      "recall": 0.933333,
+      "recall_ci95": [
+        0.701829,
+        0.988133
+      ],
+      "f1": 0.345679,
+      "review_items": 213,
+      "review_burden_per_chart": 2.13,
+      "info_rows": 142,
+      "info_rows_per_chart": 1.42,
+      "false_positives_per_chart": 0.52,
+      "hard_negative_pass_rate": {
+        "overall": null,
+        "pass": 0,
+        "total": 0,
+        "by_category": {}
+      },
+      "unsupported_existing": {
+        "tp": 7,
+        "fp": 140,
+        "fn": 7,
+        "planted_shown_as_info": 7,
+        "precision": 0.047619,
+        "recall": 0.5
+      },
+      "unsupported_claim_drops": 1,
+      "abstain_count": 3,
+      "abstain_rate": 0.005848,
+      "candidates_considered": 513,
+      "latency_p50_s": 2.583303,
+      "latency_p95_s": 15.187884,
+      "cost_per_chart_usd": 0.000878,
+      "tavily_credits_per_chart": 0.0,
+      "tavily_cache_hits_per_chart": 0.03,
+      "tavily_credits_if_uncached_per_chart": 0.0,
+      "guideline_decision_changes": 0,
+      "id": "C4a",
+      "label": "Adaptive: C1, full C4 only if a combination/specificity candidate survives triage",
+      "citation_provenance": {
+        "tavily_live": 3
+      },
+      "depth_counts": {
+        "C1": 97,
+        "C4": 3
+      },
+      "escalated_charts": 3,
+      "escalated_fraction": 0.03,
+      "latency_scope": "live_wall_clock",
+      "cost_basis": "token_factory_usage_x_catalog_price",
+      "gap_rows_per_chart": 0.66
+    }
+  ],
+  "gold_by_code": {
+    "E11.9": 1,
+    "E78.5": 5,
+    "I10": 8,
+    "N18.30": 1
+  },
+  "per_code": {
+    "C0+": {
+      "D64.9": {
+        "fp": 3
+      },
+      "E11.22": {
+        "fp": 4
+      },
+      "E11.65": {
+        "fp": 4
+      },
+      "E11.9": {
+        "fn": 1,
+        "fp": 1
+      },
+      "E78.0": {
+        "fp": 3
+      },
+      "E78.5": {
+        "fp": 29,
+        "tp": 5
+      },
+      "F41.1": {
+        "fp": 39
+      },
+      "I10": {
+        "tp": 8,
+        "fp": 38
+      },
+      "I12.9": {
+        "fp": 2
+      },
+      "I50.9": {
+        "fp": 45
+      },
+      "J44.1": {
+        "fp": 5
+      },
+      "K76.89": {
+        "fp": 3
+      },
+      "N18.30": {
+        "tp": 1
+      },
+      "N18.4": {
+        "fp": 2
+      },
+      "N18.5": {
+        "fp": 3
+      },
+      "N18.9": {
+        "fp": 29
+      }
+    },
+    "C1": {
+      "E11.65": {
+        "fp": 4
+      },
+      "E11.9": {
+        "fn": 1,
+        "fp": 1
+      },
+      "E78.0": {
+        "fp": 3
+      },
+      "E78.5": {
+        "fp": 29,
+        "tp": 5
+      },
+      "F41.1": {
+        "fp": 1
+      },
+      "I10": {
+        "tp": 8,
+        "fp": 9
+      },
+      "K76.89": {
+        "fp": 1
+      },
+      "N18.30": {
+        "tp": 1
+      },
+      "N18.4": {
+        "fp": 1
+      },
+      "N18.9": {
+        "fp": 2
+      }
+    },
+    "C2": {
+      "E11.65": {
+        "fp": 4
+      },
+      "E11.9": {
+        "fn": 1,
+        "fp": 1
+      },
+      "E78.0": {
+        "fp": 3
+      },
+      "E78.5": {
+        "fp": 29,
+        "tp": 5
+      },
+      "F41.1": {
+        "fp": 1
+      },
+      "I10": {
+        "tp": 8,
+        "fp": 10
+      },
+      "K76.89": {
+        "fp": 1
+      },
+      "N18.30": {
+        "tp": 1
+      },
+      "N18.4": {
+        "fp": 1
+      },
+      "N18.9": {
+        "fp": 2
+      }
+    },
+    "C3": {
+      "E11.22": {
+        "fp": 1
+      },
+      "E11.65": {
+        "fp": 4
+      },
+      "E11.9": {
+        "fn": 1,
+        "fp": 1
+      },
+      "E78.0": {
+        "fp": 3
+      },
+      "E78.5": {
+        "fp": 29,
+        "tp": 5
+      },
+      "F41.1": {
+        "fp": 1
+      },
+      "I10": {
+        "tp": 8,
+        "fp": 10
+      },
+      "K76.89": {
+        "fp": 1
+      },
+      "N18.30": {
+        "tp": 1
+      },
+      "N18.4": {
+        "fp": 1
+      },
+      "N18.9": {
+        "fp": 2
+      }
+    },
+    "C4": {
+      "E11.65": {
+        "fp": 4
+      },
+      "E11.9": {
+        "fn": 1,
+        "fp": 1
+      },
+      "E78.0": {
+        "fp": 3
+      },
+      "E78.5": {
+        "fp": 29,
+        "tp": 5
+      },
+      "F41.1": {
+        "fp": 1
+      },
+      "I10": {
+        "tp": 8,
+        "fp": 10
+      },
+      "K76.89": {
+        "fp": 1
+      },
+      "N18.30": {
+        "tp": 1
+      },
+      "N18.4": {
+        "fp": 1
+      },
+      "N18.9": {
+        "fp": 2
+      }
+    },
+    "C4a": {
+      "E11.65": {
+        "fp": 4
+      },
+      "E11.9": {
+        "fn": 1,
+        "fp": 1
+      },
+      "E78.0": {
+        "fp": 3
+      },
+      "E78.5": {
+        "fp": 29,
+        "tp": 5
+      },
+      "F41.1": {
+        "fp": 1
+      },
+      "I10": {
+        "tp": 8,
+        "fp": 10
+      },
+      "K76.89": {
+        "fp": 1
+      },
+      "N18.30": {
+        "tp": 1
+      },
+      "N18.4": {
+        "fp": 1
+      },
+      "N18.9": {
+        "fp": 2
+      }
+    }
+  },
+  "gold_gap_fate": {
+    "C0": {
+      "dropped:rules": 6,
+      "not_proposed": 1,
+      "shown:accept": 8
+    },
+    "C0+": {
+      "not_proposed": 1,
+      "shown:accept": 8,
+      "shown:review": 6
+    },
+    "C1": {
+      "not_proposed": 1,
+      "shown:accept": 1,
+      "shown:review": 13
+    },
+    "C2": {
+      "not_proposed": 1,
+      "shown:abstain": 12,
+      "shown:accept": 1,
+      "shown:review": 1
+    },
+    "C3": {
+      "not_proposed": 1,
+      "shown:abstain": 11,
+      "shown:accept": 1,
+      "shown:review": 2
+    },
+    "C4": {
+      "not_proposed": 1,
+      "shown:abstain": 11,
+      "shown:accept": 1,
+      "shown:review": 2
+    },
+    "C4a": {
+      "not_proposed": 1,
+      "shown:accept": 1,
+      "shown:review": 13
+    }
+  },
+  "degraded_reasons": {
+    "charts": 0,
+    "reasons": [],
+    "by_config": {
+      "C0": 0,
+      "C0+": 0,
+      "C1": 0,
+      "C2": 0,
+      "C3": 0,
+      "C4": 0,
+      "C4a": 0
+    }
+  },
+  "live_errors": [],
+  "total_cost_usd": 0.5736,
+  "tavily_credits": 0,
+  "caveats": [
+    "Synthea notes are template text and rarely name chronic conditions, so most evidence is medications and labs. The cascade sends lab-only and medication-only rows to review instead of accepting them.",
+    "A statin, metformin or antihypertensive with no matching diagnosis goes to review under CodeSentinel's medication policy. Synthea prescribes statins and ACE inhibitors for prevention (heart disease, diabetes), so most E78.5 and I10 false positives are those review rows.",
+    "Unsupported-existing flags stay high: about three per chart on billed codes Synthea does have, because the 12-month chart (3 template notes, labs only, no vitals) carries no mention, linked medication or lab for many chronic codes.",
+    "Synthea sometimes records a diabetic kidney condition without a type 2 diabetes condition; the NLM map still maps it to an E11 code. Those charts rarely support an E11.22 gap, so most are neutral.",
+    "Gold gaps are dominated by E78.5 and I10, which Synthea links to statins and antihypertensives. Diabetes, CKD and combination-code gaps are few, so their per-code numbers are anecdotal.",
+    "Codes outside CodeSentinel's rules (for example I11.0, I13.0, N18.1, N18.2, E11.29, E11.40) stay billed and are never removed. The benchmark measures gap finding on the codes the rules cover.",
+    "Labels are derived by code from Synthea's conditions; no certified coder reviewed them."
+  ]
+}
