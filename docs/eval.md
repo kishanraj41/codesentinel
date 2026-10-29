@@ -1,6 +1,6 @@
 # CodeSentinel eval
 
-The published numbers are the live run in `eval/results/live/summary.json`, with the table in `eval/results/live/RESULTS.md` and the recorded Nemotron completions in `eval/results/live/recordings/`. `eval/results/mock/` is offline regression output from the recorded client; it is not live model quality. `--mode live` writes to `eval/results/live/`, mock runs write to `eval/results/mock/`, and `EVAL_OUT_DIR` overrides both. The web Eval tab reads `eval/results/live/summary.json` and falls back to the mock summary.
+The published numbers are the v9 live run on the shipped commit `8ab01be`: `eval/results/live-v9/summary.json` (Gold-B) and `gold_a_summary.json` (Gold-A), with the tables in `eval/results/live-v9/RESULTS.md`, and the Synthea held-out run in `eval/results/synthea/heldout-v9/`. Earlier runs are kept unedited: v7 in `eval/results/live/` (with its recorded Nemotron completions in `eval/results/live/recordings/`) and v8 in `eval/results/live-v8/`. `eval/results/mock/` is offline regression output from the recorded client; it is not live model quality. `--mode live` writes to `eval/results/live/`, mock runs write to `eval/results/mock/`, and `EVAL_OUT_DIR` overrides both (the v9 run used `EVAL_OUT_DIR=eval/results/live-v9`). The web Eval tab reads `eval/results/live-v9/summary.json`, then `eval/results/live/summary.json`, and falls back to the mock summary.
 
 ## What is measured
 

@@ -347,27 +347,66 @@ def _markdown(summary: dict) -> str:
             f"{row['review_burden_per_chart']:.3f} | {row['cost_per_chart_usd']:.5f} |"
         )
     lines.append("")
-    comp = summary["comparisons"]["configs"].get("C4") or {}
-    red = comp.get("review_burden_reduction_vs_c0_plus")
-    if red is not None:
+    for cid in ("C4", "C4a"):
+        comp = summary["comparisons"]["configs"].get(cid) or {}
+        red = comp.get("review_burden_reduction_vs_c0_plus")
+        if red is None:
+            continue
         lines.append(
-            f"C4 review burden is {red:.1%} lower than C0+ on this split "
+            f"{cid} review burden is {red:.1%} lower than C0+ on this split "
             f"({comp.get('review_burden_per_chart_from'):.3f} → {comp.get('review_burden_per_chart_to'):.3f} items per chart). "
             f"Recall {comp.get('recall_from')} → {comp.get('recall_to')}."
         )
         lines.append("")
-    lines.append("## Hard-negative pass rate (C4)")
+    _ci_sets = [("Gold-B", summary["configs"])]
+    if isinstance(summary.get("gold_a"), dict) and summary["gold_a"].get("configs"):
+        _ci_sets.insert(0, ("Gold-A", summary["gold_a"]["configs"]))
+    if any(c.get("precision_ci95") for _n, cfgs in _ci_sets for c in cfgs):
+        lines.append("## 95% confidence intervals")
+        lines.append("")
+        lines.append("| Set | Config | Precision | Precision 95% CI | Recall | Recall 95% CI |")
+        lines.append("|---|---|---:|---|---:|---|")
+        for set_name, cfgs in _ci_sets:
+            for c in cfgs:
+                pci, rci = c.get("precision_ci95"), c.get("recall_ci95")
+                lines.append(
+                    f"| {set_name} | {c['id']} | {_fmt(c.get('precision'))} | "
+                    f"{(f'{pci[0]:.3f}–{pci[1]:.3f}') if pci else '—'} | {_fmt(c.get('recall'))} | "
+                    f"{(f'{rci[0]:.3f}–{rci[1]:.3f}') if rci else '—'} |"
+                )
+        lines.append("")
+    hn_cfgs = [c for c in summary["configs"] if c["id"] in ("C4", "C4a")]
+    lines.append("## Hard-negative pass rate (" + ", ".join(c["id"] for c in hn_cfgs) + ")")
     lines.append("")
     c4 = next(c for c in summary["configs"] if c["id"] == "C4")
-    lines.append("| Category | Pass | Total | Rate |")
-    lines.append("|---|---:|---:|---:|")
-    for cat, info in (c4["hard_negative_pass_rate"]["by_category"] or {}).items():
-        rate = info["rate"]
-        lines.append(f"| {cat} | {info['pass']} | {info['total']} | {rate:.3f} |")
+    cats = list((c4["hard_negative_pass_rate"]["by_category"] or {}).keys())
+    lines.append("| Category | " + " | ".join(f"{c['id']} pass / total" for c in hn_cfgs) + " |")
+    lines.append("|---|" + "---:|" * len(hn_cfgs))
+    for cat in cats:
+        cells = []
+        for c in hn_cfgs:
+            info = (c["hard_negative_pass_rate"]["by_category"] or {}).get(cat)
+            cells.append(f"{info['pass']}/{info['total']}" if info else "—")
+        lines.append(f"| {cat} | " + " | ".join(cells) + " |")
     lines.append("")
+    if any(c.get("depth_counts") for c in summary["configs"] if c["id"] == "C4a"):
+        lines.append("## Adaptive depth (C4a)")
+        lines.append("")
+        for set_name, cfgs in _ci_sets:
+            c4a = next((c for c in cfgs if c["id"] == "C4a"), None)
+            if c4a and c4a.get("depth_counts"):
+                dc = ", ".join(f"{k} {v}" for k, v in c4a["depth_counts"].items())
+                lines.append(
+                    f"- {set_name}: {c4a.get('escalated_charts')} of {c4a.get('n_charts')} charts ran the full C4 path "
+                    f"({_fmt(c4a.get('escalated_fraction'))}); depth counts {dc}."
+                )
+        lines.append("")
     lines.append("## Known failures")
     lines.append("")
-    lines.append("These are misses of mock C4 (the real cascade with the recorded client) on the held-out split, plus Gold-A misses. They are not a claim about live Nemotron.")
+    if summary.get("mode") == "live":
+        lines.append("These are misses of fixed-depth C4 in this live run on the test split, plus Gold-A misses. Per-config results, including C4a, are in the tables above.")
+    else:
+        lines.append("These are misses of mock C4 (the real cascade with the recorded client) on the held-out split, plus Gold-A misses. They are not a claim about live Nemotron.")
     lines.append("")
     if not summary["known_failures"]:
         lines.append("None recorded.")

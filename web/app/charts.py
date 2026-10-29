@@ -342,7 +342,7 @@ def finish(
 
 MARGARET_NOTE = """PROGRESS NOTE — Margaret Whitmore
 Date: 2026-03-12 | Provider: Dr. Helen Cho, MD
-Synthetic chart for the CodeSentinel demo.
+Demo chart for CodeSentinel.
 
 CHIEF COMPLAINT:
 Diabetes follow-up. Shortness of breath on one flight of stairs.
@@ -1023,35 +1023,35 @@ CARDS = [
         "name": "Margaret Whitmore",
         "hook": "Specificity, negation, and a family-history trap in one chart.",
         "featured": True,
-        "setting": "Outpatient follow-up · synthetic",
+        "setting": "Outpatient follow-up · demo patient",
     },
     {
         "id": "pt-001",
         "name": "Maria Elena Rodriguez",
         "hook": "Coded E11.9. The plan says uncontrolled hyperglycemia, and CKD is uncoded.",
         "featured": False,
-        "setting": "Outpatient follow-up · synthetic",
+        "setting": "Outpatient follow-up · demo patient",
     },
     {
         "id": "pt-004",
         "name": "Robert Williams",
         "hook": "Diabetes with CKD. The combination code is the decision.",
         "featured": False,
-        "setting": "Outpatient follow-up · synthetic",
+        "setting": "Outpatient follow-up · demo patient",
     },
     {
         "id": "pt-005",
         "name": "Patricia Davis",
         "hook": "Negation trap. The claim says diabetes. The note says there is no evidence of it.",
         "featured": False,
-        "setting": "Annual physical · synthetic",
+        "setting": "Annual physical · demo patient",
     },
     {
         "id": "pt-009",
         "name": "Jennifer Wilson",
         "hook": "Screening trap. A PHQ-9 at a wellness visit is not depression.",
         "featured": False,
-        "setting": "Annual wellness visit · synthetic",
+        "setting": "Annual wellness visit · demo patient",
     },
 ]
 

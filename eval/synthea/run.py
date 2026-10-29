@@ -206,7 +206,8 @@ def markdown(summary: dict) -> str:
         "Raw numbers: [summary.json](summary.json).",
         "",
         *([f"Split: `{d['split']}` from `eval/synthea/split.json` (seed 20261028; 100 dev, 300 held-out). "
-           "Fixes were made on dev only; held-out was run once after they were committed.", ""]
+           "Fixes were made on dev only. Each code version gets one held-out run, kept as is; "
+           "the run history is in `eval/synthea/README.md`.", ""]
           if d.get("split", "all") != "all" else []),
         f"{d['charts']} Synthea patients (Synthea {d['synthea_version']}, seed {d['seed']}, {d['state']}, ages {d['ages']}, "
         f"reference date {d['reference_date']}). Conditions are Synthea's, mapped to ICD-10-CM with the NLM SNOMED CT to "

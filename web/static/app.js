@@ -283,6 +283,10 @@ function renderResult(payload) {
   const audit = payload.audit;
   const summary = audit.summary || {};
   const kept = summary.worklist_count || 0;
+  if (delivery.source === "cache") {
+    head.append(el("p", { class: "cache-banner", role: "alert", id: "cache-banner",
+      text: delivery.banner || "Showing a cached result: live capacity reached, try again shortly." }));
+  }
   head.append(
     el("p", { class: "oknote", role: "status" },
       el("span", { class: "tag", text: tagFor(payload) }),
@@ -684,7 +688,7 @@ document.getElementById("paste-form").addEventListener("submit", function (event
   event.preventDefault();
   const text = document.getElementById("paste").value.trim();
   if (!text) {
-    showProblem("Paste a synthetic note first.");
+    showProblem("Paste a demo chart first (no PHI).");
     return;
   }
   runAudit({
@@ -692,7 +696,7 @@ document.getElementById("paste-form").addEventListener("submit", function (event
     pace_ms: 0,
     profile: {
       fhir_patient_id: "pasted-note",
-      demographics: { full_name: "Synthetic paste", found: true },
+      demographics: { full_name: "Pasted note", found: true },
       clinical_notes: [{ text: text }],
       observations: [],
       medications: [],
@@ -758,7 +762,7 @@ function renderEval(data) {
   const after = el("article", {});
   after.append(el("h2", { text: "After Nemotron" }));
   if (data.status === "loaded" && (data.configs || []).length) {
-    after.append(el("p", { text: (data.mode === "live" ? "Measured rows from the live Token Factory run, eval/results/live/summary.json." : "Mock regression rows from eval/results/mock/summary.json, not live model quality.") + " The MTSamples counts above stay queue counts, not precision." }));
+    after.append(el("p", { text: (data.mode === "live" ? "Measured rows from the live Token Factory run, " + (data.source_label || "eval/results/live-v9/summary.json") + "." : "Mock regression rows from eval/results/mock/summary.json, not live model quality.") + " The MTSamples counts above stay queue counts, not precision." }));
     if (data.mode_detail) after.append(el("p", { class: "meta", text: data.mode_detail }));
     after.append(configTable(data.configs));
   } else {

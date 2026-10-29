@@ -40,6 +40,15 @@ adjustments in `run.py`: a shown code that is the dotted parent of a label code 
 code (CodeSentinel writes `N18.3`; the FY 2027 billable code is `N18.30`), and neutral rows are
 removed before scoring.
 
+## Frontier chart
+
+Review rows per chart against Token Factory cost per chart for C1 to C4 on the 300 held-out charts,
+with recall for each configuration ([synthea-frontier.png](../../docs/assets/synthea-frontier.png)):
+
+<p align="center">
+  <img src="../../docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 300 held-out Synthea charts, with recall for each configuration." width="760">
+</p>
+
 ## Reproduce
 
 ```bash
@@ -63,6 +72,12 @@ used, so a rebuilt benchmark can be checked chart by chart.
 
 This section describes the first held-out run (v1), which ran on the v7 code. The later runs (v2 on the v8 code, then v9) are below.
 
+From the project README (moved here verbatim; these are the v1 figures):
+
+The first run on all 400 charts was poor: C4 recall 0.027. It showed three bugs. Triage dropped medication-supported gaps as `copied_forward_unclear` (56 of 75) instead of sending them to review, because the rescue for medication evidence only fired on empty notes and Synthea notes are template text. Triage saw only the first 40 structured lines, which hid the medication list on 103 charts. And the unsupported-existing check flagged 1,962 billed codes Synthea does have, because it only knew terms for a short code list and ignored linked medications and labs. The 400 patients were then split by seed into 100 dev and 300 held-out charts, and the split was committed before any fix. The fixes, plus a blood-glucose LOINC that had been mapped to glycosuria and an R73 Excludes1 rule, were made and checked on dev only (dev C4 recall 0.067 to 0.933). The held-out charts were run once afterwards.
+
+On held-out, C4 recall is 0.667 (95% CI 0.54–0.77), up from 0.017 before the fixes, with precision 0.183 against 0.070 for the rules queue. It is still weaker than dev, and it is reported that way: 8 held-out gaps were still dropped as `copied_forward_unclear`, and most false positives are statin and ACE-inhibitor rows that the medication policy sends to review (Synthea prescribes both for prevention). The two-way check found 19 of 20 planted unsupported codes. It still flags about three billed codes per chart, because the 12-month chart has no mention, linked medication or lab for many chronic conditions.
+
 The first full run (all 400 charts, before any change) exposed three cascade bugs. They were
 fixed under a split fixed in advance, so the published number is on charts the fixes never saw.
 
@@ -72,8 +87,8 @@ fixed under a split fixed in advance, so the published number is on charts the f
 2. **Fix on dev only.** Bugs were diagnosed from dev charts and from the dev rows of the first
    run. Held-out per-chart outcomes were not opened while fixing. The live iteration runs were
    `--split dev` only.
-3. **One held-out run.** After the fixes were committed, the 300 held-out charts were run once
-   with every configuration (`--split held_out`). No change was made after that run.
+3. **One held-out run per code version.** After the fixes were committed, the 300 held-out charts were run once
+   with every configuration (`--split held_out`). Later code versions each got one more held-out run (below).
 4. **Benchmark unchanged.** `labels.jsonl` and the chart bundles are the ones from the first
    run (manifest SHA-256s unchanged). No label was edited.
 
@@ -82,13 +97,16 @@ charts (which can include held-out patients) had been read while writing up the 
 No fix was designed from a specific held-out chart.
 
 Post-run fix: carvedilol and furosemide were removed from the heart-failure (`I50`) drug list in
-`codesentinel/policy.py`, because they excused a planted unsupported `I50.9`. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
+`codesentinel/policy.py`, because they excused a planted unsupported `I50.9`. Found on held-out after the v1 held-out run; fixed afterward. The v1 held-out numbers are from before this fix; the v9 rerun below includes it.
 The same two drugs were then removed from the `I13` (hypertensive heart and chronic kidney disease) list,
-so they no longer excuse an `I13` code on their own either; also not rerun.
+so they no longer excuse an `I13` code on their own either (also before v9).
 
 ```bash
 python -m eval.synthea.run --bench BENCH --out OUT_DEV --mode live --split dev
-python -m eval.synthea.run --bench ## Later held-out runs: v8 (gate + adaptive, gate reverted) and v9
+python -m eval.synthea.run --bench BENCH --out OUT_HELD --mode live --split held_out
+```
+
+## Later held-out runs: v8 (gate + adaptive, gate reverted) and v9
 
 The 300 held-out charts have been run three times, once per code version. Each run is kept; none
 was edited afterward. Labels and chart bundles are the v1 ones throughout.
@@ -145,12 +163,10 @@ In v9 the unsupported check flags all 20 planted codes, and again 912 billed cod
 escalate too). Each config is a separate live pass, so small differences between configs and runs
 include live variance.
 
-figures because each config is a separate live pass.
-
 
 ## Limits
 
-- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counted as a heart-failure drug even though the triage policy treats it as nonspecific. Found on held-out after the single held-out run; fixed afterward. Held-out numbers are from before this fix and were not rerun.
+- One planted unsupported code (`I50.9`) on held-out was excused by carvedilol, which the unsupported-existing fix counted as a heart-failure drug even though the triage policy treats it as nonspecific. Found on held-out after the v1 held-out run; fixed afterward. The v9 held-out rerun includes the fix and catches it (20/20).
 
 - Synthea notes are template text. They rarely name the chronic conditions, so evidence is mostly
   medications and labs.

@@ -1,5 +1,7 @@
 # CodeSentinel eval results: live run on Nebius Token Factory
 
+Run v9: commit `8ab01be` (C4a adaptive default, v8 info gate reverted), finished 2026-10-28 01:32 CDT (06:32 UTC). Raw files: [summary.json](summary.json), [gold_a_summary.json](gold_a_summary.json). Earlier runs are kept: v7 in [../live/](../live/RESULTS.md), v8 in [../live-v8/](../live-v8/README.md); the v9 changes are summarised in [README.md](README.md).
+
 C0 and C0+ stay on the rules pipeline. C1–C4 ran through the real cascade on Token Factory. Nemotron responses were recorded under eval/fixtures/nemotron. Guideline citations target the ICD-10-CM Official Guidelines in force on the run date. Tavily retrieves the passage live from cms.gov or cdc.gov, and it is cited only when it is verbatim in the official PDF fetched in the same run; curated sections are the fallback and cross-check. Citation provenance per config is in summary.json (citation_provenance). Replay those Nemotron completions with CODESENTINEL_REPLAY=1.
 
 ## Gold-A: 10 hand-labeled charts (headline)
@@ -50,25 +52,51 @@ Latency is wall time per chart against Token Factory. Cost is reported token usa
 
 C4 review burden is 38.6% lower than C0+ on this split (2.000 → 1.227 items per chart). Recall 1.0 → 0.974684.
 
-## Hard-negative pass rate (C4)
+C4a review burden is 39.4% lower than C0+ on this split (2.000 → 1.212 items per chart). Recall 1.0 → 0.974684.
 
-| Category | Pass | Total | Rate |
-|---|---:|---:|---:|
-| acute_not_chronic | 3 | 3 | 1.000 |
-| copied_forward | 2 | 2 | 1.000 |
-| cross_sentence_negation | 3 | 3 | 1.000 |
-| family_history | 2 | 2 | 1.000 |
-| hypothetical_plan | 5 | 5 | 1.000 |
-| medication_only | 20 | 20 | 1.000 |
-| negation | 7 | 7 | 1.000 |
-| resolved | 2 | 2 | 1.000 |
-| screening | 2 | 2 | 1.000 |
-| unspecified_sibling | 5 | 5 | 1.000 |
-| wrong_specificity | 1 | 2 | 0.500 |
+## 95% confidence intervals
+
+| Set | Config | Precision | Precision 95% CI | Recall | Recall 95% CI |
+|---|---|---:|---|---:|---|
+| Gold-A | C0 | 0.739 | 0.535–0.875 | 0.459 | 0.310–0.616 |
+| Gold-A | C0+ | 0.755 | 0.619–0.854 | 1.000 | 0.906–1.000 |
+| Gold-A | C1 | 0.857 | 0.722–0.933 | 0.973 | 0.862–0.995 |
+| Gold-A | C2 | 0.854 | 0.716–0.931 | 0.946 | 0.823–0.985 |
+| Gold-A | C3 | 0.895 | 0.759–0.958 | 0.919 | 0.787–0.972 |
+| Gold-A | C4 | 0.892 | 0.753–0.957 | 0.892 | 0.753–0.957 |
+| Gold-A | C4a | 0.897 | 0.764–0.959 | 0.946 | 0.823–0.985 |
+| Gold-B | C0 | 0.697 | 0.595–0.782 | 0.785 | 0.682–0.861 |
+| Gold-B | C0+ | 0.598 | 0.513–0.678 | 1.000 | 0.954–1.000 |
+| Gold-B | C1 | 0.975 | 0.912–0.993 | 0.975 | 0.912–0.993 |
+| Gold-B | C2 | 0.975 | 0.913–0.993 | 0.987 | 0.932–0.998 |
+| Gold-B | C3 | 1.000 | 0.952–1.000 | 0.975 | 0.912–0.993 |
+| Gold-B | C4 | 0.987 | 0.931–0.998 | 0.975 | 0.912–0.993 |
+| Gold-B | C4a | 1.000 | 0.952–1.000 | 0.975 | 0.912–0.993 |
+
+## Hard-negative pass rate (C4, C4a)
+
+| Category | C4 pass / total | C4a pass / total |
+|---|---:|---:|
+| acute_not_chronic | 3/3 | 3/3 |
+| copied_forward | 2/2 | 2/2 |
+| cross_sentence_negation | 3/3 | 3/3 |
+| family_history | 2/2 | 2/2 |
+| hypothetical_plan | 5/5 | 5/5 |
+| medication_only | 20/20 | 20/20 |
+| negation | 7/7 | 7/7 |
+| resolved | 2/2 | 2/2 |
+| screening | 2/2 | 2/2 |
+| unspecified_sibling | 5/5 | 5/5 |
+| wrong_specificity | 1/2 | 2/2 |
+
+## Adaptive depth (C4a)
+
+- Gold-A: 5 of 10 charts ran the full C4 path (0.500); depth counts C1 5, C4 5.
+- Gold-B: 15 of 66 charts ran the full C4 path (0.227); depth counts C1 51, C4 15.
 
 ## Known failures
 
-These are misses of mock C4 (the real cascade with the recorded client) on the held-out split, plus Gold-A misses. They are not a claim about live Nemotron.
+These are misses of fixed-depth C4 in this live run on the test split, plus Gold-A misses. Per-config results, including C4a, are in the tables above.
 
 - **gb-0051** (gold-b, hf_specificity) false_positive `I50.9`. The note documents reduced ejection fraction or systolic heart failure. The cascade proposes I50.22 as a specificity upgrade and accepts it only with a verified quote and a guideline citation. I50.9 is dropped only after that more specific code is accepted.
 - **gb-0041** (gold-b, combo_forbid) false_negative `I12.9`. C4 did not show a gold gap. If the rules never proposed it, every config misses it.
