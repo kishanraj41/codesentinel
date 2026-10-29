@@ -9,7 +9,7 @@ Then:
     python scripts/record_readme_gifs.py
 
 With NEBIUS_API_KEY and TAVILY_API_KEY set in the demo's environment, the
-audit-findings GIF is a live Token Factory run (about $0.015 of spend); the
+audit-findings GIF is a live Token Factory run (about $0.01-0.02 of spend); the
 wait while the cascade runs is sped up in the GIF. Without keys every GIF is the
 offline recorded client. Set ONLY=audit-findings to record one GIF.
 
@@ -125,7 +125,7 @@ def evidence(page) -> None:
     page.wait_for_timeout(400)
     row.get_by_role("button", name="Evidence", exact=True).click()
     page.wait_for_timeout(400)
-    row.locator("text=Secondary source").scroll_into_view_if_needed()
+    row.locator(".evidence .query").first.scroll_into_view_if_needed()
     page.wait_for_timeout(3200)
 
 
