@@ -63,13 +63,23 @@ def _dirs() -> list[Path]:
     if env:
         found.append(Path(env))
     here = Path(__file__).resolve()
-    # The published live run first, then mock regression output, then legacy paths.
+    # The published live run first (v9, then the v7 run kept in live/), then mock
+    # regression output, then legacy paths.
+    found.append(here.parents[2] / "eval" / "results" / "live-v9")
     found.append(here.parents[2] / "eval" / "results" / "live")
     found.append(here.parents[2] / "eval" / "results" / "mock")
     found.append(here.parents[2] / "eval" / "results")
     found.append(here.parents[1] / "eval_results" / "live")
     found.append(here.parents[1] / "eval_results")
     return found
+
+
+def _display_path(path: Path) -> str:
+    root = Path(__file__).resolve().parents[2]
+    try:
+        return path.resolve().relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
 
 
 def _configs_from(payload) -> list[dict]:
@@ -132,8 +142,9 @@ def _for_failure(row: dict) -> dict:
 
 
 def load_eval() -> dict:
-    """The Eval tab reads one summary.json: eval/results/live first, then eval/results/mock."""
+    """The Eval tab reads one summary.json: eval/results/live-v9, then eval/results/live, then eval/results/mock."""
     path = _summary_path()
+    shown_path = _display_path(path) if path is not None else "eval/results/live-v9/summary.json"
     payload = None
     if path is not None:
         try:
@@ -145,7 +156,7 @@ def load_eval() -> dict:
     loaded = bool(configs or measured)
     note = (
         (
-            "Rows are from eval/results/live/summary.json, the published live run on Nebius Token Factory. "
+            f"Rows are from {shown_path}, the published live run on Nebius Token Factory. "
             "The MTSamples counts above stay queue counts, not precision."
             if isinstance(payload, dict) and payload.get("mode") == "live"
             else "Rows are from eval/results/mock/summary.json. The MTSamples counts above stay "
@@ -155,12 +166,13 @@ def load_eval() -> dict:
         if loaded
         else (
             "Measured precision, recall, review burden, and dollars per chart "
-            "appear here when eval/results/live/summary.json is present."
+            "appear here when eval/results/live-v9/summary.json is present."
         )
     )
     return {
         "status": "loaded" if loaded else "awaiting_harness",
-        "source": str(path) if path and loaded else "eval/results/live/summary.json",
+        "source": str(path) if path and loaded else "eval/results/live-v9/summary.json",
+        "source_label": shown_path,
         "files": [str(path)] if path and loaded else [],
         "mode": payload.get("mode") if isinstance(payload, dict) else None,
         "mode_detail": payload.get("mode_detail") if isinstance(payload, dict) else None,

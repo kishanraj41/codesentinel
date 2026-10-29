@@ -46,4 +46,4 @@ pytest
 
 The public demo image is `Dockerfile.web` at the repo root (UI plus in-process audit cascade), hosted on Render's free tier with `render.yaml`. See [docs/DEPLOY.md](../docs/DEPLOY.md). `web/Dockerfile` only holds the UI, so use it with `AUDIT_API_BASE` pointing at a separate audit service.
 
-The Eval tab reads `EVAL_RESULTS_DIR`, else `eval/results/live/summary.json`, else the mock regression summary in `eval/results/mock/`, and labels which one it shows.
+The Eval tab reads `EVAL_RESULTS_DIR`, else `eval/results/live-v9/summary.json` (the published v9 run), else `eval/results/live/summary.json` (v7), else the mock regression summary in `eval/results/mock/`, and labels which one it shows.

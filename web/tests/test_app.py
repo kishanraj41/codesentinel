@@ -288,7 +288,9 @@ def test_eval_tab_reads_summary_json():
     assert payload["baseline"]["notes"] == 2227
     assert "not precision" in payload["baseline"]["warning"].lower()
     assert payload["status"] == "loaded"
-    assert payload["source"].replace("\\", "/").endswith("eval/results/live/summary.json")
+    assert payload["source"].replace("\\", "/").endswith("eval/results/live-v9/summary.json")
+    assert payload["source_label"] == "eval/results/live-v9/summary.json"
+    assert "C4a" in [row["id"] for row in payload["configs"]]
     assert payload["files"] == [payload["source"]]
     ids = [row["id"] for row in payload["configs"]]
     assert ids[0] == "C0"
