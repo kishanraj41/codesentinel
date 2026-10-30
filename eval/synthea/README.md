@@ -42,11 +42,11 @@ removed before scoring.
 
 ## Frontier chart
 
-Review rows per chart against Token Factory cost per chart for C1 to C4 on the 300 held-out charts,
-with recall for each configuration ([synthea-frontier.png](../../docs/assets/synthea-frontier.png)):
+Review rows per chart against Token Factory cost per chart for C1 to C4 and adaptive C4a on the 300 held-out charts (v9),
+with recall for each configuration ([synthea-frontier-v9.png](../../docs/assets/synthea-frontier-v9.png)):
 
 <p align="center">
-  <img src="../../docs/assets/synthea-frontier.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 on 300 held-out Synthea charts, with recall for each configuration." width="760">
+  <img src="../../docs/assets/synthea-frontier-v9.svg" alt="Review rows per chart against Token Factory cost per chart for C1 to C4 and adaptive C4a on 300 held-out Synthea charts, with recall for each configuration." width="760">
 </p>
 
 ## Reproduce
