@@ -37,7 +37,7 @@ CodeSentinel audits outpatient clinical charts for ICD-10-CM and HCC coding gaps
 
 This is clinical coding integrity, not software security: the "code" is a diagnosis code.
 
-**Live demo:** `<DEMO_URL>` (Render free tier; the first request after idle takes about a minute to wake). Inference runs on Nebius Token Factory.
+**Live demo:** [codesentinel-bno0.onrender.com](https://codesentinel-bno0.onrender.com) (Render free tier; the first request after idle takes about a minute to wake). Inference runs on Nebius Token Factory.
 
 ## Results
 

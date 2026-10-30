@@ -35,7 +35,7 @@ Render secrets, not in the repo). Render builds `Dockerfile.web` from `main` and
 `/health`.
 
 Free instances sleep after 15 minutes idle and take about a minute to wake. Demo URL:
-`<DEMO_URL>` (added once the service is live).
+[codesentinel-bno0.onrender.com](https://codesentinel-bno0.onrender.com).
 
 ## Keep-alive
 
@@ -44,8 +44,8 @@ Free instances sleep after 15 minutes idle and take about a minute to wake. Demo
 falling back to `<DEMO_URL>/`. If `DEMO_URL` is unset, it exits 0 without making a request.
 
 After deploying, Kishan sets the repository variable: GitHub > Settings > Secrets and variables >
-Actions > Variables > New repository variable, name `DEMO_URL`, value the Render URL (for example
-`https://codesentinel.onrender.com`, no trailing path). It is a variable, not a secret; it holds no key.
+Actions > Variables > New repository variable, name `DEMO_URL`, value the Render URL
+`https://codesentinel-bno0.onrender.com` (no trailing path). It is a variable, not a secret; it holds no key.
 Scheduled workflows run from the default branch (`main`), so the keep-alive starts once this file is
 on `main`. GitHub may delay scheduled runs by a few minutes under load, and Render's free tier has a
 monthly instance-hour allowance, so a 24/7 keep-alive uses most of it; disable the workflow after judging.
